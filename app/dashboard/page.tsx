@@ -15,6 +15,7 @@ interface DashboardStats {
   sentThisMonth: number;
   totalContacts: number;
   failedSMS: number;
+  sentToday: number; // Bugün gönderilen SMS sayısı
   // Admin stats
   totalUsers?: number;
   pendingPaymentRequests?: number;
@@ -47,6 +48,7 @@ export default function DashboardPage() {
     sentThisMonth: 0,
     totalContacts: 0,
     failedSMS: 0,
+    sentToday: 0,
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [bulkSmsReports, setBulkSmsReports] = useState<BulkSmsReport[]>([]);

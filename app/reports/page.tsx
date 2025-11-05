@@ -64,10 +64,28 @@ export default function SMSReportsPage() {
   }, [isAdmin, tabValue]);
 
   useEffect(() => {
+    // URL'den today parametresini oku ve bugünkü tarihi filtrele
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const today = params.get('today');
+      if (today === 'true' && tabValue === 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        setFilters((prev) => ({
+          ...prev,
+          startDate: todayStr,
+          endDate: todayStr,
+        }));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (tabValue === 0) {
       loadHistory();
     }
-  }, [filters.userId]);
+  }, [filters.userId, filters.startDate, filters.endDate]);
 
   const loadUsers = async () => {
     try {
