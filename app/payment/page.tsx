@@ -1,12 +1,12 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning } from '@mui/icons-material';
+import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
 import ClientDate from '@/components/ClientDate';
@@ -21,16 +21,21 @@ interface PaymentPackage {
 }
 
 interface CryptoCurrency {
+  id?: string;
   symbol: string;
   name: string;
   decimals: number;
   minAmount: number;
   networkFee: number;
   confirmations: number;
+  walletAddress?: string;
+  isActive?: boolean;
 }
 
 export default function CryptoPaymentPage() {
   const { api, user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const [tabValue, setTabValue] = useState(0);
   const [packages, setPackages] = useState<PaymentPackage[]>([]);
   const [currencies, setCurrencies] = useState<CryptoCurrency[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string>('');
@@ -46,6 +51,14 @@ export default function CryptoPaymentPage() {
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const paymentInfoRef = useRef<HTMLDivElement>(null);
+  
+  // Admin management states
+  const [packageDialogOpen, setPackageDialogOpen] = useState(false);
+  const [cryptoDialogOpen, setCryptoDialogOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<PaymentPackage | null>(null);
+  const [editingCrypto, setEditingCrypto] = useState<CryptoCurrency | null>(null);
+  const [packageForm, setPackageForm] = useState({ name: '', credits: 0, price: 0, currency: 'TRY', bonus: 0, isActive: true });
+  const [cryptoForm, setCryptoForm] = useState({ symbol: '', name: '', decimals: 18, minAmount: 0, networkFee: 0, confirmations: 3, walletAddress: '', isActive: true });
 
   useEffect(() => {
     loadPackages();
@@ -214,6 +227,47 @@ export default function CryptoPaymentPage() {
     }
   };
 
+  // Admin management handlers
+  const handleSavePackage = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      if (editingPackage) {
+        await api.put(`/admin/payment-packages/${editingPackage.id}`, packageForm);
+        setSuccess('Paket başarıyla güncellendi');
+      } else {
+        await api.post('/admin/payment-packages', packageForm);
+        setSuccess('Paket başarıyla oluşturuldu');
+      }
+      setPackageDialogOpen(false);
+      loadPackages();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Paket kaydedilirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveCrypto = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      if (editingCrypto && editingCrypto.id) {
+        await api.put(`/admin/crypto-currencies/${editingCrypto.id}`, cryptoForm);
+        setSuccess('Kripto para birimi başarıyla güncellendi');
+      } else {
+        await api.post('/admin/crypto-currencies', cryptoForm);
+        setSuccess('Kripto para birimi başarıyla oluşturuldu');
+      }
+      setCryptoDialogOpen(false);
+      loadCurrencies();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Kripto para birimi kaydedilirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <ProtectedRoute>
       <Box
@@ -241,31 +295,45 @@ export default function CryptoPaymentPage() {
             mx: { md: 'auto' },
           }}
         >
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              gutterBottom 
-              sx={{ 
-                color: 'primary.main', 
-                mb: 2.5,
-                mt: 1,
-                fontSize: '18px',
-                fontWeight: 600,
-              }}
-            >
-              Kripto Ödeme
-            </Typography>
+            {/* Tabs for Admin/User view */}
+            {(user?.role === 'admin' || user?.role === 'moderator') && (
+              <Tabs 
+                value={tabValue} 
+                onChange={(e, newValue) => setTabValue(newValue)}
+                sx={{ mb: 2 }}
+              >
+                <Tab label="Ödeme" icon={<AccountBalanceWallet />} />
+                <Tab label="Yönetim" icon={<Settings />} />
+              </Tabs>
+            )}
 
-            <Typography 
-              variant="body2" 
-              color="text.secondary" 
-              sx={{ 
-                mb: 2,
-                fontSize: '14px',
-              }}
-            >
-              Kripto para ile SMS kredisi satın alın. Kredi paketlerinden birini seçin ve ödeme yapın.
-            </Typography>
+            {tabValue === 0 ? (
+              <>
+                <Typography 
+                  variant="h4" 
+                  component="h1" 
+                  gutterBottom 
+                  sx={{ 
+                    color: 'primary.main', 
+                    mb: 2.5,
+                    mt: 1,
+                    fontSize: '18px',
+                    fontWeight: 600,
+                  }}
+                >
+                  Kripto Ödeme
+                </Typography>
+
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    mb: 2,
+                    fontSize: '14px',
+                  }}
+                >
+                  Kripto para ile SMS kredisi satın alın. Kredi paketlerinden birini seçin ve ödeme yapın.
+                </Typography>
 
             {error && (
               <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
@@ -880,6 +948,382 @@ export default function CryptoPaymentPage() {
                 )}
               </CardContent>
             </Card>
+              </>
+            ) : null}
+
+            {/* Admin Management Tab */}
+            {tabValue === 1 && isAdmin ? (
+              <Box>
+                <Typography 
+                  variant="h4" 
+                  component="h1" 
+                  gutterBottom 
+                  sx={{ 
+                    color: 'primary.main', 
+                    mb: 2.5,
+                    mt: 1,
+                    fontSize: '18px',
+                    fontWeight: 600,
+                  }}
+                >
+                  Ödeme Yönetimi
+                </Typography>
+
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    mb: 2,
+                    fontSize: '14px',
+                  }}
+                >
+                  Kredi paketlerini ve kripto para birimlerini yönetin.
+                </Typography>
+
+                {/* Payment Packages Management */}
+                <Card sx={{ mb: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  <CardContent sx={{ p: 1.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 500 }}>
+                        Kredi Paketleri
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        startIcon={<Add />}
+                        onClick={() => {
+                          setEditingPackage(null);
+                          setPackageForm({ name: '', credits: 0, price: 0, currency: 'TRY', bonus: 0, isActive: true });
+                          setPackageDialogOpen(true);
+                        }}
+                        sx={{
+                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                          boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                          borderRadius: 2,
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          textTransform: 'none',
+                        }}
+                      >
+                        Yeni Paket
+                      </Button>
+                    </Box>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Paket Adı</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Kredi</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Fiyat</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Bonus</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Durum</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>İşlemler</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {packages.map((pkg: any) => (
+                            <TableRow key={pkg.id}>
+                              <TableCell sx={{ fontSize: '12px' }}>{pkg.name}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>{pkg.credits}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>{pkg.price} {pkg.currency}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>{pkg.bonus || 0}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>
+                                <Chip
+                                  label={pkg.isActive !== false ? 'Aktif' : 'Pasif'}
+                                  color={pkg.isActive !== false ? 'success' : 'default'}
+                                  size="small"
+                                  sx={{ fontSize: '0.65rem', height: 20 }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setEditingPackage(pkg);
+                                    setPackageForm({ name: pkg.name, credits: pkg.credits, price: pkg.price, currency: pkg.currency, bonus: pkg.bonus || 0, isActive: pkg.isActive !== false });
+                                    setPackageDialogOpen(true);
+                                  }}
+                                  sx={{ p: 0.5 }}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={async () => {
+                                    if (confirm('Bu paketi silmek istediğinizden emin misiniz?')) {
+                                      try {
+                                        await api.delete(`/admin/payment-packages/${pkg.id}`);
+                                        loadPackages();
+                                        setSuccess('Paket başarıyla silindi');
+                                      } catch (err: any) {
+                                        setError(err.response?.data?.message || 'Paket silinirken hata oluştu');
+                                      }
+                                    }
+                                  }}
+                                  sx={{ p: 0.5, ml: 1 }}
+                                >
+                                  <Delete fontSize="small" color="error" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Crypto Currencies Management */}
+                <Card sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  <CardContent sx={{ p: 1.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 500 }}>
+                        Kripto Para Birimleri
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        startIcon={<Add />}
+                        onClick={() => {
+                          setEditingCrypto(null);
+                          setCryptoForm({ symbol: '', name: '', decimals: 18, minAmount: 0, networkFee: 0, confirmations: 3, walletAddress: '', isActive: true });
+                          setCryptoDialogOpen(true);
+                        }}
+                        sx={{
+                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                          boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                          borderRadius: 2,
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          textTransform: 'none',
+                        }}
+                      >
+                        Yeni Kripto Para
+                      </Button>
+                    </Box>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Sembol</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Ad</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Cüzdan Adresi</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Min Tutar</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Ağ Ücreti</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Durum</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>İşlemler</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {currencies.map((crypto: any) => (
+                            <TableRow key={crypto.id || crypto.symbol}>
+                              <TableCell sx={{ fontSize: '12px' }}>{crypto.symbol}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>{crypto.name}</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontFamily: 'monospace' }}>
+                                {crypto.walletAddress ? `${crypto.walletAddress.substring(0, 20)}...` : '-'}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>{crypto.minAmount}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>{crypto.networkFee}</TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>
+                                <Chip
+                                  label={crypto.isActive !== false ? 'Aktif' : 'Pasif'}
+                                  color={crypto.isActive !== false ? 'success' : 'default'}
+                                  size="small"
+                                  sx={{ fontSize: '0.65rem', height: 20 }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px' }}>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setEditingCrypto(crypto);
+                                    setCryptoForm({ 
+                                      symbol: crypto.symbol, 
+                                      name: crypto.name, 
+                                      decimals: crypto.decimals || 18, 
+                                      minAmount: crypto.minAmount || 0, 
+                                      networkFee: crypto.networkFee || 0, 
+                                      confirmations: crypto.confirmations || 3, 
+                                      walletAddress: crypto.walletAddress || '', 
+                                      isActive: crypto.isActive !== false 
+                                    });
+                                    setCryptoDialogOpen(true);
+                                  }}
+                                  sx={{ p: 0.5 }}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={async () => {
+                                    if (confirm('Bu kripto para birimini silmek istediğinizden emin misiniz?')) {
+                                      try {
+                                        await api.delete(`/admin/crypto-currencies/${crypto.id || crypto.symbol}`);
+                                        loadCurrencies();
+                                        setSuccess('Kripto para birimi başarıyla silindi');
+                                      } catch (err: any) {
+                                        setError(err.response?.data?.message || 'Kripto para birimi silinirken hata oluştu');
+                                      }
+                                    }
+                                  }}
+                                  sx={{ p: 0.5, ml: 1 }}
+                                >
+                                  <Delete fontSize="small" color="error" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </CardContent>
+                </Card>
+              </Box>
+            ) : null}
+
+            {/* Package Dialog */}
+            <Dialog open={packageDialogOpen} onClose={() => setPackageDialogOpen(false)} maxWidth="sm" fullWidth>
+              <DialogTitle>{editingPackage ? 'Paket Düzenle' : 'Yeni Paket'}</DialogTitle>
+              <DialogContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                  <TextField
+                    label="Paket Adı"
+                    value={packageForm.name}
+                    onChange={(e) => setPackageForm({ ...packageForm, name: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Kredi"
+                    type="number"
+                    value={packageForm.credits}
+                    onChange={(e) => setPackageForm({ ...packageForm, credits: parseInt(e.target.value) || 0 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Fiyat"
+                    type="number"
+                    value={packageForm.price}
+                    onChange={(e) => setPackageForm({ ...packageForm, price: parseFloat(e.target.value) || 0 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Para Birimi"
+                    value={packageForm.currency}
+                    onChange={(e) => setPackageForm({ ...packageForm, currency: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Bonus"
+                    type="number"
+                    value={packageForm.bonus}
+                    onChange={(e) => setPackageForm({ ...packageForm, bonus: parseInt(e.target.value) || 0 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Durum</InputLabel>
+                    <Select
+                      value={packageForm.isActive ? 'active' : 'inactive'}
+                      onChange={(e) => setPackageForm({ ...packageForm, isActive: e.target.value === 'active' })}
+                      label="Durum"
+                    >
+                      <MenuItem value="active">Aktif</MenuItem>
+                      <MenuItem value="inactive">Pasif</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setPackageDialogOpen(false)}>İptal</Button>
+                <Button onClick={handleSavePackage} variant="contained" disabled={loading}>
+                  {loading ? 'Kaydediliyor...' : 'Kaydet'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Crypto Dialog */}
+            <Dialog open={cryptoDialogOpen} onClose={() => setCryptoDialogOpen(false)} maxWidth="sm" fullWidth>
+              <DialogTitle>{editingCrypto ? 'Kripto Para Düzenle' : 'Yeni Kripto Para'}</DialogTitle>
+              <DialogContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                  <TextField
+                    label="Sembol"
+                    value={cryptoForm.symbol}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, symbol: e.target.value.toUpperCase() })}
+                    fullWidth
+                    size="small"
+                    disabled={!!editingCrypto}
+                  />
+                  <TextField
+                    label="Ad"
+                    value={cryptoForm.name}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, name: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Cüzdan Adresi"
+                    value={cryptoForm.walletAddress}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, walletAddress: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Min Tutar"
+                    type="number"
+                    value={cryptoForm.minAmount}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, minAmount: parseFloat(e.target.value) || 0 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Ağ Ücreti"
+                    type="number"
+                    value={cryptoForm.networkFee}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, networkFee: parseFloat(e.target.value) || 0 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Onay Sayısı"
+                    type="number"
+                    value={cryptoForm.confirmations}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, confirmations: parseInt(e.target.value) || 3 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Decimals"
+                    type="number"
+                    value={cryptoForm.decimals}
+                    onChange={(e) => setCryptoForm({ ...cryptoForm, decimals: parseInt(e.target.value) || 18 })}
+                    fullWidth
+                    size="small"
+                  />
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Durum</InputLabel>
+                    <Select
+                      value={cryptoForm.isActive ? 'active' : 'inactive'}
+                      onChange={(e) => setCryptoForm({ ...cryptoForm, isActive: e.target.value === 'active' })}
+                      label="Durum"
+                    >
+                      <MenuItem value="active">Aktif</MenuItem>
+                      <MenuItem value="inactive">Pasif</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setCryptoDialogOpen(false)}>İptal</Button>
+                <Button onClick={handleSaveCrypto} variant="contained" disabled={loading}>
+                  {loading ? 'Kaydediliyor...' : 'Kaydet'}
+                </Button>
+              </DialogActions>
+            </Dialog>
         </Box>
       </Box>
     </ProtectedRoute>

@@ -119,20 +119,22 @@ export default function Navbar() {
               {user?.username || 'Kullanıcı'}
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.75, mt: 0.5, alignItems: 'center' }}>
+              {user?.role !== 'admin' && user?.role !== 'moderator' && (
+                <Chip
+                  label={`${user?.credit || 0} SMS`}
+                  color="success"
+                  size="small"
+                  sx={{ 
+                    height: 22, 
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    px: 0.75,
+                  }}
+                />
+              )}
               <Chip
-                label={`${user?.credit || 0} SMS`}
-                color="success"
-                size="small"
-                sx={{ 
-                  height: 22, 
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  px: 0.75,
-                }}
-              />
-              <Chip
-                label={user?.role === 'admin' ? 'Admin' : 'Premium'}
-                color={user?.role === 'admin' ? 'error' : 'warning'}
+                label={user?.role === 'admin' ? 'Admin' : user?.role === 'moderator' ? 'Moderator' : 'Premium'}
+                color={user?.role === 'admin' ? 'error' : user?.role === 'moderator' ? 'warning' : 'warning'}
                 size="small"
                 sx={{ 
                   height: 18, 
