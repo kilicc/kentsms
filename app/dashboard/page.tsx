@@ -147,9 +147,9 @@ export default function DashboardPage() {
         component="main"
         sx={{
           flexGrow: 1,
-          padding: { xs: 2, sm: 3, md: 3 },
-          paddingLeft: { xs: 2, sm: 3, md: 3 },
-          paddingRight: { xs: 2, sm: 3, md: 3 },
+          padding: { xs: 2, sm: 2, md: 2.5 },
+          paddingLeft: { xs: 2, sm: 2, md: 2.5 },
+          paddingRight: { xs: 2, sm: 2, md: 2.5 },
           marginLeft: { xs: 0, md: '280px' },
           width: { xs: '100%', md: 'calc(100% - 280px)' },
           minHeight: '100vh',
@@ -166,8 +166,8 @@ export default function DashboardPage() {
             gutterBottom 
             sx={{ 
               color: 'primary.main', 
-              mb: 3,
-              fontSize: '34px',
+              mb: 2,
+              fontSize: '24px',
               fontWeight: 600,
             }}
           >
@@ -175,7 +175,7 @@ export default function DashboardPage() {
           </Typography>
 
           {/* Stat Cards Grid - Modern Design */}
-          <Grid container spacing={3} sx={{ mb: 4, width: '100%', margin: 0 }}>
+          <Grid container spacing={2} sx={{ mb: 3, width: '100%', margin: 0 }}>
             {statCards.map((card, index) => {
               const isCreditCard = card.title === 'Mevcut Kredi';
               return (
@@ -194,11 +194,11 @@ export default function DashboardPage() {
                       border: isCreditCard 
                         ? 'none'
                         : `1px solid ${alpha('#e0e0e0', 0.5)}`,
-                      borderRadius: 3,
-                      p: 3,
+                      borderRadius: 2,
+                      p: 2,
                       boxShadow: isCreditCard
-                        ? '0 8px 24px rgba(76, 175, 80, 0.25)'
-                        : '0 4px 12px rgba(0, 0, 0, 0.08)',
+                        ? '0 6px 16px rgba(76, 175, 80, 0.2)'
+                        : '0 2px 8px rgba(0, 0, 0, 0.06)',
                       cursor: 'pointer',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       position: 'relative',
@@ -214,82 +214,82 @@ export default function DashboardPage() {
                         pointerEvents: 'none',
                       } : {},
                       '&:hover': {
-                        transform: 'translateY(-8px) scale(1.02)',
+                        transform: 'translateY(-4px) scale(1.01)',
                         boxShadow: isCreditCard
-                          ? '0 12px 32px rgba(76, 175, 80, 0.35)'
-                          : '0 8px 20px rgba(0, 0, 0, 0.12)',
+                          ? '0 8px 20px rgba(76, 175, 80, 0.3)'
+                          : '0 4px 12px rgba(0, 0, 0, 0.1)',
                         border: isCreditCard 
                           ? 'none'
                           : `1px solid ${alpha('#1976d2', 0.3)}`,
                       },
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        flexDirection: 'column',
-                        height: '100%',
-                        minHeight: '140px',
-                      }}
-                    >
-                      <Box sx={{ width: '100%', mb: 2 }}>
-                        <Typography 
-                          variant="body2" 
-                          sx={{
-                            fontSize: '13px',
-                            mb: 1.5,
-                            fontWeight: 500,
-                            color: isCreditCard ? 'rgba(255,255,255,0.9)' : 'text.secondary',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                          }}
-                        >
-                          {card.title}
-                        </Typography>
-                        <Typography
-                          variant="h3"
-                          sx={{ 
-                            fontWeight: 700, 
-                            fontSize: '42px',
-                            lineHeight: 1,
-                            color: isCreditCard ? '#ffffff' : 'primary.main',
-                            mb: 0.5,
-                          }}
-                        >
-                          {card.value}
-                        </Typography>
-                        <Typography 
-                          variant="body2"
-                          sx={{
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            color: isCreditCard ? 'rgba(255,255,255,0.8)' : 'text.secondary',
-                            mt: 0.5,
-                          }}
-                        >
-                          {card.subtitle}
-                        </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between',
+                          flexDirection: 'column',
+                          height: '100%',
+                          minHeight: '100px',
+                        }}
+                      >
+                        <Box sx={{ width: '100%', mb: 1.5 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{
+                              fontSize: '11px',
+                              mb: 1,
+                              fontWeight: 500,
+                              color: isCreditCard ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {card.title}
+                          </Typography>
+                          <Typography
+                            variant="h3"
+                            sx={{ 
+                              fontWeight: 700, 
+                              fontSize: '28px',
+                              lineHeight: 1.1,
+                              color: isCreditCard ? '#ffffff' : 'primary.main',
+                              mb: 0.5,
+                            }}
+                          >
+                            {card.value}
+                          </Typography>
+                          <Typography 
+                            variant="body2"
+                            sx={{
+                              fontSize: '11px',
+                              fontWeight: 500,
+                              color: isCreditCard ? 'rgba(255,255,255,0.8)' : 'text.secondary',
+                              mt: 0.5,
+                            }}
+                          >
+                            {card.subtitle}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ 
+                          alignSelf: 'flex-end',
+                          mt: 'auto',
+                        }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: isCreditCard ? 'rgba(255,255,255,0.2)' : alpha(card.color, 0.1),
+                              width: 48,
+                              height: 48,
+                              fontSize: '24px',
+                              color: isCreditCard ? '#ffffff' : card.color,
+                              border: isCreditCard ? '2px solid rgba(255,255,255,0.3)' : 'none',
+                            }}
+                          >
+                            {card.icon}
+                          </Avatar>
+                        </Box>
                       </Box>
-                      <Box sx={{ 
-                        alignSelf: 'flex-end',
-                        mt: 'auto',
-                      }}>
-                        <Avatar
-                          sx={{
-                            bgcolor: isCreditCard ? 'rgba(255,255,255,0.2)' : alpha(card.color, 0.1),
-                            width: 64,
-                            height: 64,
-                            fontSize: '32px',
-                            color: isCreditCard ? '#ffffff' : card.color,
-                            border: isCreditCard ? '2px solid rgba(255,255,255,0.3)' : 'none',
-                          }}
-                        >
-                          {card.icon}
-                        </Avatar>
-                      </Box>
-                    </Box>
                   </Card>
                 </Grid>
               );
@@ -299,18 +299,18 @@ export default function DashboardPage() {
           {/* Recent Activity Card - Modern Design */}
           <Card 
             sx={{ 
-              borderRadius: 3, 
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              borderRadius: 2, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
               border: `1px solid ${alpha('#e0e0e0', 0.5)}`,
-              p: 3,
+              p: 2,
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Typography 
                 variant="h5" 
                 sx={{ 
-                  fontSize: '22px',
+                  fontSize: '18px',
                   fontWeight: 600,
                   color: 'primary.main',
                 }}
@@ -332,7 +332,7 @@ export default function DashboardPage() {
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 2,
+                gap: 1.5,
               }}
             >
               {recentActivities.length > 0 ? (
@@ -346,14 +346,14 @@ export default function DashboardPage() {
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 2,
-                        padding: 2,
+                        gap: 1.5,
+                        padding: 1.5,
                         background: isSuccess
                           ? alpha('#4caf50', 0.08)
                           : isFailed
                           ? alpha('#f44336', 0.08)
                           : alpha('#1976d2', 0.08),
-                        borderRadius: 2,
+                        borderRadius: 1.5,
                         border: `1px solid ${isSuccess
                           ? alpha('#4caf50', 0.2)
                           : isFailed
@@ -361,19 +361,19 @@ export default function DashboardPage() {
                           : alpha('#1976d2', 0.2)}`,
                         transition: 'all 0.2s',
                         '&:hover': {
-                          transform: 'translateX(4px)',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                          transform: 'translateX(2px)',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
                         },
                       }}
                     >
                       <Avatar
                         sx={{
                           bgcolor: isSuccess ? '#4caf50' : isFailed ? '#f44336' : 'primary.main',
-                          width: 40,
-                          height: 40,
-                          fontSize: '18px',
+                          width: 36,
+                          height: 36,
+                          fontSize: '16px',
                           fontWeight: 600,
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
                         }}
                       >
                         {activity.status === 'sent' || activity.status === 'delivered'
@@ -387,7 +387,7 @@ export default function DashboardPage() {
                           variant="body1" 
                           sx={{ 
                             fontWeight: 500,
-                            fontSize: '16px',
+                            fontSize: '14px',
                           }}
                         >
                           SMS Gönderildi
@@ -396,7 +396,7 @@ export default function DashboardPage() {
                           variant="caption" 
                           color="text.secondary"
                           sx={{
-                            fontSize: '12px',
+                            fontSize: '11px',
                           }}
                         >
                           {activity.phoneNumber} - <ClientDate date={activity.sentAt} format="relative" />
@@ -411,9 +411,9 @@ export default function DashboardPage() {
                         color={isSuccess ? 'success' : isFailed ? 'error' : 'info'}
                         size="small"
                         sx={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.7rem',
                           fontWeight: 500,
-                          height: 24,
+                          height: 22,
                         }}
                       />
                     </Box>
@@ -425,8 +425,8 @@ export default function DashboardPage() {
                   color="text.secondary" 
                   sx={{ 
                     textAlign: 'center', 
-                    py: 2,
-                    fontSize: '14px',
+                    py: 1.5,
+                    fontSize: '13px',
                   }}
                 >
                   Henüz aktivite yok
