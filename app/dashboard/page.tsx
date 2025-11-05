@@ -175,17 +175,14 @@ export default function DashboardPage() {
           </Typography>
 
           {/* Stat Cards Grid - Modern Design */}
-          <Grid container spacing={3} sx={{ mb: 4, width: '100%' }}>
+          <Grid container spacing={3} sx={{ mb: 4, width: '100%', margin: 0 }}>
             {statCards.map((card, index) => {
               const isCreditCard = card.title === 'Mevcut Kredi';
               return (
                 <Grid 
-                  item
-                  xs={12}
-                  sm={6}
-                  md={3}
+                  size={{ xs: 12, sm: 6, md: 3 }} 
                   key={index}
-                  sx={{ display: 'flex' }}
+                  sx={{ display: 'flex', minWidth: 0 }}
                 >
                   <Card
                     onClick={() => router.push(card.path)}
