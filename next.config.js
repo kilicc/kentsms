@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone', // Docker için standalone output
   experimental: {
     // Next.js 16 özellikleri
   },
