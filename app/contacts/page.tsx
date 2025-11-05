@@ -1,11 +1,11 @@
 'use client';
 
 import { Box, Container, Typography, Paper, Button, Grid, Tabs, Tab, Card, CardContent, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, Chip, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { Add, Edit, Delete, Group, Person } from '@mui/icons-material';
+import { Add, Edit, Delete, Group, Person, Upload, Download } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 
 interface Contact {
@@ -39,6 +39,8 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Contact dialog
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
@@ -157,6 +159,83 @@ export default function ContactsPage() {
     }
   };
 
+  const handleExport = async (format: 'csv' | 'xlsx') => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await fetch(`${window.location.origin}/api/contacts/export?format=${format}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Export hatası');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rehber_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setSuccess(`Rehber ${format.toUpperCase()} formatında export edildi`);
+    } catch (err: any) {
+      setError(err.message || 'Export hatası');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    try {
+      setImporting(true);
+      setError('');
+      
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/contacts/import-file', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        setSuccess(response.data.message || 'Import başarılı');
+        loadContacts();
+      } else {
+        setError(response.data.message || 'Import hatası');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Import hatası');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
+        handleImport(file);
+      } else {
+        setError('Sadece CSV veya Excel dosyaları destekleniyor');
+      }
+    }
+  };
+
   return (
     <ProtectedRoute>
       <Box
@@ -182,7 +261,7 @@ export default function ContactsPage() {
             mx: { md: 'auto' },
           }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
               <Box>
                 <Typography 
                   variant="h4" 
@@ -206,38 +285,112 @@ export default function ContactsPage() {
                   Kişilerinizi ve gruplarınızı yönetin. SMS göndermek için kişileri gruplara ekleyebilirsiniz.
                 </Typography>
               </Box>
-              <Button
-                variant="contained"
-                startIcon={tabValue === 0 ? <Person /> : <Group />}
-                onClick={() => {
-                  if (tabValue === 0) {
-                    setEditingContact(null);
-                    setContactForm({ name: '', phone: '', email: '', notes: '', groupId: '' });
-                    setContactDialogOpen(true);
-                  } else {
-                    setEditingGroup(null);
-                    setGroupForm({ name: '', description: '', color: '#1976d2', icon: 'group' });
-                    setGroupDialogOpen(true);
-                  }
-                }}
-                sx={{
-                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                  boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
-                  borderRadius: 2,
-                  padding: '8px 20px',
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {tabValue === 0 && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.xlsx,.xls"
+                      onChange={handleFileSelect}
+                      aria-label="CSV veya Excel dosyası seç"
+                      style={{ display: 'none' }}
+                    />
+                    <Button
+                      variant="outlined"
+                      startIcon={<Upload />}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={importing}
+                      size="small"
+                      sx={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          backgroundColor: 'primary.light',
+                        },
+                      }}
+                    >
+                      {importing ? 'Import Ediliyor...' : 'Import Et'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Download />}
+                      onClick={() => handleExport('csv')}
+                      disabled={loading}
+                      size="small"
+                      sx={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        borderColor: 'success.main',
+                        color: 'success.main',
+                        '&:hover': {
+                          borderColor: 'success.dark',
+                          backgroundColor: 'success.light',
+                        },
+                      }}
+                    >
+                      CSV Export
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Download />}
+                      onClick={() => handleExport('xlsx')}
+                      disabled={loading}
+                      size="small"
+                      sx={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        borderColor: 'info.main',
+                        color: 'info.main',
+                        '&:hover': {
+                          borderColor: 'info.dark',
+                          backgroundColor: 'info.light',
+                        },
+                      }}
+                    >
+                      Excel Export
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="contained"
+                  startIcon={tabValue === 0 ? <Person /> : <Group />}
+                  onClick={() => {
+                    if (tabValue === 0) {
+                      setEditingContact(null);
+                      setContactForm({ name: '', phone: '', email: '', notes: '', groupId: '' });
+                      setContactDialogOpen(true);
+                    } else {
+                      setEditingGroup(null);
+                      setGroupForm({ name: '', description: '', color: '#1976d2', icon: 'group' });
+                      setGroupDialogOpen(true);
+                    }
+                  }}
+                  sx={{
+                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                    boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                    borderRadius: 2,
+                    padding: '8px 20px',
                     fontSize: '12px',
                     size: 'small',
-                  fontWeight: 500,
-                  textTransform: 'none',
-                  '&:hover': {
-                    boxShadow: '0 8px 25px rgba(25, 118, 210, 0.4)',
-                    transform: 'translateY(-2px)',
-                  },
-                  transition: 'all 0.3s',
-                }}
-              >
-                {tabValue === 0 ? 'Kişi Ekle' : 'Grup Oluştur'}
-              </Button>
+                    fontWeight: 500,
+                    textTransform: 'none',
+                    '&:hover': {
+                      boxShadow: '0 8px 25px rgba(25, 118, 210, 0.4)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  {tabValue === 0 ? 'Kişi Ekle' : 'Grup Oluştur'}
+                </Button>
+              </Box>
             </Box>
 
             {loading && tabValue === 0 && (
