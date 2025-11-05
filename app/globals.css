@@ -39,13 +39,13 @@
   --gradient-button: linear-gradient(135deg, #1976d2 0%, #dc004e 100%);
 }
 
-/* Global CSS - Normal çözünürlük için standart değerler */
+/* Global CSS - %20 küçültülmüş çözünürlük */
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-size: 16px; /* Standart base font size */
+  font-size: 12.8px; /* 16px × 0.8 = 12.8px */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -53,7 +53,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-size: 0.875rem; /* 14px - Normal body font */
+  font-size: 0.7rem; /* 14px × 0.8 = 11.2px ≈ 0.7rem */
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.87);
   background-color: #f5f5f5;
@@ -61,7 +61,7 @@ body {
   font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
-/* Normal başlık boyutları */
+/* %20 küçültülmüş başlık boyutları */
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-weight: 600;
@@ -69,70 +69,70 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 2rem; /* 32px */
+  font-size: 1.6rem; /* 32px × 0.8 = 25.6px ≈ 1.6rem */
 }
 
 h2 {
-  font-size: 1.75rem; /* 28px */
+  font-size: 1.4rem; /* 28px × 0.8 = 22.4px ≈ 1.4rem */
 }
 
 h3 {
-  font-size: 1.5rem; /* 24px */
+  font-size: 1.2rem; /* 24px × 0.8 = 19.2px ≈ 1.2rem */
 }
 
 h4 {
-  font-size: 1.25rem; /* 20px */
+  font-size: 1rem; /* 20px × 0.8 = 16px = 1rem */
 }
 
 h5 {
-  font-size: 1.125rem; /* 18px */
+  font-size: 0.9rem; /* 18px × 0.8 = 14.4px ≈ 0.9rem */
 }
 
 h6 {
-  font-size: 1rem; /* 16px */
+  font-size: 0.8rem; /* 16px × 0.8 = 12.8px ≈ 0.8rem */
 }
 
-/* Normal paragraf ve link boyutları */
+/* %20 küçültülmüş paragraf ve link boyutları */
 p {
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.7rem; /* 14px × 0.8 = 11.2px ≈ 0.7rem */
   line-height: 1.6;
   margin: 0;
 }
 
 a {
-  font-size: 0.875rem; /* 14px */
+  font-size: 0.7rem; /* 14px × 0.8 = 11.2px ≈ 0.7rem */
   text-decoration: none;
 }
 
-/* Normal scrollbar */
+/* %20 küçültülmüş scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 9.6px; /* 12px × 0.8 = 9.6px */
+  height: 9.6px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 6px;
+  border-radius: 4.8px; /* 6px × 0.8 = 4.8px */
 }
 
 ::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 6px;
+  border-radius: 4.8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
-/* Responsive font scaling - sadece mobile için hafif küçültme */
+/* Responsive font scaling - %20 küçültülmüş */
 @media (max-width: 768px) {
   html {
-    font-size: 15px;
+    font-size: 12px; /* 15px × 0.8 = 12px */
   }
 }
 
 @media (max-width: 480px) {
   html {
-    font-size: 14px;
+    font-size: 11.2px; /* 14px × 0.8 = 11.2px */
   }
 }
