@@ -96,7 +96,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         setUser(user);
-        router.push('/dashboard');
+        
+        // Subdomain'e göre yönlendirme
+        const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+        const subdomain = hostname.split('.')[0];
+        
+        // Admin subdomain (panel.finsms.io) -> /admin
+        if (subdomain === 'panel') {
+          router.push('/admin');
+        } 
+        // Platform subdomain (platform.finsms.io) veya localhost -> /dashboard
+        else {
+          router.push('/dashboard');
+        }
       } else {
         throw new Error(response.data.message || 'Giriş başarısız');
       }

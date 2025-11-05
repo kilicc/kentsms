@@ -2,25 +2,38 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 // Ana sayfa - Subdomain'e göre yönlendirme
 export default function Home() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
+    // Auth kontrolü tamamlanana kadar bekle
+    if (loading) {
+      return;
+    }
+
     // Subdomain'i al
     const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
     const subdomain = hostname.split('.')[0];
     
-    // panel.finsms.io -> /admin
-    if (subdomain === 'panel') {
-      router.push('/admin');
-    } 
-    // platform.finsms.io veya localhost -> /dashboard
-    else {
-      router.push('/dashboard');
+    // Eğer kullanıcı giriş yapmışsa
+    if (user) {
+      // panel.finsms.io -> /admin
+      if (subdomain === 'panel') {
+        router.push('/admin');
+      } 
+      // platform.finsms.io veya localhost -> /dashboard
+      else {
+        router.push('/dashboard');
+      }
+    } else {
+      // Kullanıcı giriş yapmamışsa login'e yönlendir
+      router.push('/login');
     }
-  }, [router]);
+  }, [router, user, loading]);
 
   return (
     <div style={{ 

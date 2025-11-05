@@ -10,21 +10,15 @@ export function middleware(request: NextRequest) {
   
   // Admin subdomain (panel.finsms.io)
   if (subdomain === 'panel') {
-    // Eğer root path'e gidiyorsa admin'e yönlendir
-    if (url.pathname === '/') {
-      url.pathname = '/admin';
-      return NextResponse.redirect(url);
-    }
-    
-    // Admin sayfalarına erişim kontrolü
-    // Eğer admin olmayan bir sayfaya gidiyorsa admin'e yönlendir
-    // API route'ları hariç tut
+    // API route'ları ve Next.js internal route'ları hariç tut
     if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
       return NextResponse.next();
     }
     
-    const adminPaths = ['/admin', '/login'];
-    const isAdminPath = adminPaths.some(path => url.pathname.startsWith(path));
+    // Login sayfasına erişim serbest
+    if (url.pathname === '/login' || url.pathname.startsWith('/login')) {
+      return NextResponse.next();
+    }
     
     // Register sayfasına erişimi engelle
     if (url.pathname.startsWith('/register')) {
@@ -32,8 +26,18 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     
+    // Eğer root path'e gidiyorsa login'e yönlendir
+    if (url.pathname === '/') {
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    
+    // Admin sayfalarına erişim kontrolü (login'den sonra)
+    const adminPaths = ['/admin'];
+    const isAdminPath = adminPaths.some(path => url.pathname.startsWith(path));
+    
     if (!isAdminPath) {
-      url.pathname = '/admin';
+      url.pathname = '/login';
       return NextResponse.redirect(url);
     }
   }
@@ -45,10 +49,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
     
-    // Eğer root path'e gidiyorsa dashboard'a yönlendir
-    if (url.pathname === '/') {
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
+    // Login sayfasına erişim serbest
+    if (url.pathname === '/login' || url.pathname.startsWith('/login')) {
+      return NextResponse.next();
     }
     
     // Register sayfasına erişimi engelle
@@ -59,7 +62,13 @@ export function middleware(request: NextRequest) {
     
     // Admin sayfalarına erişimi engelle
     if (url.pathname.startsWith('/admin')) {
-      url.pathname = '/dashboard';
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    
+    // Eğer root path'e gidiyorsa login'e yönlendir
+    if (url.pathname === '/') {
+      url.pathname = '/login';
       return NextResponse.redirect(url);
     }
   }
