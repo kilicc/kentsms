@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Remove duplicate contact IDs (eğer aynı kişi hem grup hem manuel seçilmişse)
+    const uniqueContactIds = [...new Set(contactIds)];
+
     // Get user to check credit using Supabase
     const { data: user, error: userError } = await supabaseServer
       .from('users')
@@ -46,24 +49,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check credit
-    const requiredCredit = contactIds.length;
-    const userCredit = user.credit || 0;
-    if (userCredit < requiredCredit) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Yetersiz kredi. Gerekli: ${requiredCredit}, Mevcut: ${userCredit}`,
-        },
-        { status: 400 }
-      );
-    }
-
     // Get contacts using Supabase
     const { data: contactsData, error: contactsError } = await supabaseServer
       .from('contacts')
       .select('id, phone')
-      .in('id', contactIds)
+      .in('id', uniqueContactIds)
       .eq('user_id', auth.user.userId)
       .eq('is_active', true)
       .eq('is_blocked', false);
@@ -84,6 +74,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Kredi hesaplama: Her bir numara için 1 kredi
+    // Her numara = 1 SMS = 1 kredi (gruptaki numaralar kadar kredi düşülür)
+    const requiredCredit = contacts.length; // Her numara için 1 kredi
+    const userCredit = user.credit || 0;
+    
+    if (userCredit < requiredCredit) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (${contacts.length} numara × 1 kredi), Mevcut: ${userCredit}`,
+        },
+        { status: 400 }
+      );
+    }
+
     const results = {
       sent: 0,
       failed: 0,
@@ -93,12 +98,16 @@ export async function POST(request: NextRequest) {
     };
 
     // Send SMS to each contact
+    // Her bir numara için 1 SMS = 1 kredi
+    // Gruptaki numaralar kadar kredi düşülür
     for (const contact of contacts) {
       try {
+        // Her numara için SMS gönder
         const smsResult = await sendSMS(contact.phone, message);
 
         if (smsResult.success && smsResult.messageId) {
           // Create SMS message record using Supabase
+          // Her SMS kaydı = 1 kredi (cost: 1)
           const { data: smsMessageData, error: createError } = await supabaseServer
             .from('sms_messages')
             .insert({
@@ -108,7 +117,7 @@ export async function POST(request: NextRequest) {
               message,
               sender: sender || null,
               status: 'sent',
-              cost: 1,
+              cost: 1, // Her numara için 1 kredi
               cep_sms_message_id: smsResult.messageId,
               sent_at: new Date().toISOString(),
             })
@@ -134,7 +143,7 @@ export async function POST(request: NextRequest) {
             }
 
             results.sent++;
-            results.totalCost += 1;
+            results.totalCost += 1; // Her numara için 1 kredi
             results.messageIds.push(smsMessageData.id);
           } else {
             results.failed++;
@@ -150,7 +159,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user credit (deduct only successful SMS) using Supabase
+    // Update user credit (deduct only successful SMS)
+    // Her başarılı SMS = 1 numara = 1 kredi
+    // Gruptaki numaralar kadar kredi düşülür
     if (results.sent > 0) {
       const { data: currentUser } = await supabaseServer
         .from('users')
@@ -159,9 +170,11 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (currentUser) {
+        // Her başarılı SMS için 1 kredi düş
+        const newCredit = Math.max(0, (currentUser.credit || 0) - results.sent);
         await supabaseServer
           .from('users')
-          .update({ credit: Math.max(0, (currentUser.credit || 0) - results.sent) })
+          .update({ credit: newCredit })
           .eq('id', auth.user.userId);
       }
     }

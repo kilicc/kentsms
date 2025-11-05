@@ -40,12 +40,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Check credit
+    // Her bir numara için 1 SMS = 1 kredi
     const userCredit = user.credit || 0;
-    if (userCredit < 1) {
+    const requiredCredit = 1; // 1 numara = 1 SMS = 1 kredi
+    
+    if (userCredit < requiredCredit) {
       return NextResponse.json(
         {
           success: false,
-          message: `Yetersiz kredi. Gerekli: 1, Mevcut: ${userCredit}`,
+          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (1 numara × 1 kredi), Mevcut: ${userCredit}`,
         },
         { status: 400 }
       );
@@ -56,6 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (smsResult.success && smsResult.messageId) {
       // Create SMS message record using Supabase
+      // Her SMS kaydı = 1 kredi (cost: 1)
       const { data: smsMessageData, error: createError } = await supabaseServer
         .from('sms_messages')
         .insert({
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
           message,
           sender: serviceName || null,
           status: 'sent',
-          cost: 1,
+          cost: 1, // Her numara için 1 kredi
           cep_sms_message_id: smsResult.messageId,
           sent_at: new Date().toISOString(),
         })
@@ -79,6 +83,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Update user credit using Supabase
+      // Her başarılı SMS için 1 kredi düş
       const { data: updatedUser, error: updateError } = await supabaseServer
         .from('users')
         .update({ credit: Math.max(0, (userCredit || 0) - 1) })
