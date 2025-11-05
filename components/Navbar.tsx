@@ -248,6 +248,53 @@ export default function Navbar() {
         )}
       </List>
 
+      {/* Kalan SMS Gösterimi - Sadece normal kullanıcılar için */}
+      {user?.role !== 'admin' && user?.role !== 'moderator' && (
+        <Box 
+          sx={{ 
+            p: 1.5, 
+            borderTop: '1px solid rgba(0,0,0,0.12)',
+            background: alpha('#4caf50', 0.1),
+            borderBottom: '1px solid rgba(0,0,0,0.12)',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 1,
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: '11px',
+                fontWeight: 500,
+                color: 'text.secondary',
+                mb: 0.5,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              Kalan SMS
+            </Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                fontSize: '32px',
+                fontWeight: 700,
+                color: '#4caf50',
+                lineHeight: 1,
+              }}
+            >
+              {user?.credit || 0}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Logout */}
       <Box sx={{ p: 0.75, borderTop: '1px solid rgba(0,0,0,0.12)' }}>
         <ListItemButton

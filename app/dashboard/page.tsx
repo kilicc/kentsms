@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Avatar, Card, CardContent, alpha, CircularProgress, Chip } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Avatar, Card, CardContent, alpha, CircularProgress, Chip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useEffect, useState } from 'react';
 import ClientDate from '@/components/ClientDate';
 import { gradients } from '@/lib/theme';
@@ -27,6 +27,15 @@ interface RecentActivity {
   message: string;
   status: string;
   sentAt: string;
+}
+
+interface BulkSmsReport {
+  message: string;
+  recipients: number;
+  status: string;
+  sentAt: string;
+  successCount: number;
+  failedCount: number;
 }
 
 export default function DashboardPage() {
@@ -393,6 +402,129 @@ export default function DashboardPage() {
               );
             })}
           </Grid>
+
+          {/* Bulk SMS Reports Card - Modern Design */}
+          {!isAdmin && (
+            <Card 
+              sx={{ 
+                borderRadius: 2, 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                border: `1px solid ${alpha('#e0e0e0', 0.5)}`,
+                p: 1.5,
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                mb: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    color: 'primary.main',
+                  }}
+                >
+                  Toplu SMS Raporları
+                </Typography>
+                <Chip
+                  label={`${bulkSmsReports.length} rapor`}
+                  size="small"
+                  sx={{
+                    bgcolor: alpha('#1976d2', 0.1),
+                    color: 'primary.main',
+                    fontWeight: 500,
+                    fontSize: '0.75rem',
+                  }}
+                />
+              </Box>
+              {bulkSmsReports.length > 0 ? (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Alıcılar</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {bulkSmsReports.map((report, index) => {
+                        const getStatusColor = (status: string) => {
+                          switch (status) {
+                            case 'sent':
+                              return 'success';
+                            case 'failed':
+                              return 'error';
+                            case 'partial':
+                              return 'warning';
+                            default:
+                              return 'default';
+                          }
+                        };
+
+                        const getStatusLabel = (status: string) => {
+                          switch (status) {
+                            case 'sent':
+                              return 'Başarılı';
+                            case 'failed':
+                              return 'Başarısız';
+                            case 'partial':
+                              return 'Kısmen Başarılı';
+                            default:
+                              return status;
+                          }
+                        };
+
+                        return (
+                          <TableRow key={index}>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {report.message}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {report.recipients} kişi
+                              {report.successCount > 0 && report.failedCount > 0 && (
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px', display: 'block' }}>
+                                  {report.successCount} başarılı, {report.failedCount} başarısız
+                                </Typography>
+                              )}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <Chip
+                                label={getStatusLabel(report.status)}
+                                color={getStatusColor(report.status)}
+                                size="small"
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  height: 20,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <ClientDate date={report.sentAt} />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    textAlign: 'center', 
+                    py: 1.5,
+                    fontSize: '13px',
+                  }}
+                >
+                  Henüz toplu SMS raporu yok
+                </Typography>
+              )}
+            </Card>
+          )}
 
           {/* Recent Activity Card - Modern Design */}
           <Card 
