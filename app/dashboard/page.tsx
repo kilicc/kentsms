@@ -49,6 +49,7 @@ export default function DashboardPage() {
     failedSMS: 0,
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [bulkSmsReports, setBulkSmsReports] = useState<BulkSmsReport[]>([]);
 
   useEffect(() => {
     if (user) {
