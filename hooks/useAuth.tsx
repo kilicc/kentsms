@@ -47,13 +47,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return config;
   });
 
-  // Response interceptor - 401 durumunda logout
+  // Response interceptor - 401 hatasını yakala ama logout yapma
+  // Logout işlemi sadece checkAuth içinde yapılmalı
+  // Bu sayede her API çağrısında logout yapılmaz
   api.interceptors.response.use(
     (response) => response,
     (error) => {
+      // 401 hatası alındığında sadece error'u döndür
+      // Logout işlemi checkAuth içinde yapılacak
+      // Bu sayede her sayfa geçişinde logout yapılmaz
       if (error.response?.status === 401) {
-        logout();
-        router.push('/login');
+        // Sadece /auth/profile endpoint'inde user'ı temizle
+        // Diğer endpoint'lerde sadece error'u döndür
+        if (error.config?.url?.includes('/auth/profile')) {
+          // Token geçersiz, user'ı temizle ama logout() çağırma
+          setUser(null);
+        }
+        // Diğer endpoint'lerde sadece error'u döndür
+        // Sayfa içindeki error handling bu hatayı yakalayacak
       }
       return Promise.reject(error);
     }
@@ -69,12 +80,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('accessToken');
         if (token) {
-          const response = await api.get('/auth/profile');
-          if (response.data.success) {
-            setUser(response.data.data.user);
-          } else {
-            // Token geçersiz, logout yap
-            logout();
+          try {
+            const response = await api.get('/auth/profile');
+            if (response.data.success) {
+              setUser(response.data.data.user);
+            } else {
+              // Token geçersiz, logout yap
+              logout();
+            }
+          } catch (profileError: any) {
+            // /auth/profile endpoint'inden 401 hatası geldi
+            if (profileError.response?.status === 401) {
+              // Token geçersiz, logout yap
+              logout();
+            } else {
+              // Network hatası veya başka bir hata, token'ı koru
+              setUser(null);
+            }
           }
         } else {
           // Token yok, user null

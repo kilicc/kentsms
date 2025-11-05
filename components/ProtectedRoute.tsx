@@ -8,12 +8,12 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
+  const [hasCheckedToken, setHasCheckedToken] = useState(false);
 
   useEffect(() => {
-    // Auth kontrolü tamamlandıktan sonra ve user yoksa login'e yönlendir
-    if (!loading && !user && !redirecting) {
-      setRedirecting(true);
+    // Auth kontrolü tamamlandıktan sonra ve user yoksa kontrol et
+    if (!loading && !user && !hasCheckedToken) {
+      setHasCheckedToken(true);
       // Token kontrolü yap
       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
       if (!token) {
@@ -21,9 +21,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         router.push('/login');
       }
       // Token varsa ama user yoksa, checkAuth henüz tamamlanmamış olabilir
-      // Bu durumda bir süre bekle
+      // Bu durumda bir süre bekle (loading gösterilecek)
     }
-  }, [user, loading, router, redirecting]);
+  }, [user, loading, router, hasCheckedToken]);
 
   // Loading durumunda göster
   if (loading) {
