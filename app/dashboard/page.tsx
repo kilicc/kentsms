@@ -128,6 +128,68 @@ export default function DashboardPage() {
           }));
 
           setRecentActivities(messages.slice(0, 5));
+
+          // Toplu SMS raporları için mesajları grupla
+          const groupedMessages = new Map<string, {
+            message: string;
+            recipients: number;
+            successCount: number;
+            failedCount: number;
+            sentAt: string;
+            status: string;
+          }>();
+
+          // Son 20 mesajı al ve grupla (aynı mesaj içeriğine sahip olanları)
+          messages.slice(0, 20).forEach((msg: any) => {
+            const messageText = msg.message || '';
+            const messageKey = messageText.substring(0, 50); // İlk 50 karakteri key olarak kullan
+            
+            if (!groupedMessages.has(messageKey)) {
+              groupedMessages.set(messageKey, {
+                message: messageText,
+                recipients: 0,
+                successCount: 0,
+                failedCount: 0,
+                sentAt: msg.sentAt,
+                status: 'sent',
+              });
+            }
+
+            const group = groupedMessages.get(messageKey)!;
+            group.recipients++;
+            if (msg.status === 'sent' || msg.status === 'delivered') {
+              group.successCount++;
+            } else if (msg.status === 'failed') {
+              group.failedCount++;
+            }
+            // En son gönderim tarihini kullan
+            if (new Date(msg.sentAt) > new Date(group.sentAt)) {
+              group.sentAt = msg.sentAt;
+            }
+            // Durumu belirle
+            if (group.failedCount > 0 && group.successCount > 0) {
+              group.status = 'partial';
+            } else if (group.failedCount > 0) {
+              group.status = 'failed';
+            } else {
+              group.status = 'sent';
+            }
+          });
+
+          // Grupları BulkSmsReport formatına dönüştür
+          const reports: BulkSmsReport[] = Array.from(groupedMessages.values())
+            .map((group) => ({
+              message: group.message.length > 50 ? group.message.substring(0, 50) + '...' : group.message,
+              recipients: group.recipients,
+              status: group.status,
+              sentAt: group.sentAt,
+              successCount: group.successCount,
+              failedCount: group.failedCount,
+            }))
+            .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())
+            .slice(0, 10); // Son 10 rapor
+
+          setBulkSmsReports(reports);
         }
       }
     } catch (error) {
