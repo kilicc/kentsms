@@ -155,8 +155,8 @@ export default function DashboardPage() {
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          maxWidth: '1400px',
-          mx: 'auto',
+          maxWidth: { xs: '100%', md: '1400px' },
+          marginX: { xs: 0, md: 'auto' },
           boxSizing: 'border-box',
         }}
       >
