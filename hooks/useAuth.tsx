@@ -76,12 +76,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function checkAuth() {
     try {
+      console.log('checkAuth çalışıyor...');
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('accessToken');
+        console.log('Token kontrolü:', { tokenExists: !!token, hasUser: !!user });
+        
         if (token) {
           try {
+            console.log('Profile API çağrısı yapılıyor...');
             const response = await api.get('/auth/profile');
+            console.log('Profile API response:', response.data.success);
+            
             if (response.data.success && response.data.data?.user) {
+              console.log('User set ediliyor:', response.data.data.user.username);
               setUser(response.data.data.user);
             } else {
               // Token geçersiz, logout yap
@@ -90,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           } catch (profileError: any) {
             // /auth/profile endpoint'inden hata geldi
-            console.log('Profile error:', profileError.response?.status, profileError.message);
+            console.error('Profile error:', profileError.response?.status, profileError.response?.data, profileError.message);
             if (profileError.response?.status === 401) {
               // Token geçersiz, logout yap
               console.log('401 hatası - logout yapılıyor');
@@ -104,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           // Token yok, user null
+          console.log('Token yok');
           setUser(null);
         }
       }
@@ -121,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setLoading(false);
+      console.log('checkAuth tamamlandı');
     }
   }
 
@@ -131,14 +140,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.data.success) {
         const { user, tokens } = response.data.data;
         
+        console.log('Login başarılı:', { user: user?.username, tokenExists: !!tokens?.accessToken });
+        
         if (typeof window !== 'undefined') {
           localStorage.setItem('accessToken', tokens.accessToken);
           localStorage.setItem('refreshToken', tokens.refreshToken);
+          console.log('Token localStorage\'a kaydedildi');
         }
         
         // User'ı set et - checkAuth'u tekrar çağırma
         setUser(user);
         setLoading(false); // Loading'i false yap
+        setHasCheckedAuth(true); // checkAuth'u tekrar çalıştırma
+        
+        console.log('User set edildi, yönlendiriliyor...');
         
         // Subdomain'e göre yönlendirme
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -146,16 +161,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Admin subdomain (panel.finsms.io) -> /admin
         if (subdomain === 'panel') {
+          console.log('Admin sayfasına yönlendiriliyor...');
           router.push('/admin');
         } 
         // Platform subdomain (platform.finsms.io) veya localhost -> /dashboard
         else {
+          console.log('Dashboard\'a yönlendiriliyor...');
           router.push('/dashboard');
         }
       } else {
         throw new Error(response.data.message || 'Giriş başarısız');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       throw new Error(error.response?.data?.message || 'Giriş başarısız');
     }
   }
