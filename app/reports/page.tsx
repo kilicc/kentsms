@@ -164,7 +164,30 @@ export default function SMSReportsPage() {
             {/* Filters */}
             <Paper sx={{ p: 1.5, mb: 1.5, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               <Grid container spacing={2} alignItems="center">
-                <Grid size={{ xs: 12, md: 3 }}>
+                {isAdmin && (
+                  <Grid size={{ xs: 12, md: 3 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel sx={{ fontSize: '12px' }}>Kullanıcı</InputLabel>
+                      <Select
+                        value={filters.userId}
+                        onChange={(e) => setFilters({ ...filters, userId: e.target.value })}
+                        label="Kullanıcı"
+                        sx={{
+                          fontSize: '12px',
+                          borderRadius: 1.5,
+                        }}
+                      >
+                        <MenuItem value="" sx={{ fontSize: '12px' }}>Tüm Kullanıcılar</MenuItem>
+                        {users.map((u) => (
+                          <MenuItem key={u.id} value={u.id} sx={{ fontSize: '12px' }}>
+                            {u.username} ({u.email})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
+                <Grid size={{ xs: 12, md: isAdmin ? 2.25 : 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -181,7 +204,7 @@ export default function SMSReportsPage() {
                     }}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: isAdmin ? 2.25 : 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -198,7 +221,7 @@ export default function SMSReportsPage() {
                     }}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: isAdmin ? 2.25 : 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -223,7 +246,7 @@ export default function SMSReportsPage() {
                     <option value="failed">Başarısız</option>
                   </TextField>
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }}>
+                <Grid size={{ xs: 12, md: isAdmin ? 2.25 : 3 }}>
                   <Button
                     fullWidth
                     variant="contained"
