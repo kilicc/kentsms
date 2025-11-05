@@ -32,14 +32,12 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     
-    // Admin sayfalarına erişim kontrolü (login'den sonra)
-    const adminPaths = ['/admin'];
-    const isAdminPath = adminPaths.some(path => url.pathname.startsWith(path));
-    
-    if (!isAdminPath) {
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
-    }
+    // Admin subdomain için tüm protected path'lere izin ver
+    // Client-side'da ProtectedRoute kontrolü yapılacak
+    // Middleware sadece public path'leri kontrol eder
+    // Protected path'ler: /admin, /sms, /dashboard, /contacts, /reports, /payment, /profile, vb.
+    // Bu path'ler client-side'da ProtectedRoute ile korunuyor
+    return NextResponse.next();
   }
   
   // Platform subdomain (platform.finsms.io)
@@ -71,6 +69,12 @@ export function middleware(request: NextRequest) {
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
+    
+    // Platform subdomain için tüm protected path'lere izin ver
+    // Client-side'da ProtectedRoute kontrolü yapılacak
+    // Protected path'ler: /dashboard, /sms, /contacts, /reports, /payment, /profile, vb.
+    // Bu path'ler client-side'da ProtectedRoute ile korunuyor
+    return NextResponse.next();
   }
   
   // Localhost geliştirme için (subdomain yoksa)
