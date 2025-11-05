@@ -8,10 +8,12 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
+# Note: --ignore-scripts is used because postinstall (prisma generate) needs prisma/schema.prisma
+# which will be copied later. Prisma generate will be run explicitly in the builder stage.
 COPY package.json package-lock.json* ./
 RUN \
-  if [ -f package-lock.json ]; then npm install --legacy-peer-deps; \
-  else npm install --legacy-peer-deps; \
+  if [ -f package-lock.json ]; then npm install --legacy-peer-deps --ignore-scripts; \
+  else npm install --legacy-peer-deps --ignore-scripts; \
   fi
 
 # Rebuild the source code only when needed
