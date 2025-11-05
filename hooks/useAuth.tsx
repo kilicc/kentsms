@@ -23,7 +23,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+// API URL'ini dinamik olarak belirle (subdomain'e göre)
+// Client-side'da window.location.origin kullan, server-side'da environment variable
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? `${window.location.origin}/api`
+  : (process.env.NEXT_PUBLIC_API_URL || '/api');
 
 // Axios instance
 const api = axios.create({
