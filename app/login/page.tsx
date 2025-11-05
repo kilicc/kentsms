@@ -182,30 +182,6 @@ export default function LoginPage() {
             >
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </Button>
-
-            <Typography 
-              variant="body2" 
-              align="center" 
-              color="text.secondary"
-              sx={{ 
-                fontSize: '11px',
-                mt: 1.5,
-              }}
-            >
-              Hesabınız yok mu?{' '}
-              <Button
-                variant="text"
-                size="small"
-                sx={{ 
-                  textTransform: 'none', 
-                  color: 'primary.main',
-                  fontWeight: 500,
-                }}
-                onClick={() => router.push('/register')}
-              >
-                Kayıt Ol
-              </Button>
-            </Typography>
           </Box>
         </CardContent>
       </Card>

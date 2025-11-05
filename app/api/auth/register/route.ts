@@ -4,6 +4,14 @@ import { hashPassword } from '@/lib/utils/password';
 import { generateToken } from '@/lib/utils/jwt';
 
 export async function POST(request: NextRequest) {
+  // Kayıt özelliği devre dışı bırakıldı
+  return NextResponse.json(
+    { success: false, message: 'Kayıt özelliği devre dışı bırakılmıştır. Lütfen yöneticinizle iletişime geçin.' },
+    { status: 403 }
+  );
+
+  // Eski kod (devre dışı):
+  /*
   try {
     const body = await request.json();
     const { username, email, password } = body;
@@ -94,5 +102,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }
 

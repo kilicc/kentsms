@@ -23,8 +23,14 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
     
-    const adminPaths = ['/admin', '/login', '/register'];
+    const adminPaths = ['/admin', '/login'];
     const isAdminPath = adminPaths.some(path => url.pathname.startsWith(path));
+    
+    // Register sayfasına erişimi engelle
+    if (url.pathname.startsWith('/register')) {
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
     
     if (!isAdminPath) {
       url.pathname = '/admin';
@@ -42,6 +48,12 @@ export function middleware(request: NextRequest) {
     // Eğer root path'e gidiyorsa dashboard'a yönlendir
     if (url.pathname === '/') {
       url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+    
+    // Register sayfasına erişimi engelle
+    if (url.pathname.startsWith('/register')) {
+      url.pathname = '/login';
       return NextResponse.redirect(url);
     }
     

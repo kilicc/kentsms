@@ -17,7 +17,6 @@ interface AuthContextType {
   loading: boolean;
   login: (login: string, password: string) => Promise<void>;
   logout: () => void;
-  register: (username: string, email: string, password: string) => Promise<void>;
   api: typeof api;
 }
 
@@ -106,27 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function register(username: string, email: string, password: string) {
-    try {
-      const response = await api.post('/auth/register', { username, email, password });
-      
-      if (response.data.success) {
-        const { user, tokens } = response.data.data;
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', tokens.accessToken);
-          localStorage.setItem('refreshToken', tokens.refreshToken);
-        }
-        
-        setUser(user);
-        router.push('/dashboard');
-      } else {
-        throw new Error(response.data.message || 'Kayıt başarısız');
-      }
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Kayıt başarısız');
-    }
-  }
 
   function logout() {
     if (typeof window !== 'undefined') {
@@ -138,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, api }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, api }}>
       {children}
     </AuthContext.Provider>
   );
