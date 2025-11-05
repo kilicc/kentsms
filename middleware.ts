@@ -18,20 +18,27 @@ export function middleware(request: NextRequest) {
     
     // Admin sayfalarına erişim kontrolü
     // Eğer admin olmayan bir sayfaya gidiyorsa admin'e yönlendir
+    // API route'ları hariç tut
+    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
+      return NextResponse.next();
+    }
+    
     const adminPaths = ['/admin', '/login', '/register'];
     const isAdminPath = adminPaths.some(path => url.pathname.startsWith(path));
     
-    if (!isAdminPath && url.pathname !== '/api') {
-      // API route'ları hariç tut
-      if (!url.pathname.startsWith('/api')) {
-        url.pathname = '/admin';
-        return NextResponse.redirect(url);
-      }
+    if (!isAdminPath) {
+      url.pathname = '/admin';
+      return NextResponse.redirect(url);
     }
   }
   
   // Platform subdomain (platform.finsms.io)
   if (subdomain === 'platform') {
+    // API route'ları ve Next.js internal route'ları hariç tut
+    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
+      return NextResponse.next();
+    }
+    
     // Eğer root path'e gidiyorsa dashboard'a yönlendir
     if (url.pathname === '/') {
       url.pathname = '/dashboard';
