@@ -597,7 +597,19 @@ export default function DashboardPage() {
                         };
 
                         return (
-                          <TableRow key={index}>
+                          <TableRow 
+                            key={index}
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: alpha('#1976d2', 0.05),
+                              },
+                            }}
+                            onClick={() => {
+                              setSelectedReport(report);
+                              setDetailDialogOpen(true);
+                            }}
+                          >
                             <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                               {report.message}
                             </TableCell>
