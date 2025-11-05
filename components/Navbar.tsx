@@ -118,15 +118,16 @@ export default function Navbar() {
             >
               {user?.username || 'Kullanıcı'}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: 1, mt: 0.5, alignItems: 'center' }}>
               <Chip
                 label={`${user?.credit || 0} SMS`}
                 color="success"
-                size="small"
+                size="medium"
                 sx={{ 
-                  height: 20, 
-                  fontSize: '0.7rem',
-                  fontWeight: 500,
+                  height: 28, 
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  px: 1,
                 }}
               />
               <Chip

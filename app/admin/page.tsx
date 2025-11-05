@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Tabs, Tab, Chip, alpha, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Tabs, Tab, Chip, alpha, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
+import ClientDate from '@/components/ClientDate';
 
 interface User {
   id: string;
@@ -81,6 +82,13 @@ export default function AdminDashboardPage() {
   const [refundsReportLoading, setRefundsReportLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedRefunds, setSelectedRefunds] = useState<string[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
+  const [loadingPaymentRequests, setLoadingPaymentRequests] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
     // Check if user is admin
@@ -94,6 +102,9 @@ export default function AdminDashboardPage() {
       loadUsers();
       if (tabValue === 1) {
         loadRefundsReport();
+      }
+      if (tabValue === 2) {
+        loadPaymentRequests();
       }
     }
   }, [user, tabValue, selectedDate]);
@@ -117,6 +128,79 @@ export default function AdminDashboardPage() {
       }
     } catch (error) {
       console.error('Users load error:', error);
+    }
+  };
+
+  const loadPaymentRequests = async () => {
+    try {
+      setLoadingPaymentRequests(true);
+      const response = await api.get('/admin/payment-requests');
+      if (response.data.success) {
+        setPaymentRequests(response.data.data.requests || []);
+      }
+    } catch (error: any) {
+      console.error('Payment requests load error:', error);
+      setError(error.response?.data?.message || 'Ödeme talepleri yüklenirken hata oluştu');
+    } finally {
+      setLoadingPaymentRequests(false);
+    }
+  };
+
+  const handleApproveRequest = async () => {
+    if (!selectedRequest) return;
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await api.post(`/admin/payment-requests/${selectedRequest.id}/approve`, {
+        adminNotes,
+      });
+
+      if (response.data.success) {
+        setSuccess('Ödeme talebi başarıyla onaylandı');
+        setApproveDialogOpen(false);
+        setSelectedRequest(null);
+        setAdminNotes('');
+        loadPaymentRequests();
+        loadUsers(); // Kullanıcı listesini güncelle
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Ödeme talebi onaylanırken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectRequest = async () => {
+    if (!selectedRequest || !rejectionReason) {
+      setError('Red sebebi gerekli');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await api.post(`/admin/payment-requests/${selectedRequest.id}/reject`, {
+        rejectionReason,
+        adminNotes,
+      });
+
+      if (response.data.success) {
+        setSuccess('Ödeme talebi reddedildi');
+        setRejectDialogOpen(false);
+        setSelectedRequest(null);
+        setRejectionReason('');
+        setAdminNotes('');
+        loadPaymentRequests();
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Ödeme talebi reddedilirken hata oluştu');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -237,25 +321,15 @@ export default function AdminDashboardPage() {
             flexGrow: 1,
             padding: { xs: 2, sm: 3, md: 3 },
             paddingLeft: { xs: 2, sm: 3, md: 2 },
-            paddingRight: { xs: 2, sm: 3, md: 3 },
             marginLeft: { xs: 0, md: '280px' },
             width: { xs: '100%', md: 'calc(100% - 280px)' },
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
+            maxWidth: { md: '1400px' },
+            mx: { md: 'auto' },
           }}
         >
-          <Container 
-            maxWidth={false}
-            disableGutters
-            sx={{ 
-              px: { xs: 2, sm: 3, md: 2 },
-              width: '100%',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
             <Typography 
               variant="h4" 
               component="h1" 
@@ -298,6 +372,7 @@ export default function AdminDashboardPage() {
               <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
                 <Tab icon={<People />} label="Kullanıcılar" />
                 <Tab icon={<Assessment />} label="İade Raporu" />
+                <Tab icon={<AccountBalanceWallet />} label="Ödeme Talepleri" />
               </Tabs>
             </Paper>
 
@@ -621,7 +696,7 @@ export default function AdminDashboardPage() {
                                             sx={{ fontSize: '0.75rem', fontWeight: 500, height: 24 }}
                                           />
                                         </TableCell>
-                                        <TableCell>{new Date(refund.createdAt).toLocaleString('tr-TR')}</TableCell>
+                                        <TableCell><ClientDate date={refund.createdAt} /></TableCell>
                                       </TableRow>
                                     ))}
                                   </TableBody>
@@ -656,7 +731,247 @@ export default function AdminDashboardPage() {
                 )}
               </Box>
             )}
-          </Container>
+
+            {/* Payment Requests Tab */}
+            {tabValue === 2 && (
+              <Box>
+                <Paper sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', p: 3 }}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom
+                    sx={{
+                      fontSize: '20px',
+                      fontWeight: 500,
+                      mb: 3,
+                    }}
+                  >
+                    Ödeme Talepleri
+                  </Typography>
+                  {loadingPaymentRequests ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : paymentRequests.length === 0 ? (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Henüz ödeme talebi bulunmuyor.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Kullanıcı</TableCell>
+                            <TableCell>Tutar</TableCell>
+                            <TableCell>Kredi</TableCell>
+                            <TableCell>Ödeme Yöntemi</TableCell>
+                            <TableCell>Transaction ID</TableCell>
+                            <TableCell>Durum</TableCell>
+                            <TableCell>Tarih</TableCell>
+                            <TableCell>İşlemler</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {paymentRequests.map((request) => {
+                            const getStatusColor = (status: string) => {
+                              switch (status) {
+                                case 'approved':
+                                  return 'success';
+                                case 'rejected':
+                                  return 'error';
+                                case 'pending':
+                                  return 'warning';
+                                default:
+                                  return 'default';
+                              }
+                            };
+
+                            const getStatusLabel = (status: string) => {
+                              switch (status) {
+                                case 'approved':
+                                  return 'Onaylandı';
+                                case 'rejected':
+                                  return 'Reddedildi';
+                                case 'pending':
+                                  return 'Beklemede';
+                                default:
+                                  return status;
+                              }
+                            };
+
+                            return (
+                              <TableRow key={request.id}>
+                                <TableCell>
+                                  {request.user?.username || '-'}
+                                  <br />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {request.user?.email || '-'}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>{Number(request.amount)} {request.currency || 'TRY'}</TableCell>
+                                <TableCell>{request.credits} SMS {request.bonus > 0 ? `+ ${request.bonus} bonus` : ''}</TableCell>
+                                <TableCell>{request.paymentMethod || '-'}</TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                                    {request.transactionId ? request.transactionId.substring(0, 20) + '...' : '-'}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={getStatusLabel(request.status)}
+                                    color={getStatusColor(request.status)}
+                                    size="small"
+                                    sx={{
+                                      fontSize: '0.75rem',
+                                      fontWeight: 500,
+                                      height: 24,
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <ClientDate date={request.createdAt} />
+                                </TableCell>
+                                <TableCell>
+                                  {request.status === 'pending' && (
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                      <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="success"
+                                        onClick={() => {
+                                          setSelectedRequest(request);
+                                          setAdminNotes('');
+                                          setApproveDialogOpen(true);
+                                        }}
+                                        sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+                                      >
+                                        Onayla
+                                      </Button>
+                                      <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="error"
+                                        onClick={() => {
+                                          setSelectedRequest(request);
+                                          setRejectionReason('');
+                                          setAdminNotes('');
+                                          setRejectDialogOpen(true);
+                                        }}
+                                        sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+                                      >
+                                        Reddet
+                                      </Button>
+                                    </Box>
+                                  )}
+                                  {request.status === 'approved' && request.approver && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      {request.approver.username} tarafından onaylandı
+                                    </Typography>
+                                  )}
+                                  {request.status === 'rejected' && (
+                                    <Typography variant="caption" color="error">
+                                      {request.rejectionReason || 'Reddedildi'}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </Paper>
+              </Box>
+            )}
+
+          {/* Approve Payment Request Dialog */}
+          <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Ödeme Talebini Onayla</DialogTitle>
+            <DialogContent>
+              {selectedRequest && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Kullanıcı: <strong>{selectedRequest.user?.username}</strong>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Tutar: <strong>{Number(selectedRequest.amount)} {selectedRequest.currency || 'TRY'}</strong>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Kredi: <strong>{selectedRequest.credits} SMS {selectedRequest.bonus > 0 ? `+ ${selectedRequest.bonus} bonus` : ''}</strong>
+                  </Typography>
+                  {selectedRequest.transactionId && (
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Transaction ID: <strong style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{selectedRequest.transactionId}</strong>
+                    </Typography>
+                  )}
+                </Box>
+              )}
+              <TextField
+                fullWidth
+                label="Admin Notları (Opsiyonel)"
+                multiline
+                rows={3}
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                margin="normal"
+                placeholder="Onay ile ilgili notlarınızı buraya yazabilirsiniz..."
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setApproveDialogOpen(false)}>İptal</Button>
+              <Button onClick={handleApproveRequest} variant="contained" color="success" disabled={loading}>
+                {loading ? 'Onaylanıyor...' : 'Onayla'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Reject Payment Request Dialog */}
+          <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Ödeme Talebini Reddet</DialogTitle>
+            <DialogContent>
+              {selectedRequest && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Kullanıcı: <strong>{selectedRequest.user?.username}</strong>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Tutar: <strong>{Number(selectedRequest.amount)} {selectedRequest.currency || 'TRY'}</strong>
+                  </Typography>
+                </Box>
+              )}
+              <TextField
+                fullWidth
+                label="Red Sebebi *"
+                multiline
+                rows={3}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                margin="normal"
+                required
+                placeholder="Red sebebini açıklayın..."
+                error={!rejectionReason}
+                helperText={!rejectionReason ? 'Red sebebi zorunludur' : ''}
+              />
+              <TextField
+                fullWidth
+                label="Admin Notları (Opsiyonel)"
+                multiline
+                rows={3}
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                margin="normal"
+                placeholder="Red ile ilgili notlarınızı buraya yazabilirsiniz..."
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRejectDialogOpen(false)}>İptal</Button>
+              <Button onClick={handleRejectRequest} variant="contained" color="error" disabled={loading || !rejectionReason}>
+                {loading ? 'Reddediliyor...' : 'Reddet'}
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           {/* Credit Dialog */}
           <Dialog open={creditDialogOpen} onClose={() => setCreditDialogOpen(false)} maxWidth="sm" fullWidth>

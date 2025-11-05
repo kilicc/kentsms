@@ -293,25 +293,15 @@ export default function AdvancedSMSPage() {
             flexGrow: 1,
             padding: { xs: 2, sm: 3, md: 3 },
             paddingLeft: { xs: 2, sm: 3, md: 2 },
-            paddingRight: { xs: 2, sm: 3, md: 3 },
             marginLeft: { xs: 0, md: '280px' },
             width: { xs: '100%', md: 'calc(100% - 280px)' },
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
+            maxWidth: { md: '1400px' },
+            mx: { md: 'auto' },
           }}
         >
-          <Container 
-            maxWidth={false}
-            disableGutters
-            sx={{ 
-              px: { xs: 2, sm: 3, md: 2 },
-              width: '100%',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
             <Typography 
               variant="h4" 
               component="h1" 
@@ -623,8 +613,7 @@ export default function AdvancedSMSPage() {
                 </Card>
               </Grid>
             </Grid>
-          </Container>
-        </Box>
+      </Box>
       </Box>
 
       {/* Template Dialog */}

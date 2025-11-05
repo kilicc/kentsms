@@ -28,12 +28,19 @@ export async function GET(request: NextRequest) {
       userId: auth.user.userId,
     };
 
-    if (startDate) {
-      where.sentAt = { ...where.sentAt, gte: new Date(startDate) };
-    }
-
-    if (endDate) {
-      where.sentAt = { ...where.sentAt, lte: new Date(endDate) };
+    // Date filtering
+    if (startDate || endDate) {
+      where.sentAt = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.sentAt.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.sentAt.lte = end;
+      }
     }
 
     if (status) {

@@ -1,12 +1,13 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { Assessment, FilterList } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
+import ClientDate from '@/components/ClientDate';
 
 interface SmsMessage {
   id: string;
@@ -25,6 +26,7 @@ export default function SMSReportsPage() {
   const { api } = useAuth();
   const [messages, setMessages] = useState<SmsMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -37,6 +39,7 @@ export default function SMSReportsPage() {
 
   const loadHistory = async () => {
     setLoading(true);
+    setError('');
     try {
       const params: any = {};
       if (filters.startDate) params.startDate = filters.startDate;
@@ -45,10 +48,14 @@ export default function SMSReportsPage() {
 
       const response = await api.get('/bulk-sms/history', { params });
       if (response.data.success) {
-        setMessages(response.data.data.messages);
+        setMessages(response.data.data.messages || []);
+      } else {
+        setError(response.data.message || 'Veri yüklenirken bir hata oluştu');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('History load error:', error);
+      setError(error.response?.data?.message || 'SMS geçmişi yüklenirken bir hata oluştu');
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -83,25 +90,15 @@ export default function SMSReportsPage() {
             flexGrow: 1,
             padding: { xs: 2, sm: 3, md: 3 },
             paddingLeft: { xs: 2, sm: 3, md: 2 },
-            paddingRight: { xs: 2, sm: 3, md: 3 },
             marginLeft: { xs: 0, md: '280px' },
             width: { xs: '100%', md: 'calc(100% - 280px)' },
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
+            maxWidth: { md: '1400px' },
+            mx: { md: 'auto' },
           }}
         >
-          <Container 
-            maxWidth={false}
-            disableGutters
-            sx={{ 
-              px: { xs: 2, sm: 3, md: 2 },
-              width: '100%',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
             <Typography 
               variant="h4" 
               component="h1" 
@@ -173,6 +170,9 @@ export default function SMSReportsPage() {
                         borderRadius: 2,
                       },
                     }}
+                    inputProps={{
+                      'aria-label': 'SMS durumu filtresi',
+                    }}
                   >
                     <option value="">Tümü</option>
                     <option value="sent">Gönderildi</option>
@@ -207,50 +207,70 @@ export default function SMSReportsPage() {
               </Grid>
             </Paper>
 
+            {/* Error Message */}
+            {error && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             {/* Messages Table */}
             <Paper sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Kişi</TableCell>
-                      <TableCell>Telefon</TableCell>
-                      <TableCell>Mesaj</TableCell>
-                      <TableCell>Durum</TableCell>
-                      <TableCell>Maliyet</TableCell>
-                      <TableCell>Tarih</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {messages.map((message) => (
-                      <TableRow key={message.id}>
-                        <TableCell>{message.contact?.name || '-'}</TableCell>
-                        <TableCell>{message.phoneNumber}</TableCell>
-                        <TableCell>{message.message.substring(0, 50)}...</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={message.status}
-                            color={getStatusColor(message.status)}
-                            size="small"
-                            sx={{
-                              fontSize: '0.75rem',
-                              fontWeight: 500,
-                              height: 24,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>{Number(message.cost)} kredi</TableCell>
-                        <TableCell>
-                          {new Date(message.sentAt).toLocaleString('tr-TR')}
-                        </TableCell>
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : messages.length === 0 ? (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {filters.startDate || filters.endDate || filters.status
+                      ? 'Filtre kriterlerine uygun SMS bulunamadı'
+                      : 'Henüz SMS gönderilmemiş'}
+                  </Typography>
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Kişi</TableCell>
+                        <TableCell>Telefon</TableCell>
+                        <TableCell>Mesaj</TableCell>
+                        <TableCell>Durum</TableCell>
+                        <TableCell>Maliyet</TableCell>
+                        <TableCell>Tarih</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {messages.map((message) => (
+                        <TableRow key={message.id}>
+                          <TableCell>{message.contact?.name || '-'}</TableCell>
+                          <TableCell>{message.phoneNumber}</TableCell>
+                          <TableCell>{message.message.substring(0, 50)}...</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={message.status}
+                              color={getStatusColor(message.status)}
+                              size="small"
+                              sx={{
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                height: 24,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{Number(message.cost)} kredi</TableCell>
+                          <TableCell>
+                            <ClientDate date={message.sentAt} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </Paper>
-          </Container>
-        </Box>
+      </Box>
       </Box>
     </ProtectedRoute>
   );

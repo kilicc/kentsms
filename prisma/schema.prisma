@@ -23,6 +23,8 @@ model User {
   contactGroups    ContactGroup[]
   contacts         Contact[]
   payments         Payment[]
+  paymentRequests  PaymentRequest[]
+  approvedPaymentRequests PaymentRequest[] @relation("PaymentRequestApprover")
   refunds          Refund[]
   smsMessages      SmsMessage[]
   smsTemplates     SmsTemplate[]
@@ -164,4 +166,31 @@ model Payment {
   @@index([status], map: "idx_payments_status")
   @@index([userId], map: "idx_payments_user_id")
   @@map("payments")
+}
+
+model PaymentRequest {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String?   @map("user_id") @db.Uuid
+  amount        Decimal   @db.Decimal(10, 2)
+  currency      String?   @default("TRY") @db.VarChar(10)
+  paymentMethod String?   @map("payment_method") @db.VarChar(50)
+  credits       Int       @default(0)
+  bonus         Int?      @default(0)
+  description   String?   @db.VarChar(500)
+  transactionId String?   @map("transaction_id") @db.VarChar(255)
+  status        String?   @default("pending") @db.VarChar(20)
+  adminNotes    String?   @map("admin_notes")
+  approvedBy    String?   @map("approved_by") @db.Uuid
+  approvedAt    DateTime? @map("approved_at") @db.Timestamptz(6)
+  rejectedAt    DateTime? @map("rejected_at") @db.Timestamptz(6)
+  rejectionReason String? @map("rejection_reason") @db.VarChar(500)
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  approver      User?     @relation("PaymentRequestApprover", fields: [approvedBy], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([status], map: "idx_payment_requests_status")
+  @@index([userId], map: "idx_payment_requests_user_id")
+  @@index([createdAt], map: "idx_payment_requests_created_at")
+  @@map("payment_requests")
 }

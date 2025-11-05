@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress } from '@mui/material';
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
 import Navbar from '@/components/Navbar';
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
+import ClientDate from '@/components/ClientDate';
 
 interface PaymentPackage {
   id: string;
@@ -42,11 +43,14 @@ export default function CryptoPaymentPage() {
   const [txHash, setTxHash] = useState('');
   const [exactAmount, setExactAmount] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
   const paymentInfoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadPackages();
     loadCurrencies();
+    loadPaymentRequests();
   }, []);
 
   const loadPackages = async () => {
@@ -135,28 +139,61 @@ export default function CryptoPaymentPage() {
     }
   };
 
+  const loadPaymentRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const response = await api.get('/payment-requests');
+      if (response.data.success) {
+        setPaymentRequests(response.data.data.requests || []);
+      }
+    } catch (error) {
+      console.error('Payment requests load error:', error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
   const handleSubmitPayment = async () => {
     if (!txHash || !exactAmount) {
       setError('Lütfen Hash/TXID ve tam tutarı girin');
       return;
     }
 
+    if (!paymentData) {
+      setError('Önce ödeme oluşturmalısınız');
+      return;
+    }
+
     setSubmittingPayment(true);
     setError('');
+    setSuccess('');
 
     try {
-      // TODO: API endpoint'i oluşturulacak - şimdilik sadece başarı mesajı göster
-      // const response = await api.post('/payment/submit', {
-      //   paymentId: paymentData.paymentId,
-      //   txHash,
-      //   exactAmount: parseFloat(exactAmount),
-      // });
+      const packageData = packages.find((p) => p.id === selectedPackage);
+      const response = await api.post('/payment-requests', {
+        amount: paymentData.fiatAmount || packageData?.price || 0,
+        currency: 'TRY',
+        paymentMethod: `crypto-${selectedCurrency}`,
+        credits: paymentData.credits || packageData?.credits || 0,
+        bonus: paymentData.bonus || packageData?.bonus || 0,
+        description: `${selectedCurrency} ile ödeme - Paket: ${packageData?.name || ''}`,
+        transactionId: txHash,
+      });
 
-      setSuccess('Ödeme bilgileri başarıyla gönderildi. Ödemeniz kontrol ediliyor...');
-      setTxHash('');
-      setExactAmount('');
+      if (response.data.success) {
+        setSuccess('Ödeme talebi başarıyla oluşturuldu. Admin onayı bekleniyor...');
+        setTxHash('');
+        setExactAmount('');
+        setPaymentData(null);
+        setSelectedPackage('');
+        setSelectedCurrency('');
+        loadPaymentRequests();
+        
+        // Sayfayı yukarı kaydır
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ödeme bilgileri gönderilirken hata oluştu');
+      setError(err.response?.data?.message || 'Ödeme talebi oluşturulurken hata oluştu');
     } finally {
       setSubmittingPayment(false);
     }
@@ -178,25 +215,15 @@ export default function CryptoPaymentPage() {
             flexGrow: 1,
             padding: { xs: 2, sm: 3, md: 3 },
             paddingLeft: { xs: 2, sm: 3, md: 2 },
-            paddingRight: { xs: 2, sm: 3, md: 3 },
             marginLeft: { xs: 0, md: '280px' },
             width: { xs: '100%', md: 'calc(100% - 280px)' },
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
+            maxWidth: { md: '1400px' },
+            mx: { md: 'auto' },
           }}
         >
-          <Container 
-            maxWidth={false}
-            disableGutters
-            sx={{ 
-              px: { xs: 2, sm: 3, md: 2 },
-              width: '100%',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
             <Typography 
               variant="h4" 
               component="h1" 
@@ -229,7 +256,7 @@ export default function CryptoPaymentPage() {
             )}
 
             {success && (
-              <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+              <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setSuccess('')}>
                 {success}
               </Alert>
             )}
@@ -256,7 +283,7 @@ export default function CryptoPaymentPage() {
                 </Typography>
                 <Grid container spacing={2}>
                   {packages.map((pkg) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pkg.id}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2.4 }} key={pkg.id}>
                           <Card
                             sx={{
                               border: selectedPackage === pkg.id ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.12)',
@@ -266,25 +293,32 @@ export default function CryptoPaymentPage() {
                                 : 'white',
                               borderRadius: 2,
                               boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              },
                             }}
                             onClick={() => handlePackageSelect(pkg.id)}
                           >
-                            <CardContent>
+                            <CardContent sx={{ p: 2 }}>
                               <Typography 
                                 variant="h6"
                                 sx={{
-                                  fontSize: '20px',
+                                  fontSize: '16px',
                                   fontWeight: 500,
+                                  mb: 1,
                                 }}
                               >
                                 {pkg.name}
                               </Typography>
                               <Typography 
-                                variant="h4" 
+                                variant="h5" 
                                 color="primary"
                                 sx={{
-                                  fontSize: '34px',
+                                  fontSize: '24px',
                                   fontWeight: 600,
+                                  mb: 0.5,
                                 }}
                               >
                                 {pkg.credits} SMS
@@ -293,7 +327,8 @@ export default function CryptoPaymentPage() {
                                 variant="body2" 
                                 color="text.secondary"
                                 sx={{
-                                  fontSize: '14px',
+                                  fontSize: '13px',
+                                  mb: 1,
                                 }}
                               >
                                 {pkg.price} {pkg.currency}
@@ -304,10 +339,9 @@ export default function CryptoPaymentPage() {
                                   color="success"
                                   size="small"
                                   sx={{ 
-                                    mt: 1,
-                                    fontSize: '0.75rem',
+                                    fontSize: '0.7rem',
                                     fontWeight: 500,
-                                    height: 24,
+                                    height: 20,
                                   }}
                                 />
                               )}
@@ -694,7 +728,7 @@ export default function CryptoPaymentPage() {
                             Bir sorunla karşılaşırsanız, lütfen <strong>toplusmssmsatalimmi@gmail.com</strong> adresine e-posta gönderin.
                           </Typography>
                           <Typography component="li" variant="body2" sx={{ fontSize: '14px' }}>
-                            Son geçerlilik: <strong>{new Date(paymentData.expiresAt).toLocaleString('tr-TR')}</strong>
+                            Son geçerlilik: <strong><ClientDate date={paymentData.expiresAt} /></strong>
                           </Typography>
                         </Box>
                       </Box>
@@ -703,7 +737,106 @@ export default function CryptoPaymentPage() {
                 </Grid>
               </Grid>
             )}
-          </Container>
+
+            {/* Ödeme Talepleri - En Alta Taşındı */}
+            <Card 
+              sx={{ 
+                borderRadius: 2,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                mt: 3,
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{
+                    fontSize: '20px',
+                    fontWeight: 500,
+                    mb: 3,
+                  }}
+                >
+                  Ödeme Taleplerim
+                </Typography>
+                {loadingRequests ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : paymentRequests.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Henüz ödeme talebi bulunmuyor.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Tutar</TableCell>
+                          <TableCell>Kredi</TableCell>
+                          <TableCell>Ödeme Yöntemi</TableCell>
+                          <TableCell>Durum</TableCell>
+                          <TableCell>Oluşturulma</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {paymentRequests.map((request) => {
+                          const getStatusColor = (status: string) => {
+                            switch (status) {
+                              case 'approved':
+                                return 'success';
+                              case 'rejected':
+                                return 'error';
+                              case 'pending':
+                                return 'warning';
+                              default:
+                                return 'default';
+                            }
+                          };
+
+                          const getStatusLabel = (status: string) => {
+                            switch (status) {
+                              case 'approved':
+                                return 'Onaylandı';
+                              case 'rejected':
+                                return 'Reddedildi';
+                              case 'pending':
+                                return 'Beklemede';
+                              default:
+                                return status;
+                            }
+                          };
+
+                          return (
+                            <TableRow key={request.id}>
+                              <TableCell>{Number(request.amount)} {request.currency || 'TRY'}</TableCell>
+                              <TableCell>{request.credits} SMS {request.bonus > 0 ? `+ ${request.bonus} bonus` : ''}</TableCell>
+                              <TableCell>{request.paymentMethod || '-'}</TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={getStatusLabel(request.status)}
+                                  color={getStatusColor(request.status)}
+                                  size="small"
+                                  sx={{
+                                    fontSize: '0.75rem',
+                                    fontWeight: 500,
+                                    height: 24,
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <ClientDate date={request.createdAt} />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </CardContent>
+            </Card>
         </Box>
       </Box>
     </ProtectedRoute>

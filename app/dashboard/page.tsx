@@ -2,24 +2,7 @@
 
 import { Box, Container, Typography, Paper, Grid, Avatar, Card, CardContent, alpha, CircularProgress, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
-
-function getTimeAgo(date: Date): string {
-  try {
-    return formatDistanceToNow(date, { addSuffix: true, locale: tr });
-  } catch {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'az önce';
-    if (diffMins < 60) return `${diffMins} dakika önce`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} saat önce`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} gün önce`;
-  }
-}
+import ClientDate from '@/components/ClientDate';
 import { gradients } from '@/lib/theme';
 import { AttachMoney, Send, Person, Warning } from '@mui/icons-material';
 import Navbar from '@/components/Navbar';
@@ -166,25 +149,15 @@ export default function DashboardPage() {
           flexGrow: 1,
           padding: { xs: 2, sm: 3, md: 3 },
           paddingLeft: { xs: 2, sm: 3, md: 2 },
-          paddingRight: { xs: 2, sm: 3, md: 3 },
           marginLeft: { xs: 0, md: '280px' },
           width: { xs: '100%', md: 'calc(100% - 280px)' },
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
+          maxWidth: { md: '1400px' },
+          mx: { md: 'auto' },
         }}
       >
-        <Container 
-          maxWidth={false}
-          disableGutters
-          sx={{ 
-            px: { xs: 2, sm: 3, md: 2 },
-            width: '100%',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
           <Typography 
             variant="h4" 
             component="h1" 
@@ -199,113 +172,168 @@ export default function DashboardPage() {
             Dashboard
           </Typography>
 
-          {/* Stat Cards Grid - HTML_TEMPLATES.html'e göre */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            {statCards.map((card, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 3 }} key={index}>
-                <Card
-                  onClick={() => router.push(card.path)}
-                  sx={{
-                    height: '100%',
-                    background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                    border: `1px solid ${alpha('#1976d2', 0.1)}`,
-                    borderRadius: 2,
-                    p: 3,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      border: `1px solid ${alpha('#1976d2', 0.3)}`,
-                    },
-                  }}
+          {/* Stat Cards Grid - Modern Design */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {statCards.map((card, index) => {
+              const isCreditCard = card.title === 'Mevcut Kredi';
+              return (
+                <Grid 
+                  size={{ xs: 12, sm: 6, md: 3 }} 
+                  key={index}
                 >
-                  <Box
+                  <Card
+                    onClick={() => router.push(card.path)}
                     sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      height: '100%',
+                      background: isCreditCard
+                        ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)'
+                        : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                      border: isCreditCard 
+                        ? 'none'
+                        : `1px solid ${alpha('#e0e0e0', 0.5)}`,
+                      borderRadius: 3,
+                      p: 3,
+                      boxShadow: isCreditCard
+                        ? '0 8px 24px rgba(76, 175, 80, 0.25)'
+                        : '0 4px 12px rgba(0, 0, 0, 0.08)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': isCreditCard ? {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%)',
+                        pointerEvents: 'none',
+                      } : {},
+                      '&:hover': {
+                        transform: 'translateY(-8px) scale(1.02)',
+                        boxShadow: isCreditCard
+                          ? '0 12px 32px rgba(76, 175, 80, 0.35)'
+                          : '0 8px 20px rgba(0, 0, 0, 0.12)',
+                        border: isCreditCard 
+                          ? 'none'
+                          : `1px solid ${alpha('#1976d2', 0.3)}`,
+                      },
                     }}
                   >
-                    <Box>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary" 
-                        gutterBottom
-                        sx={{
-                          fontSize: '14px',
-                          mb: 1,
-                        }}
-                      >
-                        {card.title}
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        color="primary"
-                        sx={{ 
-                          fontWeight: 600, 
-                          mb: 0.5,
-                          fontSize: '34px',
-                        }}
-                      >
-                        {card.value}
-                      </Typography>
-                      <Typography 
-                        variant="caption" 
-                        color="text.secondary"
-                        sx={{
-                          fontSize: '12px',
-                        }}
-                      >
-                        {card.subtitle}
-                      </Typography>
-                    </Box>
-                    <Avatar
+                    <Box
                       sx={{
-                        bgcolor: card.color,
-                        width: 56,
-                        height: 56,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        flexDirection: 'column',
+                        height: '100%',
+                        minHeight: '140px',
                       }}
                     >
-                      {card.icon}
-                    </Avatar>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
+                      <Box sx={{ width: '100%', mb: 2 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{
+                            fontSize: '13px',
+                            mb: 1.5,
+                            fontWeight: 500,
+                            color: isCreditCard ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          {card.title}
+                        </Typography>
+                        <Typography
+                          variant="h3"
+                          sx={{ 
+                            fontWeight: 700, 
+                            fontSize: '42px',
+                            lineHeight: 1,
+                            color: isCreditCard ? '#ffffff' : 'primary.main',
+                            mb: 0.5,
+                          }}
+                        >
+                          {card.value}
+                        </Typography>
+                        <Typography 
+                          variant="body2"
+                          sx={{
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            color: isCreditCard ? 'rgba(255,255,255,0.8)' : 'text.secondary',
+                            mt: 0.5,
+                          }}
+                        >
+                          {card.subtitle}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ 
+                        alignSelf: 'flex-end',
+                        mt: 'auto',
+                      }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: isCreditCard ? 'rgba(255,255,255,0.2)' : alpha(card.color, 0.1),
+                            width: 64,
+                            height: 64,
+                            fontSize: '32px',
+                            color: isCreditCard ? '#ffffff' : card.color,
+                            border: isCreditCard ? '2px solid rgba(255,255,255,0.3)' : 'none',
+                          }}
+                        >
+                          {card.icon}
+                        </Avatar>
+                      </Box>
+                    </Box>
+                  </Card>
+                </Grid>
+              );
+            })}
           </Grid>
 
-          {/* Recent Activity Card - HTML_TEMPLATES.html'e göre */}
+          {/* Recent Activity Card - Modern Design */}
           <Card 
             sx={{ 
-              borderRadius: 2, 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              borderRadius: 3, 
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              border: `1px solid ${alpha('#e0e0e0', 0.5)}`,
               p: 3,
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
             }}
           >
-            <Typography 
-              variant="h5" 
-              gutterBottom 
-              sx={{ 
-                mb: 2,
-                fontSize: '24px',
-                fontWeight: 500,
-              }}
-            >
-              Son Aktiviteler
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontSize: '22px',
+                  fontWeight: 600,
+                  color: 'primary.main',
+                }}
+              >
+                Son Aktiviteler
+              </Typography>
+              <Chip
+                label={`${recentActivities.length} aktivite`}
+                size="small"
+                sx={{
+                  bgcolor: alpha('#1976d2', 0.1),
+                  color: 'primary.main',
+                  fontWeight: 500,
+                  fontSize: '0.75rem',
+                }}
+              />
+            </Box>
             <Box
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 1.5,
+                gap: 2,
               }}
             >
               {recentActivities.length > 0 ? (
                 recentActivities.map((activity) => {
-                  const sentDate = new Date(activity.sentAt);
-                  const timeAgo = getTimeAgo(sentDate);
                   const isSuccess = activity.status === 'sent' || activity.status === 'delivered';
                   const isFailed = activity.status === 'failed';
 
@@ -315,22 +343,34 @@ export default function DashboardPage() {
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1.5,
-                        padding: 1.5,
+                        gap: 2,
+                        padding: 2,
                         background: isSuccess
-                          ? alpha('#4caf50', 0.05)
+                          ? alpha('#4caf50', 0.08)
                           : isFailed
-                          ? alpha('#f44336', 0.05)
-                          : alpha('#1976d2', 0.05),
+                          ? alpha('#f44336', 0.08)
+                          : alpha('#1976d2', 0.08),
                         borderRadius: 2,
+                        border: `1px solid ${isSuccess
+                          ? alpha('#4caf50', 0.2)
+                          : isFailed
+                          ? alpha('#f44336', 0.2)
+                          : alpha('#1976d2', 0.2)}`,
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          transform: 'translateX(4px)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        },
                       }}
                     >
                       <Avatar
                         sx={{
                           bgcolor: isSuccess ? '#4caf50' : isFailed ? '#f44336' : 'primary.main',
-                          width: 32,
-                          height: 32,
-                          fontSize: '14px',
+                          width: 40,
+                          height: 40,
+                          fontSize: '18px',
+                          fontWeight: 600,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                         }}
                       >
                         {activity.status === 'sent' || activity.status === 'delivered'
@@ -356,7 +396,7 @@ export default function DashboardPage() {
                             fontSize: '12px',
                           }}
                         >
-                          {activity.phoneNumber} - {timeAgo}
+                          {activity.phoneNumber} - <ClientDate date={activity.sentAt} format="relative" />
                         </Typography>
                       </Box>
                       <Chip
@@ -391,7 +431,6 @@ export default function DashboardPage() {
               )}
             </Box>
           </Card>
-        </Container>
       </Box>
     </Box>
     </ProtectedRoute>

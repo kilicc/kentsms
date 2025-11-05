@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Button, Grid, Tabs, Tab, Card, CardContent, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, Chip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Container, Typography, Paper, Button, Grid, Tabs, Tab, Card, CardContent, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, Chip, FormControl, InputLabel, Select, MenuItem, CircularProgress } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -68,12 +68,20 @@ export default function ContactsPage() {
 
   const loadContacts = async () => {
     try {
+      setLoading(true);
+      setError('');
       const response = await api.get('/contacts');
       if (response.data.success) {
-        setContacts(response.data.data.contacts);
+        setContacts(response.data.data.contacts || []);
+      } else {
+        setError(response.data.message || 'Kişiler yüklenirken bir hata oluştu');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Contacts load error:', error);
+      setError(error.response?.data?.message || 'Kişiler yüklenirken bir hata oluştu');
+      setContacts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,10 +89,11 @@ export default function ContactsPage() {
     try {
       const response = await api.get('/contact-groups');
       if (response.data.success) {
-        setGroups(response.data.data.groups);
+        setGroups(response.data.data.groups || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Groups load error:', error);
+      setGroups([]);
     }
   };
 
@@ -164,25 +173,15 @@ export default function ContactsPage() {
             flexGrow: 1,
             padding: { xs: 2, sm: 3, md: 3 },
             paddingLeft: { xs: 2, sm: 3, md: 2 },
-            paddingRight: { xs: 2, sm: 3, md: 3 },
             marginLeft: { xs: 0, md: '280px' },
             width: { xs: '100%', md: 'calc(100% - 280px)' },
             minHeight: '100vh',
             display: 'flex',
             flexDirection: 'column',
+            maxWidth: { md: '1400px' },
+            mx: { md: 'auto' },
           }}
         >
-          <Container 
-            maxWidth={false}
-            disableGutters
-            sx={{ 
-              px: { xs: 2, sm: 3, md: 2 },
-              width: '100%',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Box>
                 <Typography 
@@ -239,7 +238,13 @@ export default function ContactsPage() {
               </Button>
             </Box>
 
-            {contacts.length === 0 && tabValue === 0 && (
+            {loading && tabValue === 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            )}
+
+            {!loading && contacts.length === 0 && tabValue === 0 && (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px', mb: 2 }}>
                   Henüz kişi eklenmemiş. Yeni kişi eklemek için "Kişi Ekle" butonuna tıklayın.
@@ -247,7 +252,7 @@ export default function ContactsPage() {
               </Box>
             )}
 
-            {groups.length === 0 && tabValue === 1 && (
+            {!loading && groups.length === 0 && tabValue === 1 && (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px', mb: 2 }}>
                   Henüz grup oluşturulmamış. Yeni grup oluşturmak için "Grup Oluştur" butonuna tıklayın.
@@ -451,7 +456,6 @@ export default function ContactsPage() {
                 </Box>
               )}
             </Paper>
-          </Container>
 
           {/* Contact Dialog */}
           <Dialog open={contactDialogOpen} onClose={() => setContactDialogOpen(false)} maxWidth="sm" fullWidth>
