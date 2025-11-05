@@ -39,13 +39,13 @@
   --gradient-button: linear-gradient(135deg, #1976d2 0%, #dc004e 100%);
 }
 
-/* Global CSS - %20 küçültülmüş çözünürlük */
+/* Global CSS - %15 büyütülmüş çözünürlük */
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-size: 12.8px; /* 16px × 0.8 = 12.8px */
+  font-size: 14.72px; /* 12.8px × 1.15 = 14.72px */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -53,7 +53,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-size: 0.7rem; /* 14px × 0.8 = 11.2px ≈ 0.7rem */
+  font-size: 0.805rem; /* 0.7rem × 1.15 = 0.805rem (≈12.88px) */
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.87);
   background-color: #f5f5f5;
@@ -61,7 +61,7 @@ body {
   font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
-/* %20 küçültülmüş başlık boyutları */
+/* %15 büyütülmüş başlık boyutları */
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-weight: 600;
@@ -69,70 +69,70 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 1.6rem; /* 32px × 0.8 = 25.6px ≈ 1.6rem */
+  font-size: 1.84rem; /* 1.6rem × 1.15 = 1.84rem (≈29.44px) */
 }
 
 h2 {
-  font-size: 1.4rem; /* 28px × 0.8 = 22.4px ≈ 1.4rem */
+  font-size: 1.61rem; /* 1.4rem × 1.15 = 1.61rem (≈25.76px) */
 }
 
 h3 {
-  font-size: 1.2rem; /* 24px × 0.8 = 19.2px ≈ 1.2rem */
+  font-size: 1.38rem; /* 1.2rem × 1.15 = 1.38rem (≈22.08px) */
 }
 
 h4 {
-  font-size: 1rem; /* 20px × 0.8 = 16px = 1rem */
+  font-size: 1.15rem; /* 1rem × 1.15 = 1.15rem (≈18.4px) */
 }
 
 h5 {
-  font-size: 0.9rem; /* 18px × 0.8 = 14.4px ≈ 0.9rem */
+  font-size: 1.035rem; /* 0.9rem × 1.15 = 1.035rem (≈16.56px) */
 }
 
 h6 {
-  font-size: 0.8rem; /* 16px × 0.8 = 12.8px ≈ 0.8rem */
+  font-size: 0.92rem; /* 0.8rem × 1.15 = 0.92rem (≈14.72px) */
 }
 
-/* %20 küçültülmüş paragraf ve link boyutları */
+/* %15 büyütülmüş paragraf ve link boyutları */
 p {
-  font-size: 0.7rem; /* 14px × 0.8 = 11.2px ≈ 0.7rem */
+  font-size: 0.805rem; /* 0.7rem × 1.15 = 0.805rem */
   line-height: 1.6;
   margin: 0;
 }
 
 a {
-  font-size: 0.7rem; /* 14px × 0.8 = 11.2px ≈ 0.7rem */
+  font-size: 0.805rem; /* 0.7rem × 1.15 = 0.805rem */
   text-decoration: none;
 }
 
-/* %20 küçültülmüş scrollbar */
+/* %15 büyütülmüş scrollbar */
 ::-webkit-scrollbar {
-  width: 9.6px; /* 12px × 0.8 = 9.6px */
-  height: 9.6px;
+  width: 11.04px; /* 9.6px × 1.15 = 11.04px */
+  height: 11.04px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 4.8px; /* 6px × 0.8 = 4.8px */
+  border-radius: 5.52px; /* 4.8px × 1.15 = 5.52px */
 }
 
 ::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 4.8px;
+  border-radius: 5.52px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
-/* Responsive font scaling - %20 küçültülmüş */
+/* Responsive font scaling - %15 büyütülmüş */
 @media (max-width: 768px) {
   html {
-    font-size: 12px; /* 15px × 0.8 = 12px */
+    font-size: 13.8px; /* 12px × 1.15 = 13.8px */
   }
 }
 
 @media (max-width: 480px) {
   html {
-    font-size: 11.2px; /* 14px × 0.8 = 11.2px */
+    font-size: 12.88px; /* 11.2px × 1.15 = 12.88px */
   }
 }

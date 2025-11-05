@@ -1,6 +1,6 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
-// MUI Theme - %20 küçültülmüş çözünürlük
+// MUI Theme - %15 büyütülmüş çözünürlük
 export const theme = createTheme({
   palette: {
     mode: 'light',
@@ -46,50 +46,50 @@ export const theme = createTheme({
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
       fontWeight: 600,
-      fontSize: '1.6rem', // 32px × 0.8 = 25.6px
+      fontSize: '1.84rem', // 1.6rem × 1.15 = 1.84rem (≈29.44px)
     },
     h2: {
       fontWeight: 600,
-      fontSize: '1.4rem', // 28px × 0.8 = 22.4px
+      fontSize: '1.61rem', // 1.4rem × 1.15 = 1.61rem (≈25.76px)
     },
     h3: {
       fontWeight: 600,
-      fontSize: '1.2rem', // 24px × 0.8 = 19.2px
+      fontSize: '1.38rem', // 1.2rem × 1.15 = 1.38rem (≈22.08px)
     },
     h4: {
       fontWeight: 600,
-      fontSize: '1rem', // 20px × 0.8 = 16px
+      fontSize: '1.15rem', // 1rem × 1.15 = 1.15rem (≈18.4px)
     },
     h5: {
       fontWeight: 500,
-      fontSize: '0.9rem', // 18px × 0.8 = 14.4px
+      fontSize: '1.035rem', // 0.9rem × 1.15 = 1.035rem (≈16.56px)
     },
     h6: {
       fontWeight: 500,
-      fontSize: '0.8rem', // 16px × 0.8 = 12.8px
+      fontSize: '0.92rem', // 0.8rem × 1.15 = 0.92rem (≈14.72px)
     },
     body1: {
-      fontSize: '0.7rem', // 14px × 0.8 = 11.2px
+      fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem (≈12.88px)
       fontWeight: 400,
     },
     body2: {
-      fontSize: '0.6rem', // 12px × 0.8 = 9.6px
+      fontSize: '0.69rem', // 0.6rem × 1.15 = 0.69rem (≈11.04px)
       fontWeight: 400,
     },
     caption: {
-      fontSize: '0.6rem', // 12px × 0.8 = 9.6px
+      fontSize: '0.69rem', // 0.6rem × 1.15 = 0.69rem (≈11.04px)
       fontWeight: 400,
     },
     subtitle1: {
-      fontSize: '0.7rem', // 14px × 0.8 = 11.2px
+      fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
       fontWeight: 500,
     },
     subtitle2: {
-      fontSize: '0.6rem', // 12px × 0.8 = 9.6px
+      fontSize: '0.69rem', // 0.6rem × 1.15 = 0.69rem
       fontWeight: 500,
     },
     button: {
-      fontSize: '0.7rem', // 14px × 0.8 = 11.2px
+      fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
       fontWeight: 500,
       textTransform: 'none',
     },
@@ -99,33 +99,33 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: 'none',
-          borderRadius: 5.12,
-          padding: '5.12px 10.24px',
+          borderRadius: 5.888, // 5.12px × 1.15 = 5.888px
+          padding: '5.888px 11.776px', // 5.12px 10.24px × 1.15
           fontWeight: 500,
-          fontSize: '0.625rem', // 0.56rem → 0.625rem (8.96px → 10px) - biraz büyütüldü
-          minHeight: '22px', // 23.04px → 22px - biraz azaltıldı
+          fontSize: '0.71875rem', // 0.625rem × 1.15 = 0.71875rem (≈11.5px)
+          minHeight: '25.3px', // 22px × 1.15 = 25.3px
         },
         sizeSmall: {
-          padding: '3.84px 7.68px',
-          fontSize: '0.575rem', // 0.52rem → 0.575rem (8.32px → 9.2px) - biraz büyütüldü
-          minHeight: '20px', // 20.48px → 20px - biraz azaltıldı
+          padding: '4.416px 8.832px', // 3.84px 7.68px × 1.15
+          fontSize: '0.66125rem', // 0.575rem × 1.15 = 0.66125rem (≈10.58px)
+          minHeight: '23px', // 20px × 1.15 = 23px
         },
         sizeMedium: {
-          padding: '5.12px 10.24px',
-          fontSize: '0.625rem', // 0.56rem → 0.625rem - biraz büyütüldü
-          minHeight: '22px', // 23.04px → 22px - biraz azaltıldı
+          padding: '5.888px 11.776px', // 5.12px 10.24px × 1.15
+          fontSize: '0.71875rem', // 0.625rem × 1.15 = 0.71875rem
+          minHeight: '25.3px', // 22px × 1.15 = 25.3px
         },
         sizeLarge: {
-          padding: '6.4px 12.8px',
-          fontSize: '0.65rem', // 0.6rem → 0.65rem (9.6px → 10.4px) - biraz büyütüldü
-          minHeight: '26px', // 26.88px → 26px - biraz azaltıldı
+          padding: '7.36px 14.72px', // 6.4px 12.8px × 1.15
+          fontSize: '0.7475rem', // 0.65rem × 1.15 = 0.7475rem (≈11.96px)
+          minHeight: '29.9px', // 26px × 1.15 = 29.9px
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 9.6, // 12px × 0.8
+          borderRadius: 11.04, // 9.6px × 1.15 = 11.04px
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         },
       },
@@ -133,9 +133,9 @@ export const theme = createTheme({
     MuiCardContent: {
       styleOverrides: {
         root: {
-          padding: '12.8px', // 16px × 0.8
+          padding: '14.72px', // 12.8px × 1.15 = 14.72px
           '&:last-child': {
-            paddingBottom: '12.8px',
+            paddingBottom: '14.72px',
           },
         },
       },
@@ -144,15 +144,15 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 6.4, // 8px × 0.8
-            fontSize: '0.7rem', // 14px × 0.8
+            borderRadius: 7.36, // 6.4px × 1.15 = 7.36px
+            fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           },
           '& .MuiInputLabel-root': {
-            fontSize: '0.7rem', // 14px × 0.8
+            fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           },
           '& .MuiInputBase-input': {
-            fontSize: '0.7rem', // 14px × 0.8
-            padding: '9.6px 11.2px', // 12px 14px × 0.8
+            fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+            padding: '11.04px 12.88px', // 9.6px 11.2px × 1.15
           },
         },
       },
@@ -161,13 +161,13 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiTableCell-root': {
-            fontSize: '0.7rem', // 14px × 0.8
-            padding: '9.6px 12.8px', // 12px 16px × 0.8
+            fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+            padding: '11.04px 14.72px', // 9.6px 12.8px × 1.15
           },
           '& .MuiTableCell-head': {
             fontWeight: 600,
-            fontSize: '0.7rem', // 14px × 0.8
-            padding: '11.2px 12.8px', // 14px 16px × 0.8
+            fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+            padding: '12.88px 14.72px', // 11.2px 12.8px × 1.15
           },
         },
       },
@@ -175,87 +175,87 @@ export const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          fontSize: '0.7rem', // 14px × 0.8
-          padding: '9.6px 12.8px', // 12px 16px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+          padding: '11.04px 14.72px', // 9.6px 12.8px × 1.15
         },
         head: {
           fontWeight: 600,
-          fontSize: '0.7rem', // 14px × 0.8
-          padding: '11.2px 12.8px', // 14px 16px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+          padding: '12.88px 14.72px', // 11.2px 12.8px × 1.15
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          fontSize: '0.65rem', // 13px × 0.8 ≈ 10.4px
-          height: '22.4px', // 28px × 0.8
+          fontSize: '0.7475rem', // 0.65rem × 1.15 = 0.7475rem (≈11.96px)
+          height: '25.76px', // 22.4px × 1.15 = 25.76px
           fontWeight: 500,
         },
         sizeSmall: {
-          fontSize: '0.6rem', // 12px × 0.8 = 9.6px
-          height: '19.2px', // 24px × 0.8
+          fontSize: '0.69rem', // 0.6rem × 1.15 = 0.69rem (≈11.04px)
+          height: '22.08px', // 19.2px × 1.15 = 22.08px
         },
         sizeMedium: {
-          fontSize: '0.65rem', // 13px × 0.8
-          height: '22.4px', // 28px × 0.8
+          fontSize: '0.7475rem', // 0.65rem × 1.15 = 0.7475rem
+          height: '25.76px', // 22.4px × 1.15 = 25.76px
         },
       },
     },
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: 9.6, // 12px × 0.8
+          borderRadius: 11.04, // 9.6px × 1.15 = 11.04px
         },
       },
     },
     MuiDialogTitle: {
       styleOverrides: {
         root: {
-          fontSize: '1rem', // 20px × 0.8 = 16px
+          fontSize: '1.15rem', // 1rem × 1.15 = 1.15rem (≈18.4px)
           fontWeight: 600,
-          padding: '12.8px 19.2px', // 16px 24px × 0.8
-          paddingBottom: '9.6px', // 12px × 0.8
+          padding: '14.72px 22.08px', // 12.8px 19.2px × 1.15
+          paddingBottom: '11.04px', // 9.6px × 1.15 = 11.04px
         },
       },
     },
     MuiDialogContent: {
       styleOverrides: {
         root: {
-          padding: '12.8px 19.2px', // 16px 24px × 0.8
-          fontSize: '0.7rem', // 14px × 0.8
+          padding: '14.72px 22.08px', // 12.8px 19.2px × 1.15
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
         },
       },
     },
     MuiDialogActions: {
       styleOverrides: {
         root: {
-          padding: '9.6px 19.2px 12.8px', // 12px 24px 16px × 0.8
+          padding: '11.04px 22.08px 14.72px', // 9.6px 19.2px 12.8px × 1.15
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 9.6, // 12px × 0.8
+          borderRadius: 11.04, // 9.6px × 1.15 = 11.04px
         },
       },
     },
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 6.4, // 8px × 0.8
-          padding: '6.4px 12.8px', // 8px 16px × 0.8
-          minHeight: '38.4px', // 48px × 0.8
+          borderRadius: 7.36, // 6.4px × 1.15 = 7.36px
+          padding: '7.36px 14.72px', // 6.4px 12.8px × 1.15
+          minHeight: '44.16px', // 38.4px × 1.15 = 44.16px
           '& .MuiListItemIcon-root': {
-            minWidth: '32px', // 40px × 0.8
-            fontSize: '19.2px', // 24px × 0.8
+            minWidth: '36.8px', // 32px × 1.15 = 36.8px
+            fontSize: '22.08px', // 19.2px × 1.15 = 22.08px
           },
           '& .MuiListItemText-primary': {
-            fontSize: '0.7rem', // 14px × 0.8
+            fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           },
           '& .MuiListItemText-secondary': {
-            fontSize: '0.6rem', // 12px × 0.8
+            fontSize: '0.69rem', // 0.6rem × 1.15 = 0.69rem
           },
         },
       },
@@ -263,74 +263,74 @@ export const theme = createTheme({
     MuiListItemIcon: {
       styleOverrides: {
         root: {
-          minWidth: '32px', // 40px × 0.8
-          fontSize: '19.2px', // 24px × 0.8
+          minWidth: '36.8px', // 32px × 1.15 = 36.8px
+          fontSize: '22.08px', // 19.2px × 1.15 = 22.08px
         },
       },
     },
     MuiListItemText: {
       styleOverrides: {
         primary: {
-          fontSize: '0.7rem', // 14px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
         },
         secondary: {
-          fontSize: '0.6rem', // 12px × 0.8
+          fontSize: '0.69rem', // 0.6rem × 1.15 = 0.69rem
         },
       },
     },
     MuiAvatar: {
       styleOverrides: {
         root: {
-          width: '32px', // 40px × 0.8
-          height: '32px',
-          fontSize: '0.8rem', // 16px × 0.8 = 12.8px
+          width: '36.8px', // 32px × 1.15 = 36.8px
+          height: '36.8px',
+          fontSize: '0.92rem', // 0.8rem × 1.15 = 0.92rem (≈14.72px)
         },
       },
     },
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          fontSize: '0.7rem', // 14px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
         },
       },
     },
     MuiSelect: {
       styleOverrides: {
         root: {
-          fontSize: '0.7rem', // 14px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
         },
       },
     },
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          fontSize: '0.7rem', // 14px × 0.8
-          padding: '6.4px 12.8px', // 8px 16px × 0.8
-          minHeight: '32px', // 40px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+          padding: '7.36px 14.72px', // 6.4px 12.8px × 1.15
+          minHeight: '36.8px', // 32px × 1.15 = 36.8px
         },
       },
     },
     MuiFormControlLabel: {
       styleOverrides: {
         label: {
-          fontSize: '0.7rem', // 14px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
         },
       },
     },
     MuiTabs: {
       styleOverrides: {
         root: {
-          minHeight: '38.4px', // 48px × 0.8
+          minHeight: '44.16px', // 38.4px × 1.15 = 44.16px
         },
       },
     },
     MuiTab: {
       styleOverrides: {
         root: {
-          fontSize: '0.7rem', // 14px × 0.8
+          fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           fontWeight: 500,
-          padding: '9.6px 12.8px', // 12px 16px × 0.8
-          minHeight: '38.4px', // 48px × 0.8
+          padding: '11.04px 14.72px', // 9.6px 12.8px × 1.15
+          minHeight: '44.16px', // 38.4px × 1.15 = 44.16px
           textTransform: 'none',
         },
       },
@@ -338,15 +338,15 @@ export const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          padding: '6.4px', // 8px × 0.8
+          padding: '7.36px', // 6.4px × 1.15 = 7.36px
           '& svg': {
-            fontSize: '19.2px', // 24px × 0.8
+            fontSize: '22.08px', // 19.2px × 1.15 = 22.08px
           },
         },
         sizeSmall: {
-          padding: '4.8px', // 6px × 0.8
+          padding: '5.52px', // 4.8px × 1.15 = 5.52px
           '& svg': {
-            fontSize: '16px', // 20px × 0.8
+            fontSize: '18.4px', // 16px × 1.15 = 18.4px
           },
         },
       },
@@ -354,15 +354,15 @@ export const theme = createTheme({
     MuiCircularProgress: {
       styleOverrides: {
         root: {
-          width: '32px', // 40px × 0.8
-          height: '32px',
+          width: '36.8px', // 32px × 1.15 = 36.8px
+          height: '36.8px',
         },
       },
     },
     MuiDivider: {
       styleOverrides: {
         root: {
-          margin: '12.8px 0', // 16px × 0.8
+          margin: '14.72px 0', // 12.8px × 1.15 = 14.72px
         },
       },
     },
@@ -370,9 +370,9 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           '&.MuiGrid-container': {
-            margin: '0 -9.6px', // -12px × 0.8
+            margin: '0 -11.04px', // -9.6px × 1.15 = -11.04px
             '& > .MuiGrid-item': {
-              padding: '0 9.6px', // 12px × 0.8
+              padding: '0 11.04px', // 9.6px × 1.15 = 11.04px
             },
           },
         },
