@@ -72,12 +72,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const response = await api.get('/auth/profile');
           if (response.data.success) {
             setUser(response.data.data.user);
+          } else {
+            // Token geçersiz, logout yap
+            logout();
           }
+        } else {
+          // Token yok, user null
+          setUser(null);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth check error:', error);
-      logout();
+      // Sadece 401 (Unauthorized) hatası için logout yap
+      // Diğer hatalar (network, timeout) için token'ı koru
+      if (error.response?.status === 401) {
+        // Token geçersiz, logout yap
+        logout();
+      } else {
+        // Network hatası veya başka bir hata, token'ı koru
+        // Sadece loading'i false yap
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
