@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 import { sendSMS } from '@/lib/utils/cepSMSProvider';
 
@@ -25,13 +25,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user to check credit
-    const user = await prisma.user.findUnique({
-      where: { id: auth.user.userId },
-      select: { credit: true },
-    });
+    // Get user to check credit using Supabase
+    const { data: user, error: userError } = await supabaseServer
+      .from('users')
+      .select('credit')
+      .eq('id', auth.user.userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { success: false, message: 'Kullanıcı bulunamadı' },
         { status: 404 }
@@ -54,41 +55,49 @@ export async function POST(request: NextRequest) {
     const smsResult = await sendSMS(phone, message);
 
     if (smsResult.success && smsResult.messageId) {
-      // Create SMS message record
-      const smsMessage = await prisma.smsMessage.create({
-        data: {
-          userId: auth.user.userId,
-          phoneNumber: phone,
+      // Create SMS message record using Supabase
+      const { data: smsMessageData, error: createError } = await supabaseServer
+        .from('sms_messages')
+        .insert({
+          user_id: auth.user.userId,
+          phone_number: phone,
           message,
           sender: serviceName || null,
           status: 'sent',
           cost: 1,
-          cepSmsMessageId: smsResult.messageId,
-          sentAt: new Date(),
-        },
-      });
+          cep_sms_message_id: smsResult.messageId,
+          sent_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-      // Update user credit
-      await prisma.user.update({
-        where: { id: auth.user.userId },
-        data: {
-          credit: {
-            decrement: 1,
-          },
-        },
-      });
+      if (createError || !smsMessageData) {
+        return NextResponse.json(
+          { success: false, message: createError?.message || 'SMS kaydı oluşturulamadı' },
+          { status: 500 }
+        );
+      }
 
-      // Get updated user credit
-      const updatedUser = await prisma.user.findUnique({
-        where: { id: auth.user.userId },
-        select: { credit: true },
-      });
+      // Update user credit using Supabase
+      const { data: updatedUser, error: updateError } = await supabaseServer
+        .from('users')
+        .update({ credit: Math.max(0, (userCredit || 0) - 1) })
+        .eq('id', auth.user.userId)
+        .select('credit')
+        .single();
+
+      if (updateError) {
+        return NextResponse.json(
+          { success: false, message: updateError.message || 'Kredi güncellenemedi' },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json({
         success: true,
         message: 'SMS başarıyla gönderildi',
         data: {
-          messageId: smsMessage.id,
+          messageId: smsMessageData.id,
           cepSmsMessageId: smsResult.messageId,
           remainingCredit: updatedUser?.credit || 0,
         },

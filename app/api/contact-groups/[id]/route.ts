@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // PUT /api/contact-groups/:id - Grup güncelleme
@@ -21,31 +21,56 @@ export async function PUT(
     const body = await request.json();
     const { name, description, color, icon } = body;
 
-    // Check if group exists and belongs to user
-    const existingGroup = await prisma.contactGroup.findFirst({
-      where: {
-        id,
-        userId: auth.user.userId,
-      },
-    });
+    // Check if group exists and belongs to user using Supabase
+    const { data: existingGroup, error: checkError } = await supabaseServer
+      .from('contact_groups')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', auth.user.userId)
+      .single();
 
-    if (!existingGroup) {
+    if (checkError || !existingGroup) {
       return NextResponse.json(
         { success: false, message: 'Grup bulunamadı' },
         { status: 404 }
       );
     }
 
-    // Update group
-    const group = await prisma.contactGroup.update({
-      where: { id },
-      data: {
-        name: name || existingGroup.name,
-        description: description !== undefined ? description : existingGroup.description,
-        color: color || existingGroup.color,
-        icon: icon || existingGroup.icon,
-      },
-    });
+    // Update group using Supabase
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (color) updateData.color = color;
+    if (icon) updateData.icon = icon;
+
+    const { data: groupData, error: updateError } = await supabaseServer
+      .from('contact_groups')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError || !groupData) {
+      return NextResponse.json(
+        { success: false, message: updateError?.message || 'Grup güncellenemedi' },
+        { status: 500 }
+      );
+    }
+
+    // Format group data
+    const group = {
+      id: groupData.id,
+      userId: groupData.user_id,
+      name: groupData.name,
+      description: groupData.description,
+      color: groupData.color || '#1976d2',
+      icon: groupData.icon || 'group',
+      isDefault: groupData.is_default ?? false,
+      isActive: groupData.is_active ?? true,
+      contactCount: groupData.contact_count || 0,
+      createdAt: groupData.created_at,
+      updatedAt: groupData.updated_at,
+    };
 
     return NextResponse.json({
       success: true,
@@ -78,25 +103,33 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Check if group exists and belongs to user
-    const group = await prisma.contactGroup.findFirst({
-      where: {
-        id,
-        userId: auth.user.userId,
-      },
-    });
+    // Check if group exists and belongs to user using Supabase
+    const { data: group, error: checkError } = await supabaseServer
+      .from('contact_groups')
+      .select('id')
+      .eq('id', id)
+      .eq('user_id', auth.user.userId)
+      .single();
 
-    if (!group) {
+    if (checkError || !group) {
       return NextResponse.json(
         { success: false, message: 'Grup bulunamadı' },
         { status: 404 }
       );
     }
 
-    // Delete group (contacts will have groupId set to null due to onDelete: SetNull)
-    await prisma.contactGroup.delete({
-      where: { id },
-    });
+    // Delete group using Supabase (contacts will have group_id set to null due to onDelete: SetNull)
+    const { error: deleteError } = await supabaseServer
+      .from('contact_groups')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { success: false, message: deleteError.message || 'Grup silinemedi' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

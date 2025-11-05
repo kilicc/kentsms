@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // GET /api/bulk-sms/status/:messageId - SMS durumu
@@ -19,28 +19,40 @@ export async function GET(
 
     const { messageId } = await params;
 
-    const message = await prisma.smsMessage.findFirst({
-      where: {
-        id: messageId,
-        userId: auth.user.userId,
-      },
-      include: {
-        contact: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-          },
-        },
-      },
-    });
+    const { data: messageData, error } = await supabaseServer
+      .from('sms_messages')
+      .select('*, contacts(id, name, phone)')
+      .eq('id', messageId)
+      .eq('user_id', auth.user.userId)
+      .single();
 
-    if (!message) {
+    if (error || !messageData) {
       return NextResponse.json(
         { success: false, message: 'SMS mesajı bulunamadı' },
         { status: 404 }
       );
     }
+
+    // Format message data
+    const message = {
+      id: messageData.id,
+      userId: messageData.user_id,
+      contactId: messageData.contact_id,
+      phoneNumber: messageData.phone_number,
+      message: messageData.message,
+      sender: messageData.sender,
+      status: messageData.status,
+      cost: messageData.cost,
+      cepSmsMessageId: messageData.cep_sms_message_id,
+      sentAt: messageData.sent_at,
+      createdAt: messageData.created_at,
+      updatedAt: messageData.updated_at,
+      contact: messageData.contacts ? {
+        id: messageData.contacts.id,
+        name: messageData.contacts.name,
+        phone: messageData.contacts.phone,
+      } : null,
+    };
 
     return NextResponse.json({
       success: true,

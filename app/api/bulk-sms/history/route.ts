@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // GET /api/bulk-sms/history - SMS geçmişi
@@ -21,53 +21,62 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const status = searchParams.get('status');
 
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    // Build where clause
-    const where: any = {
-      userId: auth.user.userId,
-    };
+    // Build Supabase query
+    let query = supabaseServer
+      .from('sms_messages')
+      .select('*, contacts(id, name, phone)', { count: 'exact' })
+      .eq('user_id', auth.user.userId);
 
     // Date filtering
-    if (startDate || endDate) {
-      where.sentAt = {};
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        where.sentAt.gte = start;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        where.sentAt.lte = end;
-      }
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      query = query.gte('sent_at', start.toISOString());
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query = query.lte('sent_at', end.toISOString());
     }
 
     if (status) {
-      where.status = status;
+      query = query.eq('status', status);
     }
 
     // Get SMS messages and total count
-    const [messages, total] = await Promise.all([
-      prisma.smsMessage.findMany({
-        where,
-        skip,
-        take: limit,
-        include: {
-          contact: {
-            select: {
-              id: true,
-              name: true,
-              phone: true,
-            },
-          },
-        },
-        orderBy: {
-          sentAt: 'desc',
-        },
-      }),
-      prisma.smsMessage.count({ where }),
-    ]);
+    const { data: messagesData, count, error: messagesError } = await query
+      .order('sent_at', { ascending: false })
+      .range(from, to);
+
+    if (messagesError) {
+      throw new Error(messagesError.message);
+    }
+
+    // Format messages data
+    const messages = (messagesData || []).map((msg: any) => ({
+      id: msg.id,
+      userId: msg.user_id,
+      contactId: msg.contact_id,
+      phoneNumber: msg.phone_number,
+      message: msg.message,
+      sender: msg.sender,
+      status: msg.status,
+      cost: msg.cost,
+      cepSmsMessageId: msg.cep_sms_message_id,
+      sentAt: msg.sent_at,
+      createdAt: msg.created_at,
+      updatedAt: msg.updated_at,
+      contact: msg.contacts ? {
+        id: msg.contacts.id,
+        name: msg.contacts.name,
+        phone: msg.contacts.phone,
+      } : null,
+    }));
+
+    const total = count || 0;
 
     return NextResponse.json({
       success: true,
