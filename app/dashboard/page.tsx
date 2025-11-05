@@ -15,6 +15,10 @@ interface DashboardStats {
   sentThisMonth: number;
   totalContacts: number;
   failedSMS: number;
+  // Admin stats
+  totalUsers?: number;
+  pendingPaymentRequests?: number;
+  smsThisMonth?: number;
 }
 
 interface RecentActivity {
@@ -43,42 +47,76 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+
   const loadDashboardData = async () => {
     try {
       setLoading(true);
 
-      // Load stats
-      const [contactsStats, smsHistory] = await Promise.all([
-        api.get('/contacts/stats'),
-        api.get('/bulk-sms/history?limit=5'),
-      ]);
+      if (isAdmin) {
+        // Admin dashboard - load admin stats
+        const [adminStats, smsHistory] = await Promise.all([
+          api.get('/admin/stats'),
+          api.get('/admin/sms-history?limit=5'),
+        ]);
 
-      if (contactsStats.data.success) {
-        const statsData = contactsStats.data.data;
-        setStats((prev) => ({
-          ...prev,
-          totalContacts: statsData.totalContacts || 0,
-          failedSMS: statsData.failedSMS || 0,
-        }));
-      }
+        if (adminStats.data.success) {
+          const statsData = adminStats.data.data;
+          setStats({
+            credit: 0,
+            sentThisMonth: statsData.smsThisMonth || 0,
+            totalContacts: 0,
+            failedSMS: 0,
+            totalUsers: statsData.totalUsers || 0,
+            pendingPaymentRequests: statsData.pendingPaymentRequests || 0,
+            smsThisMonth: statsData.smsThisMonth || 0,
+          } as DashboardStats);
+        }
 
-      if (smsHistory.data.success) {
-        const messages = smsHistory.data.data.messages || [];
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (smsHistory.data.success) {
+          const messages = smsHistory.data.data.messages || [];
+          setRecentActivities(messages.slice(0, 5).map((msg: any) => ({
+            id: msg.id,
+            phoneNumber: msg.phoneNumber,
+            message: msg.message,
+            status: msg.status,
+            sentAt: msg.sentAt,
+          })));
+        }
+      } else {
+        // User dashboard - load user stats
+        const [contactsStats, smsHistory] = await Promise.all([
+          api.get('/contacts/stats'),
+          api.get('/bulk-sms/history?limit=5'),
+        ]);
 
-        const sentThisMonth = messages.filter((msg: RecentActivity) => {
-          const sentDate = new Date(msg.sentAt);
-          return sentDate >= startOfMonth && msg.status === 'sent';
-        }).length;
+        if (contactsStats.data.success) {
+          const statsData = contactsStats.data.data;
+          setStats((prev) => ({
+            ...prev,
+            totalContacts: statsData.totalContacts || 0,
+            failedSMS: statsData.failedSMS || 0,
+          }));
+        }
 
-        setStats((prev) => ({
-          ...prev,
-          credit: user?.credit || 0,
-          sentThisMonth,
-        }));
+        if (smsHistory.data.success) {
+          const messages = smsHistory.data.data.messages || [];
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        setRecentActivities(messages.slice(0, 5));
+          const sentThisMonth = messages.filter((msg: RecentActivity) => {
+            const sentDate = new Date(msg.sentAt);
+            return sentDate >= startOfMonth && msg.status === 'sent';
+          }).length;
+
+          setStats((prev) => ({
+            ...prev,
+            credit: user?.credit || 0,
+            sentThisMonth,
+          }));
+
+          setRecentActivities(messages.slice(0, 5));
+        }
       }
     } catch (error) {
       console.error('Dashboard data load error:', error);
@@ -95,40 +133,77 @@ export default function DashboardPage() {
     );
   }
 
-  const statCards = [
-    {
-      title: 'Mevcut Kredi',
-      value: stats.credit.toString(),
-      subtitle: 'SMS',
-      icon: <AttachMoney />,
-      color: '#4caf50',
-      path: '/payment',
-    },
-    {
-      title: 'Bu Ay Gönderilen',
-      value: stats.sentThisMonth.toString(),
-      subtitle: 'SMS',
-      icon: <Send />,
-      color: '#2196f3',
-      path: '/reports',
-    },
-    {
-      title: 'Kayıtlı Kişi',
-      value: stats.totalContacts.toString(),
-      subtitle: 'Rehber',
-      icon: <Person />,
-      color: '#ff9800',
-      path: '/contacts',
-    },
-    {
-      title: 'Toplam Hata',
-      value: stats.failedSMS.toString(),
-      subtitle: 'Başarısız SMS',
-      icon: <Warning />,
-      color: '#f44336',
-      path: '/refunds',
-    },
-  ];
+  const statCards = isAdmin
+    ? [
+        {
+          title: 'Bekleyen Ödeme Talepleri',
+          value: (stats.pendingPaymentRequests || 0).toString(),
+          subtitle: 'Onay Bekliyor',
+          icon: <AttachMoney />,
+          color: '#ff9800',
+          path: '/admin',
+          tab: 3, // Ödeme Talepleri tab'ı
+        },
+        {
+          title: 'Bu Ay Gönderilen SMS',
+          value: (stats.smsThisMonth || 0).toString(),
+          subtitle: 'Toplam SMS',
+          icon: <Send />,
+          color: '#2196f3',
+          path: '/reports',
+        },
+        {
+          title: 'Toplam Kullanıcı',
+          value: (stats.totalUsers || 0).toString(),
+          subtitle: 'Aktif Kullanıcı',
+          icon: <Person />,
+          color: '#4caf50',
+          path: '/admin',
+          tab: 0, // Kullanıcılar tab'ı
+        },
+        {
+          title: 'Toplam SMS',
+          value: (stats.smsThisMonth || stats.sentThisMonth || 0).toString(),
+          subtitle: 'Tüm Zamanlar',
+          icon: <Warning />,
+          color: '#9c27b0',
+          path: '/reports',
+        },
+      ]
+    : [
+        {
+          title: 'Mevcut Kredi',
+          value: stats.credit.toString(),
+          subtitle: 'SMS',
+          icon: <AttachMoney />,
+          color: '#4caf50',
+          path: '/payment',
+        },
+        {
+          title: 'Bu Ay Gönderilen',
+          value: stats.sentThisMonth.toString(),
+          subtitle: 'SMS',
+          icon: <Send />,
+          color: '#2196f3',
+          path: '/reports',
+        },
+        {
+          title: 'Kayıtlı Kişi',
+          value: stats.totalContacts.toString(),
+          subtitle: 'Rehber',
+          icon: <Person />,
+          color: '#ff9800',
+          path: '/contacts',
+        },
+        {
+          title: 'Toplam Hata',
+          value: stats.failedSMS.toString(),
+          subtitle: 'Başarısız SMS',
+          icon: <Warning />,
+          color: '#f44336',
+          path: '/refunds',
+        },
+      ];
 
   return (
     <ProtectedRoute>
@@ -196,7 +271,14 @@ export default function DashboardPage() {
                   }}
                 >
                   <Card
-                    onClick={() => router.push(card.path)}
+                    onClick={() => {
+                      if (card.tab !== undefined) {
+                        // Admin sayfasına tab ile yönlendir
+                        router.push(`${card.path}?tab=${card.tab}`);
+                      } else {
+                        router.push(card.path);
+                      }
+                    }}
                     sx={{
                       height: '100%',
                       width: '100%',

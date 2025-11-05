@@ -96,6 +96,20 @@ export default function AdminDashboardPage() {
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
 
   useEffect(() => {
+    // URL'den tab parametresini oku (client-side only)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab) {
+        const tabNum = parseInt(tab, 10);
+        if (!isNaN(tabNum) && tabNum >= 0 && tabNum <= 3) {
+          setTabValue(tabNum);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     // Check if user is admin
     if (user) {
       if (user.role !== 'admin' && user.role !== 'moderator') {

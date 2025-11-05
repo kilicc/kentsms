@@ -21,13 +21,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get current month start date
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
     // Get system statistics using Supabase
     const [
       totalUsersResult,
       totalContactsResult,
       totalSMSResult,
+      smsThisMonthResult,
       completedPaymentsResult,
       allPaymentsResult,
+      pendingPaymentRequestsResult,
     ] = await Promise.all([
       supabaseServer
         .from('users')
@@ -39,6 +46,10 @@ export async function GET(request: NextRequest) {
         .from('sms_messages')
         .select('*', { count: 'exact', head: true }),
       supabaseServer
+        .from('sms_messages')
+        .select('*', { count: 'exact', head: true })
+        .gte('sent_at', startOfMonth.toISOString()),
+      supabaseServer
         .from('payments')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'completed'),
@@ -46,14 +57,20 @@ export async function GET(request: NextRequest) {
         .from('payments')
         .select('amount')
         .eq('status', 'completed'),
+      supabaseServer
+        .from('payment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending'),
     ]);
 
     const totalUsers = totalUsersResult.count || 0;
     const totalContacts = totalContactsResult.count || 0;
     const totalSMS = totalSMSResult.count || 0;
+    const smsThisMonth = smsThisMonthResult.count || 0;
     const totalPayments = completedPaymentsResult.count || 0;
     const payments = allPaymentsResult.data || [];
     const totalRevenue = payments.reduce((sum: number, payment: any) => sum + (Number(payment.amount) || 0), 0);
+    const pendingPaymentRequests = pendingPaymentRequestsResult.count || 0;
 
     return NextResponse.json({
       success: true,
@@ -61,8 +78,10 @@ export async function GET(request: NextRequest) {
         totalUsers,
         totalContacts,
         totalSMS,
+        smsThisMonth,
         totalPayments,
         totalRevenue,
+        pendingPaymentRequests,
       },
     });
   } catch (error: any) {
