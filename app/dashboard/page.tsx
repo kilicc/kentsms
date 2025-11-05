@@ -148,14 +148,16 @@ export default function DashboardPage() {
         sx={{
           flexGrow: 1,
           padding: { xs: 2, sm: 3, md: 3 },
-          paddingLeft: { xs: 2, sm: 3, md: 2 },
+          paddingLeft: { xs: 2, sm: 3, md: 3 },
+          paddingRight: { xs: 2, sm: 3, md: 3 },
           marginLeft: { xs: 0, md: '280px' },
           width: { xs: '100%', md: 'calc(100% - 280px)' },
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          maxWidth: { md: '1400px' },
-          mx: { md: 'auto' },
+          maxWidth: '1400px',
+          mx: 'auto',
+          boxSizing: 'border-box',
         }}
       >
           <Typography 
@@ -173,13 +175,17 @@ export default function DashboardPage() {
           </Typography>
 
           {/* Stat Cards Grid - Modern Design */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={3} sx={{ mb: 4, width: '100%' }}>
             {statCards.map((card, index) => {
               const isCreditCard = card.title === 'Mevcut Kredi';
               return (
                 <Grid 
-                  size={{ xs: 12, sm: 6, md: 3 }} 
+                  item
+                  xs={12}
+                  sm={6}
+                  md={3}
                   key={index}
+                  sx={{ display: 'flex' }}
                 >
                   <Card
                     onClick={() => router.push(card.path)}
