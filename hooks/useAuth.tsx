@@ -34,6 +34,7 @@ const api = axios.create({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const router = useRouter();
 
   // Request interceptor - Token ekle
@@ -56,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 401 hatası alındığında sadece error'u döndür
       // Logout işlemi checkAuth içinde yapılacak
       // Bu sayede her sayfa geçişinde logout yapılmaz
-      // setUser(null) yapmayı kaldırdık - bu ProtectedRoute'u tetikliyordu
       if (error.response?.status === 401) {
         // Sadece error'u döndür, logout yapma
         // Logout işlemi sadece checkAuth içinde yapılacak
@@ -66,10 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   );
 
-  // Check if user is logged in on mount
+  // Check if user is logged in on mount - sadece bir kez çalıştır
   useEffect(() => {
-    checkAuth();
-  }, []);
+    if (!hasCheckedAuth) {
+      checkAuth();
+      setHasCheckedAuth(true);
+    }
+  }, [hasCheckedAuth]);
 
   async function checkAuth() {
     try {
@@ -78,19 +81,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (token) {
           try {
             const response = await api.get('/auth/profile');
-            if (response.data.success) {
+            if (response.data.success && response.data.data?.user) {
               setUser(response.data.data.user);
             } else {
               // Token geçersiz, logout yap
+              console.log('Token geçersiz - logout yapılıyor');
               logout();
             }
           } catch (profileError: any) {
-            // /auth/profile endpoint'inden 401 hatası geldi
+            // /auth/profile endpoint'inden hata geldi
+            console.log('Profile error:', profileError.response?.status, profileError.message);
             if (profileError.response?.status === 401) {
               // Token geçersiz, logout yap
+              console.log('401 hatası - logout yapılıyor');
               logout();
             } else {
               // Network hatası veya başka bir hata, token'ı koru
+              // Sadece user'ı null yap, logout yapma
+              console.log('Network hatası - token korunuyor');
               setUser(null);
             }
           }
@@ -128,7 +136,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('refreshToken', tokens.refreshToken);
         }
         
+        // User'ı set et - checkAuth'u tekrar çağırma
         setUser(user);
+        setLoading(false); // Loading'i false yap
         
         // Subdomain'e göre yönlendirme
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
