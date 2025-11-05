@@ -99,7 +99,7 @@ export default function DashboardPage() {
         // User dashboard - load user stats
         const [contactsStats, smsHistory] = await Promise.all([
           api.get('/contacts/stats'),
-          api.get('/bulk-sms/history?limit=5'),
+          api.get('/bulk-sms/history?limit=20'),
         ]);
 
         if (contactsStats.data.success) {
