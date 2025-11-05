@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { verifyPassword } from '@/lib/utils/password';
 import { generateToken } from '@/lib/utils/jwt';
 
@@ -16,22 +16,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by username or email
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [{ username: login }, { email: login }],
-      },
-    });
+    // Find user by username or email using Supabase
+    const { data: users, error: findError } = await supabaseServer
+      .from('users')
+      .select('*')
+      .or(`username.eq.${login},email.eq.${login}`)
+      .limit(1);
 
-    if (!user) {
+    if (findError || !users || users.length === 0) {
       return NextResponse.json(
         { success: false, message: 'Kullanıcı adı veya şifre hatalı' },
         { status: 401 }
       );
     }
 
+    const user = users[0];
+
     // Verify password
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
+    const isValidPassword = await verifyPassword(password, user.password_hash);
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2FA check (TODO: Implement 2FA verification)
-    if (user.twoFactorEnabled && !twoFactorCode) {
+    if (user.two_factor_enabled && !twoFactorCode) {
       return NextResponse.json(
         { success: false, message: '2FA kodu gerekli', requires2FA: true },
         { status: 200 }
@@ -49,10 +51,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() },
-    });
+    await supabaseServer
+      .from('users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', user.id);
 
     // Generate tokens
     const accessToken = generateToken({
