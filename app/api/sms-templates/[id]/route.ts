@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // PUT /api/sms-templates/:id - Şablon güncelleme
@@ -21,32 +21,57 @@ export async function PUT(
     const body = await request.json();
     const { name, content, category, variables, isActive } = body;
 
-    // Check if template exists and belongs to user
-    const existingTemplate = await prisma.smsTemplate.findFirst({
-      where: {
-        id,
-        userId: auth.user.userId,
-      },
-    });
+    // Check if template exists and belongs to user using Supabase
+    const { data: existingTemplate, error: checkError } = await supabaseServer
+      .from('sms_templates')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', auth.user.userId)
+      .single();
 
-    if (!existingTemplate) {
+    if (checkError || !existingTemplate) {
       return NextResponse.json(
         { success: false, message: 'Şablon bulunamadı' },
         { status: 404 }
       );
     }
 
-    // Update template
-    const template = await prisma.smsTemplate.update({
-      where: { id },
-      data: {
-        name: name || existingTemplate.name,
-        content: content || existingTemplate.content,
-        category: category || existingTemplate.category,
-        variables: variables || existingTemplate.variables,
-        isActive: isActive !== undefined ? isActive : existingTemplate.isActive,
-      },
-    });
+    // Update template using Supabase
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (content) updateData.content = content;
+    if (category) updateData.category = category;
+    if (variables) updateData.variables = variables;
+    if (isActive !== undefined) updateData.is_active = isActive;
+
+    const { data: templateData, error: updateError } = await supabaseServer
+      .from('sms_templates')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError || !templateData) {
+      return NextResponse.json(
+        { success: false, message: updateError?.message || 'Şablon güncellenemedi' },
+        { status: 500 }
+      );
+    }
+
+    // Format template data
+    const template = {
+      id: templateData.id,
+      userId: templateData.user_id,
+      name: templateData.name,
+      content: templateData.content,
+      category: templateData.category || 'Genel',
+      variables: templateData.variables || [],
+      isActive: templateData.is_active ?? true,
+      usageCount: templateData.usage_count || 0,
+      lastUsed: templateData.last_used,
+      createdAt: templateData.created_at,
+      updatedAt: templateData.updated_at,
+    };
 
     return NextResponse.json({
       success: true,
@@ -79,25 +104,33 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Check if template exists and belongs to user
-    const template = await prisma.smsTemplate.findFirst({
-      where: {
-        id,
-        userId: auth.user.userId,
-      },
-    });
+    // Check if template exists and belongs to user using Supabase
+    const { data: template, error: checkError } = await supabaseServer
+      .from('sms_templates')
+      .select('id')
+      .eq('id', id)
+      .eq('user_id', auth.user.userId)
+      .single();
 
-    if (!template) {
+    if (checkError || !template) {
       return NextResponse.json(
         { success: false, message: 'Şablon bulunamadı' },
         { status: 404 }
       );
     }
 
-    // Delete template
-    await prisma.smsTemplate.delete({
-      where: { id },
-    });
+    // Delete template using Supabase
+    const { error: deleteError } = await supabaseServer
+      .from('sms_templates')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { success: false, message: deleteError.message || 'Şablon silinemedi' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
