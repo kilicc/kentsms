@@ -24,14 +24,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // API URL'ini dinamik olarak belirle (subdomain'e göre)
-// Client-side'da window.location.origin kullan, server-side'da environment variable
-const API_BASE_URL = typeof window !== 'undefined' 
-  ? `${window.location.origin}/api`
-  : (process.env.NEXT_PUBLIC_API_URL || '/api');
-
-// Axios instance
+// Axios instance - baseURL runtime'da belirlenir
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: '/api', // Relative path kullan (subdomain'e göre otomatik çalışır)
   headers: {
     'Content-Type': 'application/json',
   },
