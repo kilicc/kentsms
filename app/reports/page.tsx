@@ -1,11 +1,11 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Tabs, Tab, Card, CardContent } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { Assessment, FilterList } from '@mui/icons-material';
+import { Assessment, FilterList, BarChart, People, Payment, MoneyOff } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import ClientDate from '@/components/ClientDate';
 
@@ -29,6 +29,7 @@ interface SmsMessage {
 
 export default function SMSReportsPage() {
   const { api, user } = useAuth();
+  const [tabValue, setTabValue] = useState(0);
   const [messages, setMessages] = useState<SmsMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +41,12 @@ export default function SMSReportsPage() {
     status: '',
     userId: '',
   });
+  
+  // Statistics states
+  const [stats, setStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
+  const [loadingPaymentRequests, setLoadingPaymentRequests] = useState(false);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
 
@@ -147,7 +154,7 @@ export default function SMSReportsPage() {
                 fontWeight: 600,
               }}
             >
-              SMS Raporları
+              Raporlar
             </Typography>
 
             <Typography 
@@ -158,8 +165,37 @@ export default function SMSReportsPage() {
                 fontSize: '14px',
               }}
             >
-              Gönderilen SMS'lerin detaylı raporlarını görüntüleyin. Tarih, durum ve kişi bazında filtreleme yapabilirsiniz.
+              Sistem raporlarını ve istatistiklerini görüntüleyin.
             </Typography>
+
+            {/* Tabs */}
+            <Tabs 
+              value={tabValue} 
+              onChange={(e, newValue) => setTabValue(newValue)}
+              sx={{ mb: 2 }}
+            >
+              <Tab label="SMS Raporları" icon={<Assessment />} />
+              {isAdmin && (
+                <>
+                  <Tab label="İstatistikler" icon={<BarChart />} />
+                  <Tab label="Ödeme Raporları" icon={<Payment />} />
+                </>
+              )}
+            </Tabs>
+
+            {/* SMS Reports Tab */}
+            {tabValue === 0 && (
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    mb: 2,
+                    fontSize: '16px',
+                    fontWeight: 600,
+                  }}
+                >
+                  SMS Raporları
+                </Typography>
 
             {/* Filters */}
             <Paper sx={{ p: 1.5, mb: 1.5, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>

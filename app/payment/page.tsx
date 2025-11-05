@@ -1,12 +1,13 @@
 'use client';
 
 import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
+import ClientDate from '@/components/ClientDate';
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings } from '@mui/icons-material';
+import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings, Visibility } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
 import ClientDate from '@/components/ClientDate';
@@ -63,6 +64,7 @@ export default function CryptoPaymentPage() {
   // Admin payment request states
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
@@ -1645,6 +1647,150 @@ export default function CryptoPaymentPage() {
                 <Button onClick={handleRejectRequest} variant="contained" color="error" disabled={loading || !rejectionReason}>
                   {loading ? 'Reddediliyor...' : 'Reddet'}
                 </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Payment Request Detail Dialog */}
+            <Dialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} maxWidth="md" fullWidth>
+              <DialogTitle>Ödeme Talebi Detayları</DialogTitle>
+              <DialogContent>
+                {selectedRequest && (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                          Kullanıcı Bilgileri
+                        </Typography>
+                        <Paper sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha('#1976d2', 0.05) }}>
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Kullanıcı Adı:</strong> {selectedRequest.user?.username || '-'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Email:</strong> {selectedRequest.user?.email || '-'}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                          Ödeme Bilgileri
+                        </Typography>
+                        <Paper sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha('#4caf50', 0.05) }}>
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Tutar:</strong> {Number(selectedRequest.amount)} {selectedRequest.currency || 'TRY'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Kredi:</strong> {selectedRequest.credits} SMS
+                          </Typography>
+                          {selectedRequest.bonus > 0 && (
+                            <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                              <strong>Bonus:</strong> {selectedRequest.bonus} SMS
+                            </Typography>
+                          )}
+                          <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                            <strong>Ödeme Yöntemi:</strong> {selectedRequest.paymentMethod || '-'}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                          Transaction ID
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          value={selectedRequest.transactionId || '-'}
+                          InputProps={{
+                            readOnly: true,
+                          }}
+                          size="small"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              fontFamily: 'monospace',
+                              fontSize: '12px',
+                            },
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                          Durum
+                        </Typography>
+                        <Chip
+                          label={
+                            selectedRequest.status === 'approved'
+                              ? 'Onaylandı'
+                              : selectedRequest.status === 'rejected'
+                              ? 'Reddedildi'
+                              : 'Beklemede'
+                          }
+                          color={
+                            selectedRequest.status === 'approved'
+                              ? 'success'
+                              : selectedRequest.status === 'rejected'
+                              ? 'error'
+                              : 'warning'
+                          }
+                          size="small"
+                          sx={{ fontSize: '12px', fontWeight: 500 }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                          Oluşturulma Tarihi
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                          <ClientDate date={selectedRequest.createdAt} />
+                        </Typography>
+                      </Grid>
+                      {selectedRequest.approvedAt && (
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                            Onaylanma Tarihi
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                            <ClientDate date={selectedRequest.approvedAt} />
+                          </Typography>
+                        </Grid>
+                      )}
+                      {selectedRequest.approver && (
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                            Onaylayan
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                            {selectedRequest.approver?.username || '-'}
+                          </Typography>
+                        </Grid>
+                      )}
+                      {selectedRequest.rejectionReason && (
+                        <Grid size={{ xs: 12 }}>
+                          <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                            Red Sebebi
+                          </Typography>
+                          <Paper sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha('#f44336', 0.05) }}>
+                            <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                              {selectedRequest.rejectionReason}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      )}
+                      {selectedRequest.adminNotes && (
+                        <Grid size={{ xs: 12 }}>
+                          <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
+                            Admin Notu
+                          </Typography>
+                          <Paper sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha('#ff9800', 0.05) }}>
+                            <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                              {selectedRequest.adminNotes}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Box>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDetailDialogOpen(false)}>Kapat</Button>
               </DialogActions>
             </Dialog>
         </Box>
