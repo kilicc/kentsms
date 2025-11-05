@@ -24,14 +24,42 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const userId = searchParams.get('userId');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const status = searchParams.get('status');
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
     // Get SMS messages and total count using Supabase
-    const { data: messagesData, count, error } = await supabaseServer
+    let query = supabaseServer
       .from('sms_messages')
-      .select('*, users!sms_messages_user_id_fkey(id, username, email), contacts!sms_messages_contact_id_fkey(id, name, phone)', { count: 'exact' })
+      .select('*, users!sms_messages_user_id_fkey(id, username, email), contacts!sms_messages_contact_id_fkey(id, name, phone)', { count: 'exact' });
+
+    // User filtering
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    // Date filtering
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      query = query.gte('sent_at', start.toISOString());
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      query = query.lte('sent_at', end.toISOString());
+    }
+
+    // Status filtering
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: messagesData, count, error } = await query
       .order('sent_at', { ascending: false })
       .range(from, to);
 

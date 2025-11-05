@@ -8,26 +8,26 @@ datasource db {
 }
 
 model User {
-  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username         String         @unique @db.VarChar(30)
-  email            String         @unique @db.VarChar(255)
-  passwordHash     String         @map("password_hash") @db.VarChar(255)
-  credit           Int?           @default(0)
-  isVerified       Boolean?       @default(false) @map("is_verified")
-  role             String?        @default("user") @db.VarChar(20)
-  twoFactorEnabled Boolean?       @default(false) @map("two_factor_enabled")
-  twoFactorSecret  String?        @map("two_factor_secret") @db.VarChar(255)
-  lastLogin        DateTime?      @map("last_login") @db.Timestamptz(6)
-  createdAt        DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime?      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  contactGroups    ContactGroup[]
-  contacts         Contact[]
-  payments         Payment[]
-  paymentRequests  PaymentRequest[]
+  id                      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username                String           @unique @db.VarChar(30)
+  email                   String           @unique @db.VarChar(255)
+  passwordHash            String           @map("password_hash") @db.VarChar(255)
+  credit                  Int?             @default(0)
+  isVerified              Boolean?         @default(false) @map("is_verified")
+  role                    String?          @default("user") @db.VarChar(20)
+  twoFactorEnabled        Boolean?         @default(false) @map("two_factor_enabled")
+  twoFactorSecret         String?          @map("two_factor_secret") @db.VarChar(255)
+  lastLogin               DateTime?        @map("last_login") @db.Timestamptz(6)
+  createdAt               DateTime?        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime?        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  contactGroups           ContactGroup[]
+  contacts                Contact[]
   approvedPaymentRequests PaymentRequest[] @relation("PaymentRequestApprover")
-  refunds          Refund[]
-  smsMessages      SmsMessage[]
-  smsTemplates     SmsTemplate[]
+  paymentRequests         PaymentRequest[]
+  payments                Payment[]
+  refunds                 Refund[]
+  smsMessages             SmsMessage[]
+  smsTemplates            SmsTemplate[]
 
   @@index([email], map: "idx_users_email")
   @@index([username], map: "idx_users_username")
@@ -169,28 +169,65 @@ model Payment {
 }
 
 model PaymentRequest {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId        String?   @map("user_id") @db.Uuid
-  amount        Decimal   @db.Decimal(10, 2)
-  currency      String?   @default("TRY") @db.VarChar(10)
-  paymentMethod String?   @map("payment_method") @db.VarChar(50)
-  credits       Int       @default(0)
-  bonus         Int?      @default(0)
-  description   String?   @db.VarChar(500)
-  transactionId String?   @map("transaction_id") @db.VarChar(255)
-  status        String?   @default("pending") @db.VarChar(20)
-  adminNotes    String?   @map("admin_notes")
-  approvedBy    String?   @map("approved_by") @db.Uuid
-  approvedAt    DateTime? @map("approved_at") @db.Timestamptz(6)
-  rejectedAt    DateTime? @map("rejected_at") @db.Timestamptz(6)
-  rejectionReason String? @map("rejection_reason") @db.VarChar(500)
-  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  approver      User?     @relation("PaymentRequestApprover", fields: [approvedBy], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String?   @map("user_id") @db.Uuid
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String?   @default("TRY") @db.VarChar(10)
+  paymentMethod   String?   @map("payment_method") @db.VarChar(50)
+  credits         Int       @default(0)
+  bonus           Int?      @default(0)
+  description     String?   @db.VarChar(500)
+  transactionId   String?   @map("transaction_id") @db.VarChar(255)
+  status          String?   @default("pending") @db.VarChar(20)
+  adminNotes      String?   @map("admin_notes")
+  approvedBy      String?   @map("approved_by") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz(6)
+  rejectedAt      DateTime? @map("rejected_at") @db.Timestamptz(6)
+  rejectionReason String?   @map("rejection_reason") @db.VarChar(500)
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  approver        User?     @relation("PaymentRequestApprover", fields: [approvedBy], references: [id], onUpdate: NoAction)
+  user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([status], map: "idx_payment_requests_status")
   @@index([userId], map: "idx_payment_requests_user_id")
   @@index([createdAt], map: "idx_payment_requests_created_at")
   @@map("payment_requests")
+}
+
+model PaymentPackage {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  packageId   String    @unique @map("package_id") @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  credits     Int       @default(0)
+  price       Decimal   @db.Decimal(10, 2)
+  currency    String?   @default("TRY") @db.VarChar(10)
+  bonus       Int?      @default(0)
+  isActive    Boolean?  @default(true) @map("is_active")
+  displayOrder Int?     @default(0) @map("display_order")
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive], map: "idx_payment_packages_is_active")
+  @@index([displayOrder], map: "idx_payment_packages_display_order")
+  @@map("payment_packages")
+}
+
+model CryptoCurrency {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  symbol        String    @unique @db.VarChar(10)
+  name          String    @db.VarChar(100)
+  decimals      Int       @default(8)
+  minAmount     Decimal   @map("min_amount") @db.Decimal(20, 8)
+  networkFee    Decimal   @map("network_fee") @db.Decimal(20, 8)
+  confirmations Int       @default(3)
+  walletAddress String?   @map("wallet_address") @db.VarChar(255)
+  isActive      Boolean?  @default(true) @map("is_active")
+  displayOrder  Int?      @default(0) @map("display_order")
+  createdAt     DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive], map: "idx_crypto_currencies_is_active")
+  @@index([displayOrder], map: "idx_crypto_currencies_display_order")
+  @@map("crypto_currencies")
 }

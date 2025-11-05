@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -16,6 +16,11 @@ interface SmsMessage {
   status: string;
   cost: number;
   sentAt: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
   contact?: {
     name: string;
     phone: string;
@@ -23,19 +28,45 @@ interface SmsMessage {
 }
 
 export default function SMSReportsPage() {
-  const { api } = useAuth();
+  const { api, user } = useAuth();
   const [messages, setMessages] = useState<SmsMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [users, setUsers] = useState<Array<{ id: string; username: string; email: string }>>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
     status: '',
+    userId: '',
   });
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadUsers();
+    }
+    loadHistory();
+  }, [isAdmin]);
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [filters.userId]);
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await api.get('/admin/users');
+      if (response.data.success) {
+        setUsers(response.data.data.users || []);
+      }
+    } catch (error) {
+      console.error('Users load error:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const loadHistory = async () => {
     setLoading(true);
@@ -45,8 +76,11 @@ export default function SMSReportsPage() {
       if (filters.startDate) params.startDate = filters.startDate;
       if (filters.endDate) params.endDate = filters.endDate;
       if (filters.status) params.status = filters.status;
+      if (isAdmin && filters.userId) params.userId = filters.userId;
 
-      const response = await api.get('/bulk-sms/history', { params });
+      // Admin ise admin endpoint, değilse kullanıcı endpoint
+      const endpoint = isAdmin ? '/admin/sms-history' : '/bulk-sms/history';
+      const response = await api.get(endpoint, { params });
       if (response.data.success) {
         setMessages(response.data.data.messages || []);
       } else {
@@ -233,7 +267,7 @@ export default function SMSReportsPage() {
               ) : messages.length === 0 ? (
                 <Box sx={{ p: 1.5, textAlign: 'center' }}>
                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-                    {filters.startDate || filters.endDate || filters.status
+                    {filters.startDate || filters.endDate || filters.status || filters.userId
                       ? 'Filtre kriterlerine uygun SMS bulunamadı'
                       : 'Henüz SMS gönderilmemiş'}
                   </Typography>
@@ -243,6 +277,9 @@ export default function SMSReportsPage() {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
+                        {isAdmin && (
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
+                        )}
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kişi</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj</TableCell>
@@ -254,6 +291,15 @@ export default function SMSReportsPage() {
                     <TableBody>
                       {messages.map((message) => (
                         <TableRow key={message.id}>
+                          {isAdmin && (
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {message.user?.username || '-'}
+                              <br />
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
+                                {message.user?.email || '-'}
+                              </Typography>
+                            </TableCell>
+                          )}
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.contact?.name || '-'}</TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.phoneNumber}</TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.message.substring(0, 50)}...</TableCell>
