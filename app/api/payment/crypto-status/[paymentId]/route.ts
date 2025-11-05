@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // GET /api/payment/crypto-status/:paymentId - Ödeme durumu
@@ -19,19 +19,32 @@ export async function GET(
 
     const { paymentId } = await params;
 
-    const payment = await prisma.payment.findFirst({
-      where: {
-        id: paymentId,
-        userId: auth.user.userId,
-      },
-    });
+    const { data: paymentData, error } = await supabaseServer
+      .from('payments')
+      .select('*')
+      .eq('id', paymentId)
+      .eq('user_id', auth.user.userId)
+      .single();
 
-    if (!payment) {
+    if (error || !paymentData) {
       return NextResponse.json(
         { success: false, message: 'Ödeme bulunamadı' },
         { status: 404 }
       );
     }
+
+    // Format payment data
+    const payment = {
+      id: paymentData.id,
+      userId: paymentData.user_id,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'TRY',
+      paymentMethod: paymentData.payment_method,
+      status: paymentData.status || 'pending',
+      transactionId: paymentData.transaction_id,
+      createdAt: paymentData.created_at,
+      updatedAt: paymentData.updated_at,
+    };
 
     return NextResponse.json({
       success: true,

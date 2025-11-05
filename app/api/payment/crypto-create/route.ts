@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 import {
   PAYMENT_PACKAGES,
@@ -84,20 +84,40 @@ export async function POST(request: NextRequest) {
     // Generate QR code
     const qrCodeData = await QRCode.toDataURL(walletAddress);
 
-    // Create payment record - Prisma otomatik UUID oluşturacak
+    // Create payment record using Supabase
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 dakika
 
-    const payment = await prisma.payment.create({
-      data: {
-        // id alanı otomatik UUID oluşturulacak (schema'da @default(dbgenerated("gen_random_uuid()")))
-        userId: auth.user.userId,
+    const { data: paymentData, error: createError } = await supabaseServer
+      .from('payments')
+      .insert({
+        user_id: auth.user.userId,
         amount: fiatAmount,
         currency: fiatCurrency || 'TRY',
-        paymentMethod: `crypto-${cryptoCurrency}`,
+        payment_method: `crypto-${cryptoCurrency}`,
         status: 'pending',
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (createError || !paymentData) {
+      return NextResponse.json(
+        { success: false, message: createError?.message || 'Ödeme oluşturulamadı' },
+        { status: 500 }
+      );
+    }
+
+    const payment = {
+      id: paymentData.id,
+      userId: paymentData.user_id,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'TRY',
+      paymentMethod: paymentData.payment_method,
+      status: paymentData.status || 'pending',
+      transactionId: paymentData.transaction_id,
+      createdAt: paymentData.created_at,
+      updatedAt: paymentData.updated_at,
+    };
 
     return NextResponse.json({
       success: true,

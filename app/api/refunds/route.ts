@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // GET /api/refunds - İade geçmişi
@@ -14,24 +14,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const refunds = await prisma.refund.findMany({
-      where: {
-        userId: auth.user.userId,
-      },
-      include: {
-        sms: {
-          select: {
-            id: true,
-            phoneNumber: true,
-            message: true,
-            sentAt: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const { data: refundsData, error } = await supabaseServer
+      .from('refunds')
+      .select('*, sms_messages(id, phone_number, message, sent_at)')
+      .eq('user_id', auth.user.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Format refunds data
+    const refunds = (refundsData || []).map((refund: any) => ({
+      id: refund.id,
+      userId: refund.user_id,
+      smsId: refund.sms_id,
+      originalCost: refund.original_cost,
+      refundAmount: refund.refund_amount,
+      reason: refund.reason,
+      status: refund.status || 'pending',
+      processedAt: refund.processed_at,
+      createdAt: refund.created_at,
+      updatedAt: refund.updated_at,
+      sms: refund.sms_messages ? {
+        id: refund.sms_messages.id,
+        phoneNumber: refund.sms_messages.phone_number,
+        message: refund.sms_messages.message,
+        sentAt: refund.sms_messages.sent_at,
+      } : null,
+    }));
 
     return NextResponse.json({
       success: true,
@@ -68,17 +79,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if SMS exists and belongs to user
-    const sms = await prisma.smsMessage.findFirst({
-      where: {
-        id: smsId,
-        userId: auth.user.userId,
-        status: 'failed',
-        refundProcessed: false,
-      },
-    });
+    // Check if SMS exists and belongs to user using Supabase
+    const { data: smsData, error: smsError } = await supabaseServer
+      .from('sms_messages')
+      .select('id, cost, refund_processed')
+      .eq('id', smsId)
+      .eq('user_id', auth.user.userId)
+      .eq('status', 'failed')
+      .eq('refund_processed', false)
+      .single();
 
-    if (!sms) {
+    if (smsError || !smsData) {
       return NextResponse.json(
         { success: false, message: 'İade için uygun SMS bulunamadı' },
         { status: 404 }
@@ -86,25 +97,48 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate refund amount (full cost)
-    const refundAmount = Number(sms.cost);
+    const refundAmount = Number(smsData.cost);
 
-    // Create refund request
-    const refund = await prisma.refund.create({
-      data: {
-        userId: auth.user.userId,
-        smsId,
-        originalCost: refundAmount,
-        refundAmount,
+    // Create refund request using Supabase
+    const { data: refundData, error: createError } = await supabaseServer
+      .from('refunds')
+      .insert({
+        user_id: auth.user.userId,
+        sms_id: smsId,
+        original_cost: refundAmount,
+        refund_amount: refundAmount,
         reason,
         status: 'pending',
-      },
-    });
+      })
+      .select()
+      .single();
 
-    // Mark SMS as refund processed
-    await prisma.smsMessage.update({
-      where: { id: smsId },
-      data: { refundProcessed: true },
-    });
+    if (createError || !refundData) {
+      return NextResponse.json(
+        { success: false, message: createError?.message || 'İade talebi oluşturulamadı' },
+        { status: 500 }
+      );
+    }
+
+    // Mark SMS as refund processed using Supabase
+    await supabaseServer
+      .from('sms_messages')
+      .update({ refund_processed: true })
+      .eq('id', smsId);
+
+    // Format refund data
+    const refund = {
+      id: refundData.id,
+      userId: refundData.user_id,
+      smsId: refundData.sms_id,
+      originalCost: refundData.original_cost,
+      refundAmount: refundData.refund_amount,
+      reason: refundData.reason,
+      status: refundData.status || 'pending',
+      processedAt: refundData.processed_at,
+      createdAt: refundData.created_at,
+      updatedAt: refundData.updated_at,
+    };
 
     return NextResponse.json({
       success: true,

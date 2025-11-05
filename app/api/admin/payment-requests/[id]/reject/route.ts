@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
 
 // POST /api/admin/payment-requests/[id]/reject - Ödeme talebini reddet
@@ -35,12 +35,14 @@ export async function POST(
       );
     }
 
-    // Ödeme talebini bul
-    const paymentRequest = await prisma.paymentRequest.findUnique({
-      where: { id },
-    });
+    // Ödeme talebini bul using Supabase
+    const { data: paymentRequest, error: findError } = await supabaseServer
+      .from('payment_requests')
+      .select('id, status')
+      .eq('id', id)
+      .single();
 
-    if (!paymentRequest) {
+    if (findError || !paymentRequest) {
       return NextResponse.json(
         { success: false, message: 'Ödeme talebi bulunamadı' },
         { status: 404 }
@@ -54,32 +56,48 @@ export async function POST(
       );
     }
 
-    // Ödeme talebini reddet
-    const rejectedRequest = await prisma.paymentRequest.update({
-      where: { id },
-      data: {
+    // Ödeme talebini reddet using Supabase
+    const { data: rejectedRequestData, error: rejectError } = await supabaseServer
+      .from('payment_requests')
+      .update({
         status: 'rejected',
-        rejectedAt: new Date(),
-        rejectionReason,
-        adminNotes,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-        approver: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-      },
-    });
+        rejected_at: new Date().toISOString(),
+        rejection_reason: rejectionReason,
+        admin_notes: adminNotes || null,
+      })
+      .eq('id', id)
+      .select('*, users!payment_requests_user_id_fkey(id, username, email), users!payment_requests_approved_by_fkey(id, username, email)')
+      .single();
+
+    if (rejectError || !rejectedRequestData) {
+      return NextResponse.json(
+        { success: false, message: rejectError?.message || 'Ödeme talebi reddedilemedi' },
+        { status: 500 }
+      );
+    }
+
+    // Format data
+    const rejectedRequest = {
+      id: rejectedRequestData.id,
+      userId: rejectedRequestData.user_id,
+      amount: rejectedRequestData.amount,
+      currency: rejectedRequestData.currency || 'TRY',
+      paymentMethod: rejectedRequestData.payment_method,
+      credits: rejectedRequestData.credits,
+      bonus: rejectedRequestData.bonus || 0,
+      description: rejectedRequestData.description,
+      transactionId: rejectedRequestData.transaction_id,
+      status: rejectedRequestData.status || 'rejected',
+      adminNotes: rejectedRequestData.admin_notes,
+      approvedBy: rejectedRequestData.approved_by,
+      approvedAt: rejectedRequestData.approved_at,
+      rejectedAt: rejectedRequestData.rejected_at,
+      rejectionReason: rejectedRequestData.rejection_reason,
+      createdAt: rejectedRequestData.created_at,
+      updatedAt: rejectedRequestData.updated_at,
+      user: Array.isArray(rejectedRequestData.users) ? rejectedRequestData.users.find((u: any) => u.id === rejectedRequestData.user_id) : rejectedRequestData.users,
+      approver: Array.isArray(rejectedRequestData.users) ? rejectedRequestData.users.find((u: any) => u.id === rejectedRequestData.approved_by) : null,
+    };
 
     return NextResponse.json({
       success: true,

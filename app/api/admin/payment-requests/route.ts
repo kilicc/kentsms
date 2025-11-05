@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
 
 // GET /api/admin/payment-requests - Tüm ödeme taleplerini listele (Admin)
@@ -25,41 +25,50 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    const where: any = {};
+    // Build Supabase query
+    let query = supabaseServer
+      .from('payment_requests')
+      .select('*, users!payment_requests_user_id_fkey(id, username, email), users!payment_requests_approved_by_fkey(id, username, email)', { count: 'exact' });
 
     if (status) {
-      where.status = status;
+      query = query.eq('status', status);
     }
 
-    const [requests, total] = await Promise.all([
-      prisma.paymentRequest.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-            },
-          },
-          approver: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-            },
-          },
-        },
-      }),
-      prisma.paymentRequest.count({ where }),
-    ]);
+    const { data: requestsData, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Format requests data (Supabase returns nested relations differently)
+    const requests = (requestsData || []).map((req: any) => ({
+      id: req.id,
+      userId: req.user_id,
+      amount: req.amount,
+      currency: req.currency || 'TRY',
+      paymentMethod: req.payment_method,
+      credits: req.credits,
+      bonus: req.bonus || 0,
+      description: req.description,
+      transactionId: req.transaction_id,
+      status: req.status || 'pending',
+      adminNotes: req.admin_notes,
+      approvedBy: req.approved_by,
+      approvedAt: req.approved_at,
+      rejectedAt: req.rejected_at,
+      rejectionReason: req.rejection_reason,
+      createdAt: req.created_at,
+      updatedAt: req.updated_at,
+      user: req.users ? (Array.isArray(req.users) ? req.users[0] : req.users) : null,
+      approver: req.users ? (Array.isArray(req.users) ? req.users.find((u: any) => u.id === req.approved_by) : (req.users.id === req.approved_by ? req.users : null)) : null,
+    }));
+
+    const total = count || 0;
 
     return NextResponse.json({
       success: true,

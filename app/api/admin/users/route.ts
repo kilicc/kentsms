@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
 
 // GET /api/admin/users - Tüm kullanıcılar
@@ -27,44 +27,43 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const role = searchParams.get('role');
 
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    // Build where clause
-    const where: any = {};
+    // Build Supabase query
+    let query = supabaseServer
+      .from('users')
+      .select('id, username, email, credit, role, is_verified, created_at, last_login', { count: 'exact' });
 
     if (search) {
-      where.OR = [
-        { username: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
+      query = query.or(`username.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     if (role) {
-      where.role = role;
+      query = query.eq('role', role);
     }
 
-    // Get users and total count
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        skip,
-        take: limit,
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          credit: true,
-          role: true,
-          isVerified: true,
-          createdAt: true,
-          lastLogin: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      }),
-      prisma.user.count({ where }),
-    ]);
+    const { data: usersData, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Format users data
+    const users = (usersData || []).map((user: any) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      credit: user.credit || 0,
+      role: user.role || 'user',
+      isVerified: user.is_verified || false,
+      createdAt: user.created_at,
+      lastLogin: user.last_login,
+    }));
+
+    const total = count || 0;
 
     return NextResponse.json({
       success: true,

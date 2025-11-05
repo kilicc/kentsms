@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
 
 // GET /api/admin/payment-history - Ödeme geçmişi
@@ -25,28 +25,39 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    // Get payments and total count
-    const [payments, total] = await Promise.all([
-      prisma.payment.findMany({
-        skip,
-        take: limit,
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      }),
-      prisma.payment.count(),
-    ]);
+    // Get payments and total count using Supabase
+    const { data: paymentsData, count, error } = await supabaseServer
+      .from('payments')
+      .select('*, users!payments_user_id_fkey(id, username, email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Format payments data
+    const payments = (paymentsData || []).map((payment: any) => ({
+      id: payment.id,
+      userId: payment.user_id,
+      amount: payment.amount,
+      currency: payment.currency || 'TRY',
+      paymentMethod: payment.payment_method,
+      status: payment.status || 'pending',
+      transactionId: payment.transaction_id,
+      createdAt: payment.created_at,
+      updatedAt: payment.updated_at,
+      user: payment.users ? {
+        id: payment.users.id,
+        username: payment.users.username,
+        email: payment.users.email,
+      } : null,
+    }));
+
+    const total = count || 0;
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
 
 // POST /api/admin/users/:userId/credit - Kredi yükleme
@@ -35,33 +35,35 @@ export async function POST(
       );
     }
 
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+    // Check if user exists using Supabase
+    const { data: user, error: userError } = await supabaseServer
+      .from('users')
+      .select('id, credit')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { success: false, message: 'Kullanıcı bulunamadı' },
         { status: 404 }
       );
     }
 
-    // Update user credit
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        credit: {
-          increment: Math.round(amount),
-        },
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        credit: true,
-      },
-    });
+    // Update user credit using Supabase
+    const currentCredit = user.credit || 0;
+    const { data: updatedUser, error: updateError } = await supabaseServer
+      .from('users')
+      .update({ credit: currentCredit + Math.round(amount) })
+      .eq('id', userId)
+      .select('id, username, email, credit')
+      .single();
+
+    if (updateError || !updatedUser) {
+      return NextResponse.json(
+        { success: false, message: updateError?.message || 'Kredi yüklenemedi' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

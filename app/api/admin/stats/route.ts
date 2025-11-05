@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
 
 // GET /api/admin/stats - Sistem istatistikleri
@@ -21,25 +21,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get system statistics
+    // Get system statistics using Supabase
     const [
-      totalUsers,
-      totalContacts,
-      totalSMS,
-      totalPayments,
-      totalRevenue,
+      totalUsersResult,
+      totalContactsResult,
+      totalSMSResult,
+      completedPaymentsResult,
+      allPaymentsResult,
     ] = await Promise.all([
-      prisma.user.count(),
-      prisma.contact.count(),
-      prisma.smsMessage.count(),
-      prisma.payment.count({
-        where: { status: 'completed' },
-      }),
-      prisma.payment.aggregate({
-        where: { status: 'completed' },
-        _sum: { amount: true },
-      }),
+      supabaseServer
+        .from('users')
+        .select('*', { count: 'exact', head: true }),
+      supabaseServer
+        .from('contacts')
+        .select('*', { count: 'exact', head: true }),
+      supabaseServer
+        .from('sms_messages')
+        .select('*', { count: 'exact', head: true }),
+      supabaseServer
+        .from('payments')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'completed'),
+      supabaseServer
+        .from('payments')
+        .select('amount')
+        .eq('status', 'completed'),
     ]);
+
+    const totalUsers = totalUsersResult.count || 0;
+    const totalContacts = totalContactsResult.count || 0;
+    const totalSMS = totalSMSResult.count || 0;
+    const totalPayments = completedPaymentsResult.count || 0;
+    const payments = allPaymentsResult.data || [];
+    const totalRevenue = payments.reduce((sum: number, payment: any) => sum + (Number(payment.amount) || 0), 0);
 
     return NextResponse.json({
       success: true,
@@ -48,7 +62,7 @@ export async function GET(request: NextRequest) {
         totalContacts,
         totalSMS,
         totalPayments,
-        totalRevenue: Number(totalRevenue._sum.amount || 0),
+        totalRevenue,
       },
     });
   } catch (error: any) {
