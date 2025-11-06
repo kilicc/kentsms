@@ -77,8 +77,7 @@ export async function POST(request: NextRequest) {
 
           // Network bilgisini de kaydet (varsa)
           if (statusResult.network) {
-            // Network bilgisini service_name veya başka bir alana kaydedebiliriz
-            // Şimdilik sadece log'layalım
+            updateData.network = statusResult.network;
             console.log(`📱 Mesaj operatör bilgisi (${message.id}): ${statusResult.network}`);
           }
 

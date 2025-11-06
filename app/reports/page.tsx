@@ -1,6 +1,7 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Tabs, Tab, Card, CardContent } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Tabs, Tab, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
+import { Close } from '@mui/icons-material';
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -85,6 +86,10 @@ export default function SMSReportsPage() {
   // Bulk SMS Reports states
   const [bulkSmsReports, setBulkSmsReports] = useState<any[]>([]);
   const [loadingBulkReports, setLoadingBulkReports] = useState(false);
+  const [selectedBulkReport, setSelectedBulkReport] = useState<any | null>(null);
+  const [bulkReportDetails, setBulkReportDetails] = useState<any[]>([]);
+  const [loadingBulkDetails, setLoadingBulkDetails] = useState(false);
+  const [bulkDetailDialogOpen, setBulkDetailDialogOpen] = useState(false);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
 
@@ -217,6 +222,7 @@ export default function SMSReportsPage() {
           failedCount: number;
           sentAt: string;
           status: string;
+          messageIds: string[];
         }>();
 
         messages.forEach((msg: any) => {
@@ -231,14 +237,19 @@ export default function SMSReportsPage() {
               failedCount: 0,
               sentAt: msg.sentAt,
               status: 'sent',
+              messageIds: [] as string[],
             });
           }
 
           const group = groupedMessages.get(messageKey)!;
           group.recipients++;
-          if (msg.status === 'sent' || msg.status === 'delivered') {
+          if (!group.messageIds) {
+            group.messageIds = [];
+          }
+          group.messageIds.push(msg.id);
+          if (msg.status === 'sent' || msg.status === 'delivered' || msg.status === 'iletildi' || msg.status === 'gönderildi') {
             group.successCount++;
-          } else if (msg.status === 'failed') {
+          } else if (msg.status === 'failed' || msg.status === 'iletilmedi' || msg.status === 'zaman_aşımı') {
             group.failedCount++;
           }
           if (new Date(msg.sentAt) > new Date(group.sentAt)) {
@@ -262,6 +273,7 @@ export default function SMSReportsPage() {
             sentAt: group.sentAt,
             successCount: group.successCount,
             failedCount: group.failedCount,
+            messageIds: group.messageIds || [],
           }))
           .sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
 
@@ -276,6 +288,42 @@ export default function SMSReportsPage() {
       console.error('Bulk reports load error:', error);
     } finally {
       setLoadingBulkReports(false);
+    }
+  };
+
+  const handleViewBulkReportDetails = async (report: any) => {
+    setSelectedBulkReport(report);
+    setBulkDetailDialogOpen(true);
+    setLoadingBulkDetails(true);
+    
+    try {
+      // Mesaj içeriğine göre filtrele
+      const params: any = {};
+      if (bulkFilters.startDate) params.startDate = bulkFilters.startDate;
+      if (bulkFilters.endDate) params.endDate = bulkFilters.endDate;
+      if (bulkFilters.userId) params.userId = bulkFilters.userId;
+      
+      const endpoint = isAdmin ? '/admin/sms-history' : '/bulk-sms/history';
+      const response = await api.get(endpoint, { params });
+      if (response.data.success) {
+        const filtered = (response.data.data.messages || []).filter((msg: any) => {
+          const msgText = msg.message || '';
+          const reportText = report.fullMessage || report.message || '';
+          return msgText === reportText;
+        }).map((msg: any) => ({
+          ...msg,
+          phoneNumber: msg.phoneNumber || msg.phone_number,
+          sentAt: msg.sentAt || msg.sent_at,
+          network: msg.network || null,
+        }));
+        setBulkReportDetails(filtered);
+      }
+    } catch (error: any) {
+      console.error('Bulk report details load error:', error);
+      // Hata durumunda boş liste göster
+      setBulkReportDetails([]);
+    } finally {
+      setLoadingBulkDetails(false);
     }
   };
 
@@ -918,7 +966,16 @@ export default function SMSReportsPage() {
                           };
 
                           return (
-                            <TableRow key={index}>
+                            <TableRow 
+                              key={index}
+                              onClick={() => handleViewBulkReportDetails(report)}
+                              sx={{
+                                cursor: 'pointer',
+                                '&:hover': {
+                                  backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                                },
+                              }}
+                            >
                               <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                 <Typography variant="body2" sx={{ fontSize: '12px', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   {report.fullMessage || report.message}
@@ -957,6 +1014,155 @@ export default function SMSReportsPage() {
                 )}
               </Box>
             )}
+
+            {/* Bulk SMS Details Dialog */}
+            <Dialog
+              open={bulkDetailDialogOpen}
+              onClose={() => setBulkDetailDialogOpen(false)}
+              maxWidth="md"
+              fullWidth
+              PaperProps={{
+                sx: {
+                  borderRadius: 2,
+                  backgroundColor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+                },
+              }}
+            >
+              <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
+                  Toplu SMS Detayları
+                </Typography>
+                <IconButton
+                  onClick={() => setBulkDetailDialogOpen(false)}
+                  size="small"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <Close />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent dividers>
+                {selectedBulkReport && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontSize: '13px', fontWeight: 600, color: 'text.secondary' }}>
+                      Mesaj İçeriği
+                    </Typography>
+                    <Paper sx={{ p: 1.5, mb: 2, borderRadius: 1.5, backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)' }}>
+                      <Typography variant="body2" sx={{ fontSize: '13px', whiteSpace: 'pre-wrap' }}>
+                        {selectedBulkReport.fullMessage || selectedBulkReport.message}
+                      </Typography>
+                    </Paper>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      <Grid size={{ xs: 6, sm: 3 }}>
+                        <Typography variant="caption" sx={{ fontSize: '11px', color: 'text.secondary' }}>
+                          Toplam Alıcı
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 600 }}>
+                          {selectedBulkReport.recipients} kişi
+                        </Typography>
+                      </Grid>
+                      <Grid size={{ xs: 6, sm: 3 }}>
+                        <Typography variant="caption" sx={{ fontSize: '11px', color: 'text.secondary' }}>
+                          Başarılı
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 600, color: '#4caf50' }}>
+                          {selectedBulkReport.successCount}
+                        </Typography>
+                      </Grid>
+                      <Grid size={{ xs: 6, sm: 3 }}>
+                        <Typography variant="caption" sx={{ fontSize: '11px', color: 'text.secondary' }}>
+                          Başarısız
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 600, color: '#f44336' }}>
+                          {selectedBulkReport.failedCount}
+                        </Typography>
+                      </Grid>
+                      <Grid size={{ xs: 6, sm: 3 }}>
+                        <Typography variant="caption" sx={{ fontSize: '11px', color: 'text.secondary' }}>
+                          Tarih
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 600 }}>
+                          <ClientDate date={selectedBulkReport.sentAt} />
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+                
+                <Typography variant="subtitle2" sx={{ mb: 1.5, fontSize: '13px', fontWeight: 600, color: 'text.secondary' }}>
+                  Alıcı Detayları
+                </Typography>
+                
+                {loadingBulkDetails ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : bulkReportDetails.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                    Detay bulunamadı
+                  </Typography>
+                ) : (
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Operatör</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {bulkReportDetails.map((detail: any) => (
+                          <TableRow key={detail.id}>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {detail.phoneNumber || detail.phone_number}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <Chip
+                                label={detail.status === 'iletildi' ? 'İletildi' : 
+                                       detail.status === 'iletilmedi' ? 'İletilmedi' : 
+                                       detail.status === 'zaman_aşımı' ? 'Zaman Aşımı' : 
+                                       detail.status === 'rapor_bekliyor' ? 'Rapor Bekliyor' : 
+                                       detail.status === 'gönderildi' ? 'Gönderildi' : 
+                                       detail.status || '-'}
+                                color={
+                                  detail.status === 'iletildi' ? 'success' : 
+                                  detail.status === 'iletilmedi' || detail.status === 'zaman_aşımı' ? 'error' : 
+                                  detail.status === 'rapor_bekliyor' ? 'warning' : 
+                                  'default'
+                                }
+                                size="small"
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  height: 20,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {detail.network || '-'}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <ClientDate date={detail.sentAt || detail.sent_at} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </DialogContent>
+              <DialogActions sx={{ p: 1.5 }}>
+                <Button
+                  onClick={() => setBulkDetailDialogOpen(false)}
+                  variant="outlined"
+                  size="small"
+                  sx={{ borderRadius: 1.5, textTransform: 'none', fontSize: '12px' }}
+                >
+                  Kapat
+                </Button>
+              </DialogActions>
+            </Dialog>
 
             {/* Statistics Tab - Admin Only */}
             {tabValue === 2 && isAdmin && (

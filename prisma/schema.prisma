@@ -94,6 +94,7 @@ model SmsMessage {
   serviceCode     String?   @map("service_code") @db.VarChar(20)
   serviceUrl      String?   @map("service_url")
   cepSmsMessageId String?   @map("cep_sms_message_id") @db.VarChar(100)
+  network         String?   @db.VarChar(50)
   sentAt          DateTime? @default(now()) @map("sent_at") @db.Timestamptz(6)
   deliveredAt     DateTime? @map("delivered_at") @db.Timestamptz(6)
   failedAt        DateTime? @map("failed_at") @db.Timestamptz(6)
