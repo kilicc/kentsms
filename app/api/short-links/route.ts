@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
     const maxAttempts = 10;
 
     const supabaseServer = getSupabaseServer();
+    console.log('Short link POST - supabaseServer created');
     
     // Benzersiz kod bul
     while (attempts < maxAttempts) {
@@ -151,9 +152,6 @@ export async function POST(request: NextRequest) {
 
     // Kısa link oluştur
     console.log('Short link POST - userId:', auth.user.userId, 'shortCode:', shortCode);
-    
-    const supabaseServer = getSupabaseServer();
-    console.log('Short link POST - supabaseServer created');
     
     const { data: shortLinkData, error } = await supabaseServer
       .from('short_links')
