@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { getSupabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // GET /api/short-links - Kullanıcının kısa linklerini listele
@@ -16,6 +16,9 @@ export async function GET(request: NextRequest) {
 
 
     console.log('Short links GET - userId:', auth.user.userId);
+    
+    const supabaseServer = getSupabaseServer();
+    console.log('Short links GET - supabaseServer created');
     
     const { data: shortLinks, error } = await supabaseServer
       .from('short_links')
@@ -107,6 +110,8 @@ export async function POST(request: NextRequest) {
     let attempts = 0;
     const maxAttempts = 10;
 
+    const supabaseServer = getSupabaseServer();
+    
     // Benzersiz kod bul
     while (attempts < maxAttempts) {
       const { data: existing, error: checkError } = await supabaseServer
@@ -146,6 +151,9 @@ export async function POST(request: NextRequest) {
 
     // Kısa link oluştur
     console.log('Short link POST - userId:', auth.user.userId, 'shortCode:', shortCode);
+    
+    const supabaseServer = getSupabaseServer();
+    console.log('Short link POST - supabaseServer created');
     
     const { data: shortLinkData, error } = await supabaseServer
       .from('short_links')

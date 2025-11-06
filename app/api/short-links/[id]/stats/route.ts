@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { getSupabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 
 // GET /api/short-links/[id]/stats - Kısa link istatistiklerini getir
@@ -19,6 +19,7 @@ export async function GET(
 
     const { id } = await params;
     const shortLinkId = id;
+    const supabaseServer = getSupabaseServer();
 
     // Kısa linkin kullanıcıya ait olduğunu kontrol et
     const { data: shortLink, error: linkError } = await supabaseServer

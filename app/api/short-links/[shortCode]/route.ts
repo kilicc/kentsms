@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { getSupabaseServer } from '@/lib/supabase-server';
 
 // GET /api/short-links/[shortCode] - Kısa linke tıklama ve yönlendirme
 export async function GET(
@@ -8,6 +8,7 @@ export async function GET(
 ) {
   try {
     const { shortCode } = await params;
+    const supabaseServer = getSupabaseServer();
 
     // Kısa linki bul
     const { data: shortLink, error } = await supabaseServer
