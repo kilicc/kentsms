@@ -1,12 +1,12 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Alert, Chip, Divider, alpha, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, InputAdornment, Pagination } from '@mui/material';
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings, Visibility } from '@mui/icons-material';
+import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings, Visibility, Search, FilterList } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
 import ClientDate from '@/components/ClientDate';
@@ -51,6 +51,12 @@ export default function CryptoPaymentPage() {
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const paymentInfoRef = useRef<HTMLDivElement>(null);
+  
+  // Payment history search and filter
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
+  const [paymentCurrentPage, setPaymentCurrentPage] = useState(1);
+  const paymentItemsPerPage = 10;
   
   // Admin management states
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
@@ -443,22 +449,96 @@ export default function CryptoPaymentPage() {
                             </Typography>
                           </Box>
                         ) : (
-                          <TableContainer>
-                            <Table size="small">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tutar</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Ödeme Yöntemi</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Transaction ID</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Oluşturulma</TableCell>
-                                  <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {paymentRequests.map((request) => {
+                          <>
+                            {/* Search and Filter */}
+                            <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                              <TextField
+                                size="small"
+                                placeholder="Kullanıcı, transaction ID veya tutar ara..."
+                                value={paymentSearchQuery}
+                                onChange={(e) => {
+                                  setPaymentSearchQuery(e.target.value);
+                                  setPaymentCurrentPage(1);
+                                }}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <Search sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                sx={{ flex: 1, minWidth: 200 }}
+                              />
+                              <FormControl size="small" sx={{ minWidth: 150 }}>
+                                <InputLabel>Durum Filtresi</InputLabel>
+                                <Select
+                                  value={paymentStatusFilter}
+                                  label="Durum Filtresi"
+                                  onChange={(e) => {
+                                    setPaymentStatusFilter(e.target.value);
+                                    setPaymentCurrentPage(1);
+                                  }}
+                                >
+                                  <MenuItem value="all">Tümü</MenuItem>
+                                  <MenuItem value="pending">Beklemede</MenuItem>
+                                  <MenuItem value="approved">Onaylandı</MenuItem>
+                                  <MenuItem value="rejected">Reddedildi</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Box>
+                            
+                            {(() => {
+                              // Filter payment requests
+                              let filteredRequests = paymentRequests.filter((request) => {
+                                const matchesSearch = paymentSearchQuery === '' || 
+                                  (request.user?.username || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                                  (request.user?.email || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                                  (request.transactionId || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                                  String(request.amount || '').includes(paymentSearchQuery);
+                                const matchesStatus = paymentStatusFilter === 'all' || request.status === paymentStatusFilter;
+                                return matchesSearch && matchesStatus;
+                              });
+
+                              // Pagination
+                              const totalPages = Math.ceil(filteredRequests.length / paymentItemsPerPage);
+                              const startIndex = (paymentCurrentPage - 1) * paymentItemsPerPage;
+                              const paginatedRequests = filteredRequests.slice(startIndex, startIndex + paymentItemsPerPage);
+
+                              return filteredRequests.length > 0 ? (
+                          // Filter payment requests
+                          let filteredRequests = paymentRequests.filter((request) => {
+                            const matchesSearch = paymentSearchQuery === '' || 
+                              (request.user?.username || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                              (request.user?.email || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                              (request.transactionId || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                              String(request.amount || '').includes(paymentSearchQuery);
+                            const matchesStatus = paymentStatusFilter === 'all' || request.status === paymentStatusFilter;
+                            return matchesSearch && matchesStatus;
+                          });
+
+                          // Pagination
+                          const totalPages = Math.ceil(filteredRequests.length / paymentItemsPerPage);
+                          const startIndex = (paymentCurrentPage - 1) * paymentItemsPerPage;
+                          const paginatedRequests = filteredRequests.slice(startIndex, startIndex + paymentItemsPerPage);
+
+                          return filteredRequests.length > 0 ? (
+                            <>
+                              <TableContainer>
+                                <Table size="small">
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tutar</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Ödeme Yöntemi</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Transaction ID</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Oluşturulma</TableCell>
+                                      <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {paginatedRequests.map((request) => {
                                   const getStatusColor = (status: string) => {
                                     switch (status) {
                                       case 'approved':
