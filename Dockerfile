@@ -36,8 +36,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install OpenSSL 1.1 for Prisma (libssl.so.1.1)
-RUN apk add --no-cache openssl1.1-compat
+# Install OpenSSL for Prisma
+# Alpine 3.22+ için openssl paketi yeterli (OpenSSL 3 ile uyumlu)
+# Prisma binaryTargets ile linux-musl için derlenmiş engine kullanılacak
+RUN apk add --no-cache openssl libc6-compat
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
