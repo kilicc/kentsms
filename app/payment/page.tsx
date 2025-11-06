@@ -505,23 +505,6 @@ export default function CryptoPaymentPage() {
                               const paginatedRequests = filteredRequests.slice(startIndex, startIndex + paymentItemsPerPage);
 
                               return filteredRequests.length > 0 ? (
-                          // Filter payment requests
-                          let filteredRequests = paymentRequests.filter((request) => {
-                            const matchesSearch = paymentSearchQuery === '' || 
-                              (request.user?.username || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
-                              (request.user?.email || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
-                              (request.transactionId || '').toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
-                              String(request.amount || '').includes(paymentSearchQuery);
-                            const matchesStatus = paymentStatusFilter === 'all' || request.status === paymentStatusFilter;
-                            return matchesSearch && matchesStatus;
-                          });
-
-                          // Pagination
-                          const totalPages = Math.ceil(filteredRequests.length / paymentItemsPerPage);
-                          const startIndex = (paymentCurrentPage - 1) * paymentItemsPerPage;
-                          const paginatedRequests = filteredRequests.slice(startIndex, startIndex + paymentItemsPerPage);
-
-                          return filteredRequests.length > 0 ? (
                             <>
                               <TableContainer>
                                 <Table size="small">
@@ -637,10 +620,31 @@ export default function CryptoPaymentPage() {
                                       </TableCell>
                                     </TableRow>
                                   );
-                                })}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                              {totalPages > 1 && (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                  <Pagination
+                                    count={totalPages}
+                                    page={paymentCurrentPage}
+                                    onChange={(e, page) => setPaymentCurrentPage(page)}
+                                    color="primary"
+                                    size="small"
+                                  />
+                                </Box>
+                              )}
+                            </>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                              {paymentRequests.length === 0
+                                ? 'Henüz ödeme talebi bulunmuyor'
+                                : 'Arama kriterlerinize uygun ödeme talebi bulunamadı'}
+                            </Typography>
+                          );
+                            })()}
+                          </>
                         )}
                       </CardContent>
                     </Card>
