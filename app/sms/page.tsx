@@ -1,11 +1,18 @@
 'use client';
 
-import { Box, Container, Typography, Paper, TextField, Button, Grid, Alert } from '@mui/material';
-import { useState } from 'react';
+import { Box, Container, Typography, Paper, TextField, Button, Grid, Alert, FormControl, InputLabel, Select, MenuItem, Chip, IconButton } from '@mui/material';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { Send } from '@mui/icons-material';
+import { Send, Description, Close } from '@mui/icons-material';
+
+interface SMSTemplate {
+  id: string;
+  name: string;
+  content: string;
+  category: string;
+}
 
 export default function SMSInterfacePage() {
   const { api } = useAuth();
@@ -13,9 +20,38 @@ export default function SMSInterfacePage() {
     phone: '',
     message: '',
   });
+  const [templates, setTemplates] = useState<SMSTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      const response = await api.get('/sms-templates');
+      if (response.data.success) {
+        setTemplates(response.data.data.templates || []);
+      }
+    } catch (error) {
+      console.error('Templates load error:', error);
+    }
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    if (templateId) {
+      const template = templates.find((t) => t.id === templateId);
+      if (template) {
+        setFormData({ ...formData, message: template.content });
+      }
+    } else {
+      setFormData({ ...formData, message: '' });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +169,56 @@ export default function SMSInterfacePage() {
                     />
                   </Grid>
 
+                  {templates.length > 0 && (
+                    <Grid size={{ xs: 12 }}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Şablon Seç</InputLabel>
+                        <Select
+                          value={selectedTemplateId}
+                          label="Şablon Seç"
+                          onChange={(e) => handleTemplateSelect(e.target.value)}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1.5,
+                              fontSize: '14px',
+                            },
+                          }}
+                          endAdornment={
+                            selectedTemplateId ? (
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTemplateSelect('');
+                                }}
+                                sx={{ mr: 1 }}
+                              >
+                                <Close fontSize="small" />
+                              </IconButton>
+                            ) : null
+                          }
+                        >
+                          <MenuItem value="">Şablon Seçme</MenuItem>
+                          {templates.map((template) => (
+                            <MenuItem key={template.id} value={template.id}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                                <Description sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="body2" sx={{ fontSize: '13px' }}>
+                                    {template.name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
+                                    {template.category}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  )}
+
                   <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth
@@ -142,7 +228,12 @@ export default function SMSInterfacePage() {
                       multiline
                       rows={6}
                       value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, message: e.target.value });
+                        if (selectedTemplateId) {
+                          setSelectedTemplateId('');
+                        }
+                      }}
                       required
                       helperText={`Mesaj karakter sayısı: ${formData.message.length}`}
                       sx={{
