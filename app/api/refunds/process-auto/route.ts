@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseServer } from '@/lib/supabase-server';
 
 // POST /api/refunds/process-auto - Otomatik iade işleme (48 saat sonra)
 // Bu endpoint cron job veya scheduled task tarafından çağrılacak
@@ -19,80 +19,111 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Otomatik iade işleme başlatılıyor...');
 
+    const supabaseServer = getSupabaseServer();
+
     // 48 saat önce oluşturulan ve hala beklemede olan iadeleri bul
     const fortyEightHoursAgo = new Date();
     fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
 
-    const pendingRefunds = await prisma.refund.findMany({
-      where: {
-        status: 'pending',
-        createdAt: {
-          lte: fortyEightHoursAgo,
-        },
-      },
-      include: {
-        sms: {
-          select: {
-            id: true,
-            status: true,
-            cost: true,
-            userId: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            credit: true,
-          },
-        },
-      },
-    });
+    const { data: pendingRefunds, error: refundsError } = await supabaseServer
+      .from('refunds')
+      .select(`
+        id,
+        user_id,
+        sms_id,
+        refund_amount,
+        status,
+        created_at,
+        sms_messages (
+          id,
+          status,
+          cost,
+          user_id
+        ),
+        users (
+          id,
+          credit
+        )
+      `)
+      .eq('status', 'pending')
+      .lte('created_at', fortyEightHoursAgo.toISOString());
 
-    console.log(`📊 ${pendingRefunds.length} iade işlenecek`);
+    if (refundsError) {
+      console.error('❌ İadeleri getirme hatası:', refundsError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: refundsError.message || 'İadeleri getirme hatası',
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log(`📊 ${pendingRefunds?.length || 0} iade işlenecek`);
 
     let processedCount = 0;
     let errorCount = 0;
 
-    for (const refund of pendingRefunds) {
+    for (const refund of pendingRefunds || []) {
       try {
+        const sms = refund.sms_messages as any;
+        const user = refund.users as any;
+
         // SMS'in hala başarısız olduğunu kontrol et
-        if (refund.sms && refund.sms.status === 'failed') {
+        if (sms && sms.status === 'failed') {
           // Kullanıcıya kredi iade et
-          const refundAmount = Number(refund.refundAmount);
-          const currentCredit = refund.user?.credit || 0;
+          const refundAmount = Number(refund.refund_amount);
+          const currentCredit = user?.credit || 0;
           const newCredit = currentCredit + refundAmount;
 
           // Kullanıcı kredisini güncelle
-          await prisma.user.update({
-            where: { id: refund.userId! },
-            data: { credit: Math.floor(newCredit) },
-          });
+          const { error: updateUserError } = await supabaseServer
+            .from('users')
+            .update({ credit: Math.floor(newCredit) })
+            .eq('id', refund.user_id);
+
+          if (updateUserError) {
+            throw updateUserError;
+          }
 
           // İade durumunu güncelle
-          await prisma.refund.update({
-            where: { id: refund.id },
-            data: {
+          const { error: updateRefundError } = await supabaseServer
+            .from('refunds')
+            .update({
               status: 'processed',
-              processedAt: new Date(),
-            },
-          });
+              processed_at: new Date().toISOString(),
+            })
+            .eq('id', refund.id);
+
+          if (updateRefundError) {
+            throw updateRefundError;
+          }
 
           // SMS'i iade işlendi olarak işaretle
-          await prisma.smsMessage.update({
-            where: { id: refund.smsId! },
-            data: { refundProcessed: true },
-          });
+          const { error: updateSmsError } = await supabaseServer
+            .from('sms_messages')
+            .update({ refund_processed: true })
+            .eq('id', refund.sms_id);
+
+          if (updateSmsError) {
+            console.warn(`⚠️ SMS güncelleme hatası (${refund.sms_id}):`, updateSmsError);
+          }
 
           processedCount++;
           console.log(`✅ İade işlendi: ${refund.id} - ${refundAmount} kredi iade edildi`);
         } else {
           // SMS başarılı olmuş, iadeyi iptal et
-          await prisma.refund.update({
-            where: { id: refund.id },
-            data: {
+          const { error: updateRefundError } = await supabaseServer
+            .from('refunds')
+            .update({
               status: 'cancelled',
-            },
-          });
+            })
+            .eq('id', refund.id);
+
+          if (updateRefundError) {
+            throw updateRefundError;
+          }
+
           console.log(`❌ İade iptal edildi: ${refund.id} - SMS başarılı`);
         }
       } catch (error: any) {
@@ -107,7 +138,7 @@ export async function POST(request: NextRequest) {
       data: {
         processed: processedCount,
         errors: errorCount,
-        total: pendingRefunds.length,
+        total: pendingRefunds?.length || 0,
       },
     });
   } catch (error: any) {

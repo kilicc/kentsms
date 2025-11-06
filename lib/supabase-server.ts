@@ -88,6 +88,9 @@ function getSupabaseClient(): SupabaseClient {
   return supabaseClientInstance;
 }
 
+// Export functions for direct use
+export { getSupabaseServer, getSupabaseClient };
+
 // Export with lazy initialization - Backward compatibility
 export const supabaseServer = new Proxy({} as any, {
   get(_target, prop) {

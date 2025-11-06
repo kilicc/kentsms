@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseServer } from '@/lib/supabase-server';
 import { verifyToken } from '@/lib/utils/jwt';
 
 export async function DELETE(
@@ -25,14 +25,16 @@ export async function DELETE(
     }
 
     const { userId } = await params;
+    const supabaseServer = getSupabaseServer();
 
     // Admin'ı silmeyi engelle
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { username: true },
-    });
+    const { data: user, error: userError } = await supabaseServer
+      .from('users')
+      .select('username')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { success: false, error: 'Kullanıcı bulunamadı' },
         { status: 404 }
@@ -47,9 +49,21 @@ export async function DELETE(
     }
 
     // Kullanıcıyı sil (cascade ile tüm ilişkili veriler otomatik silinecek)
-    await prisma.user.delete({
-      where: { id: userId },
-    });
+    const { error: deleteError } = await supabaseServer
+      .from('users')
+      .delete()
+      .eq('id', userId);
+
+    if (deleteError) {
+      console.error('❌ Kullanıcı silme hatası:', deleteError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: deleteError.message || 'Kullanıcı silinirken hata oluştu',
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
