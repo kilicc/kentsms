@@ -75,8 +75,10 @@ export default function SMSReportsPage() {
   // Statistics states
   const [stats, setStats] = useState<any>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [statsError, setStatsError] = useState('');
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
   const [loadingPaymentRequests, setLoadingPaymentRequests] = useState(false);
+  const [paymentRequestsError, setPaymentRequestsError] = useState('');
   
   // Bulk SMS Reports states
   const [bulkSmsReports, setBulkSmsReports] = useState<any[]>([]);
@@ -316,6 +318,7 @@ export default function SMSReportsPage() {
     
     try {
       setLoadingStats(true);
+      setStatsError('');
       const params: any = {};
       if (statsFilters.startDate) params.startDate = statsFilters.startDate;
       if (statsFilters.endDate) params.endDate = statsFilters.endDate;
@@ -323,9 +326,13 @@ export default function SMSReportsPage() {
       const response = await api.get('/admin/stats', { params });
       if (response.data.success) {
         setStats(response.data.data);
+      } else {
+        setStatsError(response.data.message || 'İstatistikler yüklenirken bir hata oluştu');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Stats load error:', error);
+      setStatsError(error.response?.data?.message || 'İstatistikler yüklenirken bir hata oluştu');
+      setStats(null);
     } finally {
       setLoadingStats(false);
     }
@@ -336,6 +343,7 @@ export default function SMSReportsPage() {
     
     try {
       setLoadingPaymentRequests(true);
+      setPaymentRequestsError('');
       const params: any = {};
       if (paymentFilters.startDate) params.startDate = paymentFilters.startDate;
       if (paymentFilters.endDate) params.endDate = paymentFilters.endDate;
@@ -395,9 +403,13 @@ export default function SMSReportsPage() {
         }
         
         setPaymentRequests(requests);
+      } else {
+        setPaymentRequestsError(response.data.message || 'Ödeme raporları yüklenirken bir hata oluştu');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment requests load error:', error);
+      setPaymentRequestsError(error.response?.data?.message || 'Ödeme raporları yüklenirken bir hata oluştu');
+      setPaymentRequests([]);
     } finally {
       setLoadingPaymentRequests(false);
     }
@@ -1024,6 +1036,12 @@ export default function SMSReportsPage() {
                   </Grid>
                 </Paper>
 
+                {statsError && (
+                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setStatsError('')}>
+                    {statsError}
+                  </Alert>
+                )}
+
                 {loadingStats ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                     <CircularProgress />
@@ -1411,6 +1429,12 @@ export default function SMSReportsPage() {
                     </Grid>
                   </Grid>
                 </Paper>
+
+                {paymentRequestsError && (
+                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setPaymentRequestsError('')}>
+                    {paymentRequestsError}
+                  </Alert>
+                )}
 
                 {loadingPaymentRequests ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
