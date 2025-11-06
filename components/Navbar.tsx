@@ -66,7 +66,7 @@ export default function Navbar() {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+          borderRight: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
         },
       }}
     >
@@ -76,7 +76,7 @@ export default function Navbar() {
           p: 1.5,
           background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
           color: 'white',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+          borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
         }}
       >
         <Box
@@ -105,7 +105,7 @@ export default function Navbar() {
         sx={{
           p: 1.5,
           background: alpha('#1976d2', 0.05),
-          borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+          borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -271,9 +271,9 @@ export default function Navbar() {
         <Box 
           sx={{ 
             p: 1.5, 
-            borderTop: '1px solid rgba(0,0,0,0.12)',
+            borderTop: mode === 'dark' ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.12)',
             background: alpha('#4caf50', 0.1),
-            borderBottom: '1px solid rgba(0,0,0,0.12)',
+            borderBottom: mode === 'dark' ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.12)',
           }}
         >
           <Box
@@ -314,7 +314,7 @@ export default function Navbar() {
       )}
 
       {/* Logout */}
-      <Box sx={{ p: 0.75, borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+      <Box sx={{ p: 0.75, borderTop: mode === 'dark' ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.12)' }}>
         <ListItemButton
           onClick={() => {
             logout();

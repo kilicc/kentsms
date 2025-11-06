@@ -185,11 +185,15 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
           '& .MuiTableCell-root': {
             fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
             padding: '11.04px 14.72px', // 9.6px 12.8px × 1.15
+            color: mode === 'dark' ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+            borderColor: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
           },
           '& .MuiTableCell-head': {
             fontWeight: 600,
             fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
             padding: '12.88px 14.72px', // 11.2px 12.8px × 1.15
+            color: mode === 'dark' ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+            backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
           },
         },
       },
@@ -199,11 +203,15 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
         root: {
           fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           padding: '11.04px 14.72px', // 9.6px 12.8px × 1.15
+          color: mode === 'dark' ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+          borderColor: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
         },
         head: {
           fontWeight: 600,
           fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           padding: '12.88px 14.72px', // 11.2px 12.8px × 1.15
+          color: mode === 'dark' ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+          backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
         },
       },
     },

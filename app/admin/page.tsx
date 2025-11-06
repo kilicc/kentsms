@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, DeleteSweep } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
@@ -68,6 +69,7 @@ interface RefundsReportResponse {
 
 export default function AdminDashboardPage() {
   const { api, user } = useAuth();
+  const { mode } = useTheme();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -437,7 +439,7 @@ export default function AdminDashboardPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />
@@ -1453,7 +1455,7 @@ export default function AdminDashboardPage() {
                         <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>
                           Notlar
                         </Typography>
-                        <Paper sx={{ p: 1.5, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+                        <Paper sx={{ p: 1.5, backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f5f5f5', borderRadius: 1 }}>
                           <Typography variant="body2" sx={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
                             {selectedPaymentRequestDetail.adminNotes || selectedPaymentRequestDetail.notes || '-'}
                           </Typography>

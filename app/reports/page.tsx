@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Assessment, FilterList, BarChart, People, Payment, MoneyOff, Send, AccountBalanceWallet } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import ClientDate from '@/components/ClientDate';
@@ -29,6 +30,7 @@ interface SmsMessage {
 
 export default function SMSReportsPage() {
   const { api, user } = useAuth();
+  const { mode } = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [messages, setMessages] = useState<SmsMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -436,7 +438,7 @@ export default function SMSReportsPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />

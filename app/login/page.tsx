@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { gradients } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login: loginUser } = useAuth();
+  const { mode } = useTheme();
   const [formData, setFormData] = useState({
     login: '',
     password: '',
@@ -47,7 +49,9 @@ export default function LoginPage() {
         sx={{
           maxWidth: 480,
           width: '100%',
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: mode === 'dark' 
+            ? 'rgba(30, 30, 30, 0.95)' 
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderRadius: 12,
           overflow: 'hidden',

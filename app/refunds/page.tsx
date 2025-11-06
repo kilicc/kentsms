@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { MoneyOff, Send, Info } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import ClientDate from '@/components/ClientDate';
@@ -26,6 +27,7 @@ interface Refund {
 
 export default function RefundsPage() {
   const { api } = useAuth();
+  const { mode } = useTheme();
   const [refunds, setRefunds] = useState<Refund[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -109,7 +111,7 @@ export default function RefundsPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />

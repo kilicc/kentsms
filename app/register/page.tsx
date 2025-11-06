@@ -4,10 +4,12 @@ import { Box, Typography, Card } from '@mui/material';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Kayıt özelliği devre dışı bırakıldı
 export default function RegisterPage() {
   const router = useRouter();
+  const { mode } = useTheme();
 
   useEffect(() => {
     // Register sayfasına erişim engellendi, login'e yönlendir
@@ -29,7 +31,9 @@ export default function RegisterPage() {
         sx={{
           maxWidth: 480,
           width: '100%',
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: mode === 'dark' 
+            ? 'rgba(30, 30, 30, 0.95)' 
+            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderRadius: 12,
           overflow: 'hidden',

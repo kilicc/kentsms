@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Add, Edit, Delete, Group, Person, Upload, Download, Search, FilterList, DeleteSweep } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 
@@ -33,6 +34,7 @@ interface ContactGroup {
 
 export default function ContactsPage() {
   const { api } = useAuth();
+  const { mode } = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [groups, setGroups] = useState<ContactGroup[]>([]);
@@ -291,7 +293,7 @@ export default function ContactsPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />

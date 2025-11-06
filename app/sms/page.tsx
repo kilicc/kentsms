@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Send, Description, Close } from '@mui/icons-material';
 
 interface SMSTemplate {
@@ -16,6 +17,7 @@ interface SMSTemplate {
 
 export default function SMSInterfacePage() {
   const { api } = useAuth();
+  const { mode } = useTheme();
   const [formData, setFormData] = useState({
     phone: '',
     message: '',
@@ -87,7 +89,7 @@ export default function SMSInterfacePage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />
