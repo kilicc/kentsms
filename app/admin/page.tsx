@@ -1,11 +1,11 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Tabs, Tab, Chip, alpha, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Select, MenuItem, FormControl, InputLabel, Divider } from '@mui/material';
+import { Box, Container, Typography, Paper, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Tabs, Tab, Chip, alpha, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Select, MenuItem, FormControl, InputLabel, Divider, InputAdornment, IconButton, Pagination } from '@mui/material';
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility } from '@mui/icons-material';
+import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, DeleteSweep } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import ClientDate from '@/components/ClientDate';
@@ -94,6 +94,14 @@ export default function AdminDashboardPage() {
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+  
+  // User management search and filter
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [bulkCreditDialogOpen, setBulkCreditDialogOpen] = useState(false);
+  const [userCurrentPage, setUserCurrentPage] = useState(1);
+  const userItemsPerPage = 10;
 
   useEffect(() => {
     // URL'den tab parametresini oku (client-side only)
@@ -283,6 +291,50 @@ export default function AdminDashboardPage() {
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Kredi yükleme hatası');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkCreditSubmit = async () => {
+    if (selectedUsers.length === 0 || creditAmount <= 0) {
+      setError('Lütfen geçerli bir kredi miktarı girin ve en az bir kullanıcı seçin');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const userId of selectedUsers) {
+        try {
+          await api.post(`/admin/users/${userId}/credit`, {
+            amount: creditAmount,
+            reason: 'Admin toplu kredi yükleme',
+          });
+          successCount++;
+        } catch (err: any) {
+          failCount++;
+          console.error(`Kredi ekleme hatası (${userId}):`, err);
+        }
+      }
+
+      if (successCount > 0) {
+        setSuccess(`${successCount} kullanıcıya ${creditAmount} kredi başarıyla eklendi${failCount > 0 ? ` (${failCount} başarısız)` : ''}`);
+        setBulkCreditDialogOpen(false);
+        setSelectedUsers([]);
+        setCreditAmount(0);
+        loadUsers();
+        loadStats();
+      } else {
+        setError('Kredi eklenemedi');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Toplu kredi ekleme hatası');
     } finally {
       setLoading(false);
     }
@@ -557,7 +609,7 @@ export default function AdminDashboardPage() {
             {/* Tab Content */}
             {tabValue === 0 && (
               <Paper sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                   <Typography 
                     variant="h6"
                     sx={{
@@ -567,81 +619,237 @@ export default function AdminDashboardPage() {
                   >
                     Kullanıcılar
                   </Typography>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<PersonAdd />}
-                    onClick={() => {
-                      setNewUser({ username: '', email: '', password: '', role: 'user', credit: 0 });
-                      setCreateUserDialogOpen(true);
-                    }}
-                    sx={{
-                      background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
-                      borderRadius: 1.5,
-                      textTransform: 'none',
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      py: 0.75,
-                      px: 1.5,
-                    }}
-                  >
-                    Yeni Kullanıcı
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {selectedUsers.length > 0 && (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="primary"
+                        startIcon={<Add />}
+                        onClick={() => setBulkCreditDialogOpen(true)}
+                        sx={{
+                          textTransform: 'none',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                        }}
+                      >
+                        Toplu Kredi Ekle ({selectedUsers.length})
+                      </Button>
+                    )}
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<PersonAdd />}
+                      onClick={() => {
+                        setNewUser({ username: '', email: '', password: '', role: 'user', credit: 0 });
+                        setCreateUserDialogOpen(true);
+                      }}
+                      sx={{
+                        background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        py: 0.75,
+                        px: 1.5,
+                      }}
+                    >
+                      Yeni Kullanıcı
+                    </Button>
+                  </Box>
                 </Box>
-                    <TableContainer>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı Adı</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>E-posta</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Rol</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {users.map((u) => (
-                            <TableRow 
-                              key={u.id}
-                              sx={{ 
-                                cursor: 'pointer',
-                                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
-                              }}
-                            >
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.username}</TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.email}</TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.credit}</TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.role}</TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                <Box sx={{ display: 'flex', gap: 0.75 }}>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    startIcon={<Add />}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedUser(u);
-                                      setCreditDialogOpen(true);
-                                    }}
-                                    sx={{
-                                      borderRadius: 1.5,
-                                      textTransform: 'none',
-                                      fontSize: '12px',
-                                      fontWeight: 500,
-                                      py: 0.5,
-                                      px: 1,
-                                    }}
-                                  >
-                                    Kredi Yükle
-                                  </Button>
-                                </Box>
-                              </TableCell>
+                
+                {/* Search and Filter */}
+                <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <TextField
+                    size="small"
+                    placeholder="Kullanıcı adı veya email ara..."
+                    value={userSearchQuery}
+                    onChange={(e) => {
+                      setUserSearchQuery(e.target.value);
+                      setUserCurrentPage(1);
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{ flex: 1, minWidth: 200 }}
+                  />
+                  <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel>Rol Filtresi</InputLabel>
+                    <Select
+                      value={userRoleFilter}
+                      label="Rol Filtresi"
+                      onChange={(e) => {
+                        setUserRoleFilter(e.target.value);
+                        setUserCurrentPage(1);
+                      }}
+                    >
+                      <MenuItem value="all">Tüm Roller</MenuItem>
+                      <MenuItem value="admin">Admin</MenuItem>
+                      <MenuItem value="moderator">Moderator</MenuItem>
+                      <MenuItem value="user">User</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {(() => {
+                  // Filter users
+                  let filteredUsers = users.filter((u) => {
+                    const matchesSearch = userSearchQuery === '' || 
+                      u.username.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                      u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+                    const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+                    return matchesSearch && matchesRole;
+                  });
+
+                  // Pagination
+                  const totalPages = Math.ceil(filteredUsers.length / userItemsPerPage);
+                  const startIndex = (userCurrentPage - 1) * userItemsPerPage;
+                  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + userItemsPerPage);
+
+                  return filteredUsers.length > 0 ? (
+                    <>
+                      {/* Select All */}
+                      <Box sx={{ px: 2, pb: 1, display: 'flex', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Checkbox
+                          checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
+                          indeterminate={selectedUsers.length > 0 && selectedUsers.length < paginatedUsers.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUsers(prev => [...new Set([...prev, ...paginatedUsers.map(u => u.id)])]);
+                            } else {
+                              setSelectedUsers(prev => prev.filter(id => !paginatedUsers.map(u => u.id).includes(id)));
+                            }
+                          }}
+                          size="small"
+                        />
+                        <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary', ml: 1 }}>
+                          {selectedUsers.length > 0 ? `${selectedUsers.length} seçili` : 'Tümünü seç'}
+                        </Typography>
+                      </Box>
+                      
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Seç</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı Adı</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>E-posta</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Rol</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                          </TableHead>
+                          <TableBody>
+                            {paginatedUsers.map((u) => (
+                              <TableRow 
+                                key={u.id}
+                                sx={{ 
+                                  cursor: 'pointer',
+                                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+                                }}
+                              >
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                  <Checkbox
+                                    checked={selectedUsers.includes(u.id)}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedUsers(prev => 
+                                        prev.includes(u.id) 
+                                          ? prev.filter(id => id !== u.id)
+                                          : [...prev, u.id]
+                                      );
+                                    }}
+                                    size="small"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.username}</TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.email}</TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.credit}</TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                  <Chip
+                                    label={u.role}
+                                    size="small"
+                                    color={u.role === 'admin' ? 'error' : u.role === 'moderator' ? 'warning' : 'default'}
+                                    sx={{ fontSize: '0.65rem', height: 20 }}
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                  <Box sx={{ display: 'flex', gap: 0.75 }}>
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      startIcon={<Visibility />}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewUserDetails(u.id);
+                                      }}
+                                      sx={{
+                                        borderRadius: 1.5,
+                                        textTransform: 'none',
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        py: 0.5,
+                                        px: 1,
+                                      }}
+                                    >
+                                      Detay
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      startIcon={<Add />}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedUser(u);
+                                        setCreditDialogOpen(true);
+                                      }}
+                                      sx={{
+                                        borderRadius: 1.5,
+                                        textTransform: 'none',
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        py: 0.5,
+                                        px: 1,
+                                      }}
+                                    >
+                                      Kredi
+                                    </Button>
+                                  </Box>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                      {totalPages > 1 && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                          <Pagination
+                            count={totalPages}
+                            page={userCurrentPage}
+                            onChange={(e, page) => setUserCurrentPage(page)}
+                            color="primary"
+                            size="small"
+                          />
+                        </Box>
+                      )}
+                    </>
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {users.length === 0
+                          ? 'Henüz kullanıcı bulunmuyor'
+                          : 'Arama kriterlerinize uygun kullanıcı bulunamadı'}
+                      </Typography>
+                    </Box>
+                  );
+                })()}
               </Paper>
             )}
 
@@ -1169,6 +1377,37 @@ export default function AdminDashboardPage() {
               <Button size="small" onClick={() => setRejectDialogOpen(false)} sx={{ fontSize: '12px' }}>İptal</Button>
               <Button size="small" onClick={handleRejectRequest} variant="contained" color="error" disabled={loading || !rejectionReason} sx={{ fontSize: '12px' }}>
                 {loading ? 'Reddediliyor...' : 'Reddet'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Bulk Credit Dialog */}
+          <Dialog open={bulkCreditDialogOpen} onClose={() => setBulkCreditDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>Toplu Kredi Yükle ({selectedUsers.length} kullanıcı)</DialogTitle>
+            <DialogContent sx={{ pt: 1.5 }}>
+              <Alert severity="info" sx={{ mb: 2, fontSize: '12px' }}>
+                {selectedUsers.length} kullanıcıya aynı miktarda kredi yüklenecektir.
+              </Alert>
+              <TextField
+                fullWidth
+                size="small"
+                label="Kredi Miktarı"
+                type="number"
+                value={creditAmount}
+                onChange={(e) => setCreditAmount(parseInt(e.target.value) || 0)}
+                margin="dense"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '12px',
+                  },
+                }}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+              <Button size="small" onClick={() => setBulkCreditDialogOpen(false)} sx={{ fontSize: '12px' }}>İptal</Button>
+              <Button size="small" onClick={handleBulkCreditSubmit} variant="contained" disabled={loading || creditAmount <= 0} sx={{ fontSize: '12px' }}>
+                {loading ? 'Yükleniyor...' : 'Kredi Yükle'}
               </Button>
             </DialogActions>
           </Dialog>
