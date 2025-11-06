@@ -185,22 +185,20 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
 
 /**
  * CepSMS API'den mesaj durumunu kontrol et
- * Not: CepSMS API dokümantasyonuna göre endpoint değişebilir
- * Genellikle /status veya /report endpoint'i kullanılır
+ * CepSMS API dokümantasyonuna göre SMS Report endpoint'i kullanılır
  */
-export async function checkSMSStatus(messageId: string): Promise<{
+export async function checkSMSStatus(messageId: string, phoneNumber?: string): Promise<{
   success: boolean;
-  status?: 'sent' | 'delivered' | 'failed' | 'pending';
+  status?: 'gönderildi' | 'iletildi' | 'iletilmedi' | 'rapor_bekliyor' | 'zaman_aşımı';
+  network?: string;
   error?: string;
 }> {
   try {
-    console.log('[CepSMS] Mesaj durumu kontrol ediliyor:', { messageId });
+    console.log('[CepSMS] Mesaj durumu kontrol ediliyor:', { messageId, phoneNumber });
 
-    // CepSMS API'de mesaj durumu sorgulama endpoint'i
-    // Genellikle /status veya /report endpoint'i kullanılır
-    // CepSMS API dokümantasyonuna göre endpoint değişebilir
-    // Önce /status endpoint'ini dene, yoksa /report dene
-    const statusUrl = CEPSMS_API_URL.replace('/smsapi', '/status') || `${CEPSMS_API_URL.replace('/smsapi', '')}/status`;
+    // CepSMS API SMS Report endpoint'i
+    // Genellikle /report veya /smsapi/report olabilir
+    const reportUrl = CEPSMS_API_URL.replace('/smsapi', '/report') || `${CEPSMS_API_URL.replace('/smsapi', '')}/report`;
     
     const requestData = {
       User: CEPSMS_USERNAME,
@@ -208,123 +206,122 @@ export async function checkSMSStatus(messageId: string): Promise<{
       MessageId: messageId,
     };
 
-    try {
-      const response = await axios.post<any>(
-        statusUrl,
-        requestData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          httpsAgent: httpsAgent,
-          timeout: 30000,
-        }
-      );
-
-      console.log('[CepSMS] Durum API Yanıtı:', JSON.stringify(response.data, null, 2));
-
-      if (!response.data) {
-        return {
-          success: false,
-          status: 'pending',
-          error: 'API yanıtı alınamadı',
-        };
+    const response = await axios.post<any>(
+      reportUrl,
+      requestData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        httpsAgent: httpsAgent,
+        timeout: 30000,
       }
+    );
 
-      // Durum kontrolü - farklı formatlar olabilir
-      const status = response.data.Status || response.data.status || response.data.DeliveryStatus || response.data.deliveryStatus;
-      const statusStr = String(status || '').toLowerCase();
+    console.log('[CepSMS] Rapor API Yanıtı:', JSON.stringify(response.data, null, 2));
 
-      // Durum eşleştirmesi
-      if (statusStr.includes('delivered') || statusStr.includes('iletildi') || statusStr === '1' || statusStr === 'ok' || statusStr === 'success') {
-        return {
-          success: true,
-          status: 'delivered',
-        };
-      } else if (statusStr.includes('failed') || statusStr.includes('iletilmedi') || statusStr.includes('undelivered') || statusStr === '0' || statusStr === 'error') {
-        return {
-          success: true,
-          status: 'failed',
-        };
-      } else if (statusStr.includes('sent') || statusStr.includes('gönderildi') || statusStr === 'pending' || statusStr === 'processing') {
-        return {
-          success: true,
-          status: 'sent',
-        };
-      }
+    if (!response.data) {
+      return {
+        success: false,
+        status: 'rapor_bekliyor',
+        error: 'API yanıtı alınamadı',
+      };
+    }
 
-      // Bilinmeyen durum
+    // Status kontrolü
+    const apiStatus = response.data.Status || response.data.status;
+    const statusStr = String(apiStatus || '').toUpperCase();
+
+    // API hatası varsa
+    if (statusStr === 'ERROR' || statusStr === 'HATA') {
+      return {
+        success: false,
+        status: 'rapor_bekliyor',
+        error: 'API hatası',
+      };
+    }
+
+    // Report array'i kontrol et
+    const report = response.data.Report || response.data.report || [];
+    
+    if (!Array.isArray(report) || report.length === 0) {
       return {
         success: true,
-        status: 'pending',
+        status: 'rapor_bekliyor',
       };
-    } catch (statusError: any) {
-      // /status endpoint'i yoksa /report endpoint'ini dene
-      console.log('[CepSMS] /status endpoint bulunamadı, /report deneniyor...');
-      
-      const reportUrl = CEPSMS_API_URL.replace('/smsapi', '/report') || `${CEPSMS_API_URL.replace('/smsapi', '')}/report`;
-      
-      try {
-        const reportResponse = await axios.post<any>(
-          reportUrl,
-          requestData,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            httpsAgent: httpsAgent,
-            timeout: 30000,
-          }
-        );
+    }
 
-        console.log('[CepSMS] Report API Yanıtı:', JSON.stringify(reportResponse.data, null, 2));
+    // Telefon numarası belirtilmişse, o numaraya ait raporu bul
+    if (phoneNumber) {
+      const formattedPhone = formatPhoneNumber(phoneNumber);
+      const phoneReport = report.find((r: any) => {
+        const reportPhone = r.GSM || r.gsm || r.phone;
+        return reportPhone === formattedPhone || reportPhone === phoneNumber;
+      });
 
-        if (!reportResponse.data) {
-          return {
-            success: false,
-            status: 'pending',
-            error: 'API yanıtı alınamadı',
-          };
-        }
-
-        // Durum kontrolü
-        const status = reportResponse.data.Status || reportResponse.data.status || reportResponse.data.DeliveryStatus || reportResponse.data.deliveryStatus;
-        const statusStr = String(status || '').toLowerCase();
-
-        if (statusStr.includes('delivered') || statusStr.includes('iletildi') || statusStr === '1' || statusStr === 'ok') {
-          return {
-            success: true,
-            status: 'delivered',
-          };
-        } else if (statusStr.includes('failed') || statusStr.includes('iletilmedi') || statusStr.includes('undelivered') || statusStr === '0') {
-          return {
-            success: true,
-            status: 'failed',
-          };
+      if (phoneReport) {
+        const state = phoneReport.State || phoneReport.state || phoneReport.status || '';
+        const network = phoneReport.Network || phoneReport.network || '';
+        
+        // Durum eşleştirmesi (Türkçe)
+        let status: 'gönderildi' | 'iletildi' | 'iletilmedi' | 'rapor_bekliyor' | 'zaman_aşımı' = 'rapor_bekliyor';
+        
+        if (state === 'İletildi' || state === 'iletildi' || state.toLowerCase().includes('iletildi')) {
+          status = 'iletildi';
+        } else if (state === 'İletilmedi' || state === 'iletilmedi' || state.toLowerCase().includes('iletilmedi')) {
+          status = 'iletilmedi';
+        } else if (state === 'Zaman Aşımı' || state === 'zaman aşımı' || state.toLowerCase().includes('zaman aşımı') || state.toLowerCase().includes('timeout')) {
+          status = 'zaman_aşımı';
+        } else if (state === 'Rapor Bekliyor' || state === 'rapor bekliyor' || state.toLowerCase().includes('rapor bekliyor') || state.toLowerCase().includes('pending')) {
+          status = 'rapor_bekliyor';
         }
 
         return {
           success: true,
-          status: 'pending',
-        };
-      } catch (reportError: any) {
-        // Her iki endpoint de çalışmıyorsa, pending döndür
-        console.warn('[CepSMS] Durum kontrolü yapılamadı, mesaj durumu bilinmiyor:', reportError.message);
-        return {
-          success: false,
-          status: 'pending',
-          error: 'Durum kontrolü yapılamadı - API endpoint bulunamadı',
+          status,
+          network,
         };
       }
     }
+
+    // Telefon numarası belirtilmemişse, ilk raporu kullan
+    const firstReport = report[0];
+    if (firstReport) {
+      const state = firstReport.State || firstReport.state || firstReport.status || '';
+      const network = firstReport.Network || firstReport.network || '';
+      
+      // Durum eşleştirmesi (Türkçe)
+      let status: 'gönderildi' | 'iletildi' | 'iletilmedi' | 'rapor_bekliyor' | 'zaman_aşımı' = 'rapor_bekliyor';
+      
+      if (state === 'İletildi' || state === 'iletildi' || state.toLowerCase().includes('iletildi')) {
+        status = 'iletildi';
+      } else if (state === 'İletilmedi' || state === 'iletilmedi' || state.toLowerCase().includes('iletilmedi')) {
+        status = 'iletilmedi';
+      } else if (state === 'Zaman Aşımı' || state === 'zaman aşımı' || state.toLowerCase().includes('zaman aşımı') || state.toLowerCase().includes('timeout')) {
+        status = 'zaman_aşımı';
+      } else if (state === 'Rapor Bekliyor' || state === 'rapor bekliyor' || state.toLowerCase().includes('rapor bekliyor') || state.toLowerCase().includes('pending')) {
+        status = 'rapor_bekliyor';
+      }
+
+      return {
+        success: true,
+        status,
+        network,
+      };
+    }
+
+    // Rapor bulunamadı
+    return {
+      success: true,
+      status: 'rapor_bekliyor',
+    };
   } catch (error: any) {
     console.error('[CepSMS] Durum kontrolü hatası:', error);
 
-    // API endpoint bulunamadıysa veya hata varsa, pending döndür
-    // Bu durumda manuel kontrol gerekebilir
+    // API endpoint bulunamadıysa veya hata varsa, rapor bekliyor döndür
     return {
       success: false,
-      status: 'pending',
+      status: 'rapor_bekliyor',
       error: error.message || 'Durum kontrolü yapılamadı',
     };
   }

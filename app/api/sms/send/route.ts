@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
           phone_number: phone,
           message,
           sender: serviceName || null,
-          status: 'sent',
+          status: 'gönderildi',
           cost: 1, // Her numara için 1 kredi
           cep_sms_message_id: smsResult.messageId,
           sent_at: new Date().toISOString(),
