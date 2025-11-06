@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabaseServer = getSupabaseServer();
 
+    const supabaseServer = getSupabaseServer();
     const { data: shortLinks, error } = await supabaseServer
       .from('short_links')
       .select('*')
@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabaseServer = getSupabaseServer();
 
     // Benzersiz kısa kod oluştur
     const generateShortCode = (): string => {
@@ -91,6 +90,7 @@ export async function POST(request: NextRequest) {
     let attempts = 0;
     const maxAttempts = 10;
 
+    const supabaseServer = getSupabaseServer();
     // Benzersiz kod bul
     while (attempts < maxAttempts) {
       const { data: existing } = await supabaseServer

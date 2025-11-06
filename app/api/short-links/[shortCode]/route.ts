@@ -50,10 +50,9 @@ export async function GET(
       .from('short_link_clicks')
       .insert({
         short_link_id: shortLink.id,
-        ip_address: ipAddress,
+        ip_address: ipAddress || 'unknown',
         user_agent: userAgent,
         referer: referer,
-        clicked_at: new Date().toISOString(),
       });
 
     if (!clickError) {
