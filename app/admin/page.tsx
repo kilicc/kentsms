@@ -94,6 +94,8 @@ export default function AdminDashboardPage() {
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
+  const [paymentRequestDetailDialogOpen, setPaymentRequestDetailDialogOpen] = useState(false);
+  const [selectedPaymentRequestDetail, setSelectedPaymentRequestDetail] = useState<any | null>(null);
   
   // User management search and filter
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -1191,7 +1193,19 @@ export default function AdminDashboardPage() {
                             };
 
                             return (
-                              <TableRow key={request.id}>
+                              <TableRow 
+                                key={request.id}
+                                onClick={() => {
+                                  setSelectedPaymentRequestDetail(request);
+                                  setPaymentRequestDetailDialogOpen(true);
+                                }}
+                                sx={{
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    backgroundColor: alpha('#1976d2', 0.05),
+                                  },
+                                }}
+                              >
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                   {request.user?.username || '-'}
                                   <br />
@@ -1229,7 +1243,8 @@ export default function AdminDashboardPage() {
                                         size="small"
                                         variant="contained"
                                         color="success"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           setSelectedRequest(request);
                                           setAdminNotes('');
                                           setApproveDialogOpen(true);
@@ -1242,7 +1257,8 @@ export default function AdminDashboardPage() {
                                         size="small"
                                         variant="contained"
                                         color="error"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           setSelectedRequest(request);
                                           setRejectionReason('');
                                           setAdminNotes('');
@@ -1320,6 +1336,171 @@ export default function AdminDashboardPage() {
               <Button size="small" onClick={handleApproveRequest} variant="contained" color="success" disabled={loading} sx={{ fontSize: '12px' }}>
                 {loading ? 'Onaylanıyor...' : 'Onayla'}
               </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Payment Request Detail Dialog */}
+          <Dialog open={paymentRequestDetailDialogOpen} onClose={() => setPaymentRequestDetailDialogOpen(false)} maxWidth="md" fullWidth>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>
+              Ödeme Talebi Detayları
+            </DialogTitle>
+            <DialogContent sx={{ pt: 1.5 }}>
+              {selectedPaymentRequestDetail && (
+                <Box>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>
+                        Kullanıcı Bilgileri
+                      </Typography>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Kullanıcı Adı:</strong> {selectedPaymentRequestDetail.user?.username || '-'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>E-posta:</strong> {selectedPaymentRequestDetail.user?.email || '-'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Kullanıcı ID:</strong> {selectedPaymentRequestDetail.user?.id || '-'}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>
+                        Ödeme Bilgileri
+                      </Typography>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Tutar:</strong> {Number(selectedPaymentRequestDetail.amount)} {selectedPaymentRequestDetail.currency || 'TRY'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Kredi:</strong> {selectedPaymentRequestDetail.credits} SMS
+                          {selectedPaymentRequestDetail.bonus > 0 && ` + ${selectedPaymentRequestDetail.bonus} bonus`}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Ödeme Yöntemi:</strong> {selectedPaymentRequestDetail.paymentMethod || '-'}
+                        </Typography>
+                        {selectedPaymentRequestDetail.transactionId && (
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Transaction ID:</strong>
+                            <Typography component="span" sx={{ fontFamily: 'monospace', fontSize: '0.65rem', ml: 0.5 }}>
+                              {selectedPaymentRequestDetail.transactionId}
+                            </Typography>
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>
+                        Durum Bilgileri
+                      </Typography>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Durum:</strong>{' '}
+                          <Chip
+                            label={
+                              selectedPaymentRequestDetail.status === 'approved' ? 'Onaylandı' :
+                              selectedPaymentRequestDetail.status === 'rejected' ? 'Reddedildi' :
+                              'Beklemede'
+                            }
+                            color={
+                              selectedPaymentRequestDetail.status === 'approved' ? 'success' :
+                              selectedPaymentRequestDetail.status === 'rejected' ? 'error' :
+                              'warning'
+                            }
+                            size="small"
+                            sx={{ fontSize: '0.65rem', height: 20, ml: 0.5 }}
+                          />
+                        </Typography>
+                        {selectedPaymentRequestDetail.approver && (
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Onaylayan:</strong> {selectedPaymentRequestDetail.approver.username || '-'}
+                          </Typography>
+                        )}
+                        {selectedPaymentRequestDetail.rejectionReason && (
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5, color: 'error.main' }}>
+                            <strong>Red Sebebi:</strong> {selectedPaymentRequestDetail.rejectionReason}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>
+                        Tarih Bilgileri
+                      </Typography>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                          <strong>Oluşturulma:</strong> <ClientDate date={selectedPaymentRequestDetail.createdAt} />
+                        </Typography>
+                        {selectedPaymentRequestDetail.updatedAt && (
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Güncellenme:</strong> <ClientDate date={selectedPaymentRequestDetail.updatedAt} />
+                          </Typography>
+                        )}
+                        {selectedPaymentRequestDetail.approvedAt && (
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Onaylanma:</strong> <ClientDate date={selectedPaymentRequestDetail.approvedAt} />
+                          </Typography>
+                        )}
+                        {selectedPaymentRequestDetail.rejectedAt && (
+                          <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
+                            <strong>Reddedilme:</strong> <ClientDate date={selectedPaymentRequestDetail.rejectedAt} />
+                          </Typography>
+                        )}
+                      </Box>
+                    </Grid>
+                    {(selectedPaymentRequestDetail.adminNotes || selectedPaymentRequestDetail.notes) && (
+                      <Grid size={{ xs: 12 }}>
+                        <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5, color: 'text.secondary' }}>
+                          Notlar
+                        </Typography>
+                        <Paper sx={{ p: 1.5, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+                          <Typography variant="body2" sx={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                            {selectedPaymentRequestDetail.adminNotes || selectedPaymentRequestDetail.notes || '-'}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+              <Button size="small" onClick={() => setPaymentRequestDetailDialogOpen(false)} sx={{ fontSize: '12px' }}>
+                Kapat
+              </Button>
+              {selectedPaymentRequestDetail?.status === 'pending' && (
+                <>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    onClick={() => {
+                      setPaymentRequestDetailDialogOpen(false);
+                      setSelectedRequest(selectedPaymentRequestDetail);
+                      setAdminNotes('');
+                      setApproveDialogOpen(true);
+                    }}
+                    sx={{ fontSize: '12px' }}
+                  >
+                    Onayla
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="error"
+                    onClick={() => {
+                      setPaymentRequestDetailDialogOpen(false);
+                      setSelectedRequest(selectedPaymentRequestDetail);
+                      setRejectionReason('');
+                      setAdminNotes('');
+                      setRejectDialogOpen(true);
+                    }}
+                    sx={{ fontSize: '12px' }}
+                  >
+                    Reddet
+                  </Button>
+                </>
+              )}
             </DialogActions>
           </Dialog>
 
