@@ -44,6 +44,7 @@ export default function AdvancedSMSPage() {
   const [message, setMessage] = useState('');
   const [templateId, setTemplateId] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const MAX_CHARACTERS = 180;
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -785,8 +786,18 @@ export default function AdvancedSMSPage() {
                             multiline
                             rows={10}
                             value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // 180 karakter limiti
+                              if (value.length <= MAX_CHARACTERS) {
+                                setMessage(value);
+                              }
+                            }}
                             required
+                            inputProps={{
+                              maxLength: MAX_CHARACTERS,
+                            }}
+                            helperText={`${MAX_CHARACTERS - message.length} karakter kaldı (180 karakter = 1 kredi)`}
                             placeholder="Mesajınızı buraya yazın veya yukarıdan bir şablon seçin..."
                             sx={{ 
                               '& .MuiOutlinedInput-root': {
@@ -807,16 +818,21 @@ export default function AdvancedSMSPage() {
                           />
                           <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }}>
-                              {message.length} karakter
+                              {message.length} / {MAX_CHARACTERS} karakter
                             </Typography>
-                            {message.length > 160 && (
-                              <Chip
-                                label={`${Math.ceil(message.length / 160)} SMS`}
-                                size="small"
-                                color="info"
-                                sx={{ fontSize: '0.7rem', height: 22 }}
-                              />
-                            )}
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }}>
+                                Tahmini Kredi: {Math.ceil(message.length / MAX_CHARACTERS) || 0}
+                              </Typography>
+                              {message.length > MAX_CHARACTERS && (
+                                <Chip
+                                  label={`${Math.ceil(message.length / MAX_CHARACTERS)} SMS`}
+                                  size="small"
+                                  color="info"
+                                  sx={{ fontSize: '0.7rem', height: 22 }}
+                                />
+                              )}
+                            </Box>
                           </Box>
                         </CardContent>
                       </Card>

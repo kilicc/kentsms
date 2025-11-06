@@ -74,16 +74,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Kredi hesaplama: Her bir numara için 1 kredi
-    // Her numara = 1 SMS = 1 kredi (gruptaki numaralar kadar kredi düşülür)
-    const requiredCredit = contacts.length; // Her numara için 1 kredi
+    // Kredi hesaplama: 180 karakter = 1 kredi
+    // Her numara için mesaj uzunluğuna göre kredi hesaplanır
+    const messageLength = message.length;
+    const creditPerMessage = Math.ceil(messageLength / 180) || 1; // En az 1 kredi
+    const requiredCredit = contacts.length * creditPerMessage; // Her numara için kredi
     const userCredit = user.credit || 0;
     
     if (userCredit < requiredCredit) {
       return NextResponse.json(
         {
           success: false,
-          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (${contacts.length} numara × 1 kredi), Mevcut: ${userCredit}`,
+          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (${contacts.length} numara × ${creditPerMessage} kredi = ${requiredCredit} kredi), Mevcut: ${userCredit}`,
         },
         { status: 400 }
       );
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     if (currentUser) {
       // Tüm SMS'ler için kredi düş (başarısız olursa 48 saat sonra iade edilecek)
-      const newCredit = Math.max(0, (currentUser.credit || 0) - contacts.length);
+      const newCredit = Math.max(0, (currentUser.credit || 0) - requiredCredit);
       await supabaseServer
         .from('users')
         .update({ credit: newCredit })
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
               message,
               sender: sender || null,
               status: 'gönderildi',
-              cost: 1, // Her numara için 1 kredi
+              cost: creditPerMessage, // 180 karakter = 1 kredi
               cep_sms_message_id: smsResult.messageId,
               sent_at: new Date().toISOString(),
             })
@@ -159,7 +161,7 @@ export async function POST(request: NextRequest) {
             }
 
             results.sent++;
-            results.totalCost += 1; // Her numara için 1 kredi
+            results.totalCost += creditPerMessage; // 180 karakter = 1 kredi
             results.messageIds.push(smsMessageData.id);
           } else {
             results.failed++;
@@ -174,7 +176,7 @@ export async function POST(request: NextRequest) {
                 message,
                 sender: sender || null,
                 status: 'failed',
-                cost: 1,
+                cost: creditPerMessage,
                 failed_at: new Date().toISOString(),
               })
               .select()
@@ -187,8 +189,8 @@ export async function POST(request: NextRequest) {
                 .insert({
                   user_id: auth.user.userId,
                   sms_id: failedSmsData.id,
-                  original_cost: 1,
-                  refund_amount: 1,
+                  original_cost: creditPerMessage,
+                  refund_amount: creditPerMessage,
                   reason: 'SMS kaydı oluşturulamadı - Otomatik iade (48 saat)',
                   status: 'pending',
                 });

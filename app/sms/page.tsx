@@ -22,6 +22,7 @@ export default function SMSInterfacePage() {
     phone: '',
     message: '',
   });
+  const MAX_CHARACTERS = 180;
   const [templates, setTemplates] = useState<SMSTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -158,10 +159,20 @@ export default function SMSInterfacePage() {
                       variant="outlined"
                       size="small"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="905xxxxxxxxx"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Birden fazla numara girişi için (virgül veya yeni satır ile ayrılmış)
+                        // Sadece 905**, 05**, 5** formatlarını kabul et
+                        const phoneRegex = /^[\d\s,\n]*$/;
+                        if (phoneRegex.test(value) || value === '') {
+                          setFormData({ ...formData, phone: value });
+                        }
+                      }}
+                      placeholder="905xxxxxxxxx veya birden fazla numara (virgülle ayırın)"
                       required
-                      helperText="Telefon numarasını 90 veya 5 ile başlayarak girin (örn: 905551234567)"
+                      multiline
+                      rows={3}
+                      helperText="Format: 905**, 05**, 5** (Birden fazla numara için virgül veya yeni satır kullanın)"
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 1.5,
@@ -231,13 +242,20 @@ export default function SMSInterfacePage() {
                       rows={6}
                       value={formData.message}
                       onChange={(e) => {
-                        setFormData({ ...formData, message: e.target.value });
-                        if (selectedTemplateId) {
-                          setSelectedTemplateId('');
+                        const value = e.target.value;
+                        // 180 karakter limiti
+                        if (value.length <= MAX_CHARACTERS) {
+                          setFormData({ ...formData, message: value });
+                          if (selectedTemplateId) {
+                            setSelectedTemplateId('');
+                          }
                         }
                       }}
                       required
-                      helperText={`Mesaj karakter sayısı: ${formData.message.length}`}
+                      inputProps={{
+                        maxLength: MAX_CHARACTERS,
+                      }}
+                      helperText={`${MAX_CHARACTERS - formData.message.length} karakter kaldı (180 karakter = 1 kredi)`}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 1.5,
@@ -258,7 +276,13 @@ export default function SMSInterfacePage() {
                         <strong>Servis:</strong> CepSMS
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-                        <strong>Maliyet:</strong> 1 SMS = 1 Kredi
+                        <strong>Maliyet:</strong> 180 karakter = 1 Kredi
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px', mt: 0.5 }}>
+                        <strong>Mesaj Uzunluğu:</strong> {formData.message.length} / {MAX_CHARACTERS} karakter
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px', mt: 0.5 }}>
+                        <strong>Tahmini Kredi:</strong> {Math.ceil(formData.message.length / MAX_CHARACTERS) || 0} kredi
                       </Typography>
                     </Box>
                   </Grid>

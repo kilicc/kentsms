@@ -25,6 +25,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Telefon numarası validasyonu: Sadece 905**, 05**, 5** formatları kabul edilir
+    const phoneNumbers = phone.split(/[,\n]/).map(p => p.trim()).filter(p => p);
+    const phoneRegex = /^(905|05|5)\d+$/;
+    const invalidPhones = phoneNumbers.filter(p => !phoneRegex.test(p));
+    
+    if (invalidPhones.length > 0) {
+      return NextResponse.json(
+        { success: false, message: `Geçersiz telefon numarası formatı: ${invalidPhones.join(', ')}. Sadece 905**, 05**, 5** formatları kabul edilir.` },
+        { status: 400 }
+      );
+    }
+
+    // Birden fazla numara varsa, her numaraya ayrı SMS gönder
+    // Şimdilik sadece ilk numaraya gönder (toplu SMS için bulk-sms endpoint'i kullanılmalı)
+    const firstPhone = phoneNumbers[0];
+
     // Get user to check credit using Supabase
     const { data: user, error: userError } = await supabaseServer
       .from('users')
@@ -40,15 +56,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Check credit
-    // Her bir numara için 1 SMS = 1 kredi
+    // 180 karakter = 1 kredi
+    const messageLength = message.length;
+    const requiredCredit = Math.ceil(messageLength / 180) || 1; // En az 1 kredi
     const userCredit = user.credit || 0;
-    const requiredCredit = 1; // 1 numara = 1 SMS = 1 kredi
     
     if (userCredit < requiredCredit) {
       return NextResponse.json(
         {
           success: false,
-          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (1 numara × 1 kredi), Mevcut: ${userCredit}`,
+          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (${messageLength} karakter / 180 = ${requiredCredit} kredi), Mevcut: ${userCredit}`,
         },
         { status: 400 }
       );
@@ -57,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Kredi düş (başarılı veya başarısız olsun, kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek)
     const { data: updatedUser, error: updateError } = await supabaseServer
       .from('users')
-      .update({ credit: Math.max(0, (userCredit || 0) - 1) })
+      .update({ credit: Math.max(0, (userCredit || 0) - requiredCredit) })
       .eq('id', auth.user.userId)
       .select('credit')
       .single();
@@ -69,8 +86,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send SMS
-    const smsResult = await sendSMS(phone, message);
+    // Send SMS (birden fazla numara varsa sadece ilk numaraya gönder)
+    const smsResult = await sendSMS(firstPhone, message);
 
     if (smsResult.success && smsResult.messageId) {
       // Create SMS message record using Supabase
@@ -79,11 +96,11 @@ export async function POST(request: NextRequest) {
         .from('sms_messages')
         .insert({
           user_id: auth.user.userId,
-          phone_number: phone,
+          phone_number: firstPhone,
           message,
           sender: serviceName || null,
           status: 'gönderildi',
-          cost: 1, // Her numara için 1 kredi
+          cost: requiredCredit, // 180 karakter = 1 kredi
           cep_sms_message_id: smsResult.messageId,
           sent_at: new Date().toISOString(),
         })
@@ -117,11 +134,11 @@ export async function POST(request: NextRequest) {
         .from('sms_messages')
         .insert({
           user_id: auth.user.userId,
-          phone_number: phone,
+          phone_number: firstPhone,
           message,
           sender: serviceName || null,
           status: 'failed',
-          cost: 1,
+          cost: requiredCredit,
           failed_at: new Date().toISOString(),
         })
         .select()
@@ -134,8 +151,8 @@ export async function POST(request: NextRequest) {
           .insert({
             user_id: auth.user.userId,
             sms_id: failedSmsData.id,
-            original_cost: 1,
-            refund_amount: 1,
+            original_cost: requiredCredit,
+            refund_amount: requiredCredit,
             reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
             status: 'pending',
           });
