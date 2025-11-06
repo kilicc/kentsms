@@ -24,37 +24,33 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Short links get Supabase error:', JSON.stringify(error, null, 2));
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.details);
-        console.error('Error hint:', error.hint);
-        return NextResponse.json(
-          { 
-            success: false, 
-            message: error.message || 'Kısa linkler alınamadı', 
-            error: {
-              code: error.code,
-              message: error.message,
-              details: error.details,
-              hint: error.hint
-            }
-          },
-          { status: 500 }
-        );
-      }
-      
-      console.log('Short links GET - success, count:', shortLinks?.length || 0);
-
-      return NextResponse.json({
-        success: true,
-        data: { shortLinks: shortLinks || [] },
-      });
-    } catch (queryError: any) {
-      console.error('Short links GET query error:', queryError);
-      throw queryError;
+    if (error) {
+      console.error('Short links get Supabase error:', JSON.stringify(error, null, 2));
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: error.message || 'Kısa linkler alınamadı', 
+          error: {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          }
+        },
+        { status: 500 }
+      );
     }
+    
+    console.log('Short links GET - success, count:', shortLinks?.length || 0);
+
+    return NextResponse.json({
+      success: true,
+      data: { shortLinks: shortLinks || [] },
+    });
   } catch (error: any) {
     console.error('Short links get error:', error);
     return NextResponse.json(
