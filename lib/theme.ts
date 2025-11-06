@@ -1,9 +1,9 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
 // MUI Theme - %15 büyütülmüş çözünürlük
-export const theme = createTheme({
+export const getTheme = (mode: 'light' | 'dark') => createTheme({
   palette: {
-    mode: 'light',
+    mode,
     primary: {
       main: '#1976d2',
       light: '#42a5f5',
@@ -33,13 +33,13 @@ export const theme = createTheme({
       light: alpha('#2196f3', 0.2),
     },
     background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+      default: mode === 'dark' ? '#121212' : '#f5f5f5',
+      paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
     },
     text: {
-      primary: 'rgba(0, 0, 0, 0.87)',
-      secondary: 'rgba(0, 0, 0, 0.6)',
-      disabled: 'rgba(0, 0, 0, 0.38)',
+      primary: mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
+      secondary: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      disabled: mode === 'dark' ? 'rgba(255, 255, 255, 0.38)' : 'rgba(0, 0, 0, 0.38)',
     },
   },
   typography: {
@@ -380,6 +380,9 @@ export const theme = createTheme({
     },
   },
 });
+
+// Light theme (default) - backward compatibility
+export const theme = getTheme('light');
 
 // Gradient renkleri (export için)
 export const gradients = {

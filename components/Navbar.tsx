@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Avatar, Chip, Typography, alpha, Divider } from '@mui/material';
+import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Avatar, Chip, Typography, alpha, Divider, IconButton, Tooltip } from '@mui/material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
 import { 
@@ -13,10 +13,13 @@ import {
   Logout,
   Assessment,
   MoneyOff,
-  AdminPanelSettings
+  AdminPanelSettings,
+  DarkMode,
+  LightMode
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const drawerWidth = 240;
 
@@ -47,6 +50,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { mode, toggleMode } = useTheme();
 
   // Get user initials
   const initials = user?.username?.charAt(0).toUpperCase() || 'U';
@@ -144,6 +148,20 @@ export default function Navbar() {
               />
             </Box>
           </Box>
+          <Tooltip title={mode === 'light' ? 'Karanlık Mod' : 'Aydınlık Mod'}>
+            <IconButton
+              onClick={toggleMode}
+              size="small"
+              sx={{
+                color: 'text.secondary',
+                '&:hover': {
+                  bgcolor: alpha('#1976d2', 0.1),
+                },
+              }}
+            >
+              {mode === 'light' ? <DarkMode sx={{ fontSize: 20 }} /> : <LightMode sx={{ fontSize: 20 }} />}
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 

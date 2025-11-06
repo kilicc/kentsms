@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import MUIThemeProvider from '@/components/ThemeProvider';
+import MUIThemeProviderWrapper from '@/components/ThemeProvider';
 import { AuthProvider } from '@/hooks/useAuth';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Finsms',
+  title: 'Finsms - Gelişmiş SMS Doğrulama Sistemi',
   description: 'Gelişmiş SMS Doğrulama Sistemi',
 };
 
@@ -19,11 +19,11 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={inter.className}>
-        <MUIThemeProvider>
+        <MUIThemeProviderWrapper>
           <AuthProvider>
             {children}
           </AuthProvider>
-        </MUIThemeProvider>
+        </MUIThemeProviderWrapper>
       </body>
     </html>
   );
