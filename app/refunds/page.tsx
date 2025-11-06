@@ -23,6 +23,9 @@ interface Refund {
   reason: string;
   status: string;
   createdAt: string;
+  remainingHours?: number;
+  isExpired?: boolean;
+  processedAt?: string;
 }
 
 export default function RefundsPage() {
@@ -264,6 +267,7 @@ export default function RefundsPage() {
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İade Tutarı</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Sebep</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>48 Saat</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
                       </TableRow>
                     </TableHead>
@@ -277,7 +281,13 @@ export default function RefundsPage() {
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{refund.reason}</TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                             <Chip
-                              label={refund.status}
+                              label={
+                                refund.status === 'processed' 
+                                  ? 'İade Edildi' 
+                                  : refund.status === 'pending' 
+                                    ? 'Beklemede' 
+                                    : refund.status
+                              }
                               color={getStatusColor(refund.status)}
                               size="small"
                               sx={{
@@ -286,6 +296,35 @@ export default function RefundsPage() {
                                 height: 20,
                               }}
                             />
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                            {refund.status === 'pending' && refund.remainingHours !== undefined ? (
+                              <Chip
+                                label={`${Math.floor(refund.remainingHours)} saat kaldı`}
+                                color={refund.isExpired ? 'success' : 'warning'}
+                                size="small"
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  height: 20,
+                                }}
+                              />
+                            ) : refund.status === 'processed' ? (
+                              <Chip
+                                label="İade Edildi"
+                                color="success"
+                                size="small"
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  height: 20,
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary' }}>
+                                -
+                              </Typography>
+                            )}
                           </TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                             <ClientDate date={refund.createdAt} />

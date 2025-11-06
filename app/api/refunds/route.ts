@@ -25,24 +25,34 @@ export async function GET(request: NextRequest) {
     }
 
     // Format refunds data
-    const refunds = (refundsData || []).map((refund: any) => ({
-      id: refund.id,
-      userId: refund.user_id,
-      smsId: refund.sms_id,
-      originalCost: refund.original_cost,
-      refundAmount: refund.refund_amount,
-      reason: refund.reason,
-      status: refund.status || 'pending',
-      processedAt: refund.processed_at,
-      createdAt: refund.created_at,
-      updatedAt: refund.updated_at,
-      sms: refund.sms_messages ? {
-        id: refund.sms_messages.id,
-        phoneNumber: refund.sms_messages.phone_number,
-        message: refund.sms_messages.message,
-        sentAt: refund.sms_messages.sent_at,
-      } : null,
-    }));
+    const refunds = (refundsData || []).map((refund: any) => {
+      const createdAt = new Date(refund.created_at);
+      const now = new Date();
+      const hoursPassed = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+      const remainingHours = Math.max(0, 48 - hoursPassed);
+      const isExpired = hoursPassed >= 48;
+
+      return {
+        id: refund.id,
+        userId: refund.user_id,
+        smsId: refund.sms_id,
+        originalCost: refund.original_cost,
+        refundAmount: refund.refund_amount,
+        reason: refund.reason,
+        status: refund.status || 'pending',
+        processedAt: refund.processed_at,
+        createdAt: refund.created_at,
+        updatedAt: refund.updated_at,
+        remainingHours: remainingHours,
+        isExpired: isExpired,
+        sms: refund.sms_messages ? {
+          id: refund.sms_messages.id,
+          phoneNumber: refund.sms_messages.phone_number,
+          message: refund.sms_messages.message,
+          sentAt: refund.sms_messages.sent_at,
+        } : null,
+      };
+    });
 
     return NextResponse.json({
       success: true,

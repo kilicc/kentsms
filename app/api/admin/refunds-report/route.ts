@@ -87,21 +87,31 @@ export async function GET(request: NextRequest) {
           todayFailedSMS: todayFailedSMSCount || 0,
           todayRefunds: todayRefunds.length,
           totalRefundAmount,
-          refunds: todayRefunds.map((refund: any) => ({
-            id: refund.id,
-            sms: {
-              id: refund.sms_messages?.id || '',
-              phoneNumber: refund.sms_messages?.phone_number || '',
-              message: refund.sms_messages?.message || '',
-              sentAt: refund.sms_messages?.sent_at || null,
-              status: refund.sms_messages?.status || '',
-            },
-            originalCost: Number(refund.original_cost),
-            refundAmount: Number(refund.refund_amount),
-            reason: refund.reason,
-            status: refund.status,
-            createdAt: refund.created_at,
-          })),
+          refunds: todayRefunds.map((refund: any) => {
+            const createdAt = new Date(refund.created_at);
+            const now = new Date();
+            const hoursPassed = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+            const remainingHours = Math.max(0, 48 - hoursPassed);
+            const isExpired = hoursPassed >= 48;
+
+            return {
+              id: refund.id,
+              sms: {
+                id: refund.sms_messages?.id || '',
+                phoneNumber: refund.sms_messages?.phone_number || '',
+                message: refund.sms_messages?.message || '',
+                sentAt: refund.sms_messages?.sent_at || null,
+                status: refund.sms_messages?.status || '',
+              },
+              originalCost: Number(refund.original_cost),
+              refundAmount: Number(refund.refund_amount),
+              reason: refund.reason,
+              status: refund.status,
+              createdAt: refund.created_at,
+              remainingHours: remainingHours,
+              isExpired: isExpired,
+            };
+          }),
         };
       })
     );

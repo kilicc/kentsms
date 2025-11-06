@@ -54,6 +54,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Kredi düş (başarılı veya başarısız olsun, kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek)
+    const { data: updatedUser, error: updateError } = await supabaseServer
+      .from('users')
+      .update({ credit: Math.max(0, (userCredit || 0) - 1) })
+      .eq('id', auth.user.userId)
+      .select('credit')
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { success: false, message: updateError.message || 'Kredi güncellenemedi' },
+        { status: 500 }
+      );
+    }
+
     // Send SMS
     const smsResult = await sendSMS(phone, message);
 
@@ -76,24 +91,13 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError || !smsMessageData) {
+        // SMS kaydı oluşturulamadı, krediyi geri ver
+        await supabaseServer
+          .from('users')
+          .update({ credit: userCredit })
+          .eq('id', auth.user.userId);
         return NextResponse.json(
           { success: false, message: createError?.message || 'SMS kaydı oluşturulamadı' },
-          { status: 500 }
-        );
-      }
-
-      // Update user credit using Supabase
-      // Her başarılı SMS için 1 kredi düş
-      const { data: updatedUser, error: updateError } = await supabaseServer
-        .from('users')
-        .update({ credit: Math.max(0, (userCredit || 0) - 1) })
-        .eq('id', auth.user.userId)
-        .select('credit')
-        .single();
-
-      if (updateError) {
-        return NextResponse.json(
-          { success: false, message: updateError.message || 'Kredi güncellenemedi' },
           { status: 500 }
         );
       }
@@ -108,10 +112,42 @@ export async function POST(request: NextRequest) {
         },
       });
     } else {
+      // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur (48 saat sonra iade edilecek)
+      const { data: failedSmsData, error: failedError } = await supabaseServer
+        .from('sms_messages')
+        .insert({
+          user_id: auth.user.userId,
+          phone_number: phone,
+          message,
+          sender: serviceName || null,
+          status: 'failed',
+          cost: 1,
+          failed_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (!failedError && failedSmsData) {
+        // Otomatik iade oluştur (48 saat sonra işlenecek)
+        await supabaseServer
+          .from('refunds')
+          .insert({
+            user_id: auth.user.userId,
+            sms_id: failedSmsData.id,
+            original_cost: 1,
+            refund_amount: 1,
+            reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
+            status: 'pending',
+          });
+      }
+
       return NextResponse.json(
         {
           success: false,
-          message: smsResult.error || 'SMS gönderim hatası',
+          message: smsResult.error || 'SMS gönderim hatası. Kredi düşüldü, 48 saat içinde otomatik iade edilecektir.',
+          data: {
+            remainingCredit: updatedUser?.credit || 0,
+          },
         },
         { status: 400 }
       );

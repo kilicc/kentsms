@@ -89,6 +89,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Kredi düş (başarılı veya başarısız olsun, tüm SMS'ler için kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek)
+    const { data: currentUser } = await supabaseServer
+      .from('users')
+      .select('credit')
+      .eq('id', auth.user.userId)
+      .single();
+
+    if (currentUser) {
+      // Tüm SMS'ler için kredi düş (başarısız olursa 48 saat sonra iade edilecek)
+      const newCredit = Math.max(0, (currentUser.credit || 0) - contacts.length);
+      await supabaseServer
+        .from('users')
+        .update({ credit: newCredit })
+        .eq('id', auth.user.userId);
+    }
+
     const results = {
       sent: 0,
       failed: 0,
@@ -148,8 +164,67 @@ export async function POST(request: NextRequest) {
           } else {
             results.failed++;
             results.errors.push(`${contact.phone}: SMS kaydı oluşturulamadı`);
+            // SMS kaydı oluşturulamadı ama kredi düşüldü, otomatik iade oluştur
+            const { data: failedSmsData, error: failedError } = await supabaseServer
+              .from('sms_messages')
+              .insert({
+                user_id: auth.user.userId,
+                contact_id: contact.id,
+                phone_number: contact.phone,
+                message,
+                sender: sender || null,
+                status: 'failed',
+                cost: 1,
+                failed_at: new Date().toISOString(),
+              })
+              .select()
+              .single();
+
+            if (!failedError && failedSmsData) {
+              // Otomatik iade oluştur (48 saat sonra işlenecek)
+              await supabaseServer
+                .from('refunds')
+                .insert({
+                  user_id: auth.user.userId,
+                  sms_id: failedSmsData.id,
+                  original_cost: 1,
+                  refund_amount: 1,
+                  reason: 'SMS kaydı oluşturulamadı - Otomatik iade (48 saat)',
+                  status: 'pending',
+                });
+            }
           }
         } else {
+          // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur (48 saat sonra iade edilecek)
+          const { data: failedSmsData, error: failedError } = await supabaseServer
+            .from('sms_messages')
+            .insert({
+              user_id: auth.user.userId,
+              contact_id: contact.id,
+              phone_number: contact.phone,
+              message,
+              sender: sender || null,
+              status: 'failed',
+              cost: 1,
+              failed_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (!failedError && failedSmsData) {
+            // Otomatik iade oluştur (48 saat sonra işlenecek)
+            await supabaseServer
+              .from('refunds')
+              .insert({
+                user_id: auth.user.userId,
+                sms_id: failedSmsData.id,
+                original_cost: 1,
+                refund_amount: 1,
+                reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
+                status: 'pending',
+              });
+          }
+
           results.failed++;
           results.errors.push(`${contact.phone}: ${smsResult.error || 'Bilinmeyen hata'}`);
         }
@@ -159,25 +234,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user credit (deduct only successful SMS)
-    // Her başarılı SMS = 1 numara = 1 kredi
-    // Gruptaki numaralar kadar kredi düşülür
-    if (results.sent > 0) {
-      const { data: currentUser } = await supabaseServer
-        .from('users')
-        .select('credit')
-        .eq('id', auth.user.userId)
-        .single();
-
-      if (currentUser) {
-        // Her başarılı SMS için 1 kredi düş
-        const newCredit = Math.max(0, (currentUser.credit || 0) - results.sent);
-        await supabaseServer
-          .from('users')
-          .update({ credit: newCredit })
-          .eq('id', auth.user.userId);
-      }
-    }
+    // Kredi zaten düşüldü (başarılı ve başarısız tüm SMS'ler için)
+    // Başarısız olanlar için otomatik iade oluşturuldu, 48 saat sonra iade edilecek
 
     // Get updated user credit using Supabase
     const { data: updatedUser } = await supabaseServer

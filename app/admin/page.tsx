@@ -52,6 +52,8 @@ interface RefundReport {
     reason: string;
     status: string;
     createdAt: string;
+    remainingHours?: number;
+    isExpired?: boolean;
   }>;
 }
 
@@ -1116,6 +1118,7 @@ export default function AdminDashboardPage() {
                                       <TableCell>İade Tutarı</TableCell>
                                       <TableCell>Sebep</TableCell>
                                       <TableCell>Durum</TableCell>
+                                      <TableCell>48 Saat</TableCell>
                                       <TableCell>Tarih</TableCell>
                                     </TableRow>
                                   </TableHead>
@@ -1135,11 +1138,38 @@ export default function AdminDashboardPage() {
                                         <TableCell>{refund.reason}</TableCell>
                                         <TableCell>
                                           <Chip
-                                            label={refund.status}
+                                            label={
+                                              refund.status === 'processed' 
+                                                ? 'İade Edildi' 
+                                                : refund.status === 'pending' 
+                                                  ? 'Beklemede' 
+                                                  : refund.status
+                                            }
                                             color={refund.status === 'processed' ? 'success' : refund.status === 'pending' ? 'warning' : 'error'}
                                             size="small"
                                             sx={{ fontSize: '0.75rem', fontWeight: 500, height: 24 }}
                                           />
+                                        </TableCell>
+                                        <TableCell>
+                                          {refund.status === 'pending' && refund.remainingHours !== undefined ? (
+                                            <Chip
+                                              label={`${Math.floor(refund.remainingHours)} saat kaldı`}
+                                              color={refund.isExpired ? 'success' : 'warning'}
+                                              size="small"
+                                              sx={{ fontSize: '0.75rem', fontWeight: 500, height: 24 }}
+                                            />
+                                          ) : refund.status === 'processed' ? (
+                                            <Chip
+                                              label="İade Edildi"
+                                              color="success"
+                                              size="small"
+                                              sx={{ fontSize: '0.75rem', fontWeight: 500, height: 24 }}
+                                            />
+                                          ) : (
+                                            <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary' }}>
+                                              -
+                                            </Typography>
+                                          )}
                                         </TableCell>
                                         <TableCell><ClientDate date={refund.createdAt} /></TableCell>
                                       </TableRow>
