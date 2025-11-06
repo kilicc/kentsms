@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     }
 
 
+    console.log('Short links GET - userId:', auth.user.userId);
+    
     const { data: shortLinks, error } = await supabaseServer
       .from('short_links')
       .select('*')
@@ -23,12 +25,27 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Short links get Supabase error:', error);
+      console.error('Short links get Supabase error:', JSON.stringify(error, null, 2));
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
       return NextResponse.json(
-        { success: false, message: error.message || 'Kısa linkler alınamadı', error: error },
+        { 
+          success: false, 
+          message: error.message || 'Kısa linkler alınamadı', 
+          error: {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          }
+        },
         { status: 500 }
       );
     }
+    
+    console.log('Short links GET - success, count:', shortLinks?.length || 0);
 
     return NextResponse.json({
       success: true,
@@ -128,6 +145,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Kısa link oluştur
+    console.log('Short link POST - userId:', auth.user.userId, 'shortCode:', shortCode);
+    
     const { data: shortLinkData, error } = await supabaseServer
       .from('short_links')
       .insert({
@@ -144,12 +163,27 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error || !shortLinkData) {
-      console.error('Short link create Supabase error:', error);
+      console.error('Short link create Supabase error:', JSON.stringify(error, null, 2));
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+      console.error('Error details:', error?.details);
+      console.error('Error hint:', error?.hint);
       return NextResponse.json(
-        { success: false, message: error?.message || 'Kısa link oluşturulamadı', error: error },
+        { 
+          success: false, 
+          message: error?.message || 'Kısa link oluşturulamadı', 
+          error: {
+            code: error?.code,
+            message: error?.message,
+            details: error?.details,
+            hint: error?.hint
+          }
+        },
         { status: 500 }
       );
     }
+    
+    console.log('Short link POST - success, id:', shortLinkData?.id);
 
     const shortLink = shortLinkData;
 
