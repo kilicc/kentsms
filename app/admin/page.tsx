@@ -313,13 +313,17 @@ export default function AdminDashboardPage() {
       const response = await api.delete(`/admin/users/${userId}`);
       if (response.data.success) {
         setSuccess(`${username} kullanıcısı başarıyla silindi.`);
+        // Seçili kullanıcılar listesinden de kaldır
+        setSelectedUsers(prev => prev.filter(id => id !== userId));
         loadUsers();
         loadStats();
       } else {
-        setError(response.data.error || 'Kullanıcı silinirken hata oluştu');
+        setError(response.data.error || response.data.message || 'Kullanıcı silinirken hata oluştu');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Kullanıcı silinirken hata oluştu');
+      console.error('Kullanıcı silme hatası:', err);
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Kullanıcı silinirken hata oluştu';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -850,7 +854,7 @@ export default function AdminDashboardPage() {
                                     >
                                       Kredi
                                     </Button>
-                                    {u.username !== 'admin' && u.username !== 'testuser' && (
+                                    {u.username !== 'admin' && (
                                       <Button
                                         size="small"
                                         variant="outlined"

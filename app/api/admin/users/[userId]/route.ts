@@ -26,7 +26,7 @@ export async function DELETE(
 
     const { userId } = await params;
 
-    // Admin ve testuser'ı silmeyi engelle
+    // Admin'ı silmeyi engelle
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { username: true },
@@ -39,9 +39,9 @@ export async function DELETE(
       );
     }
 
-    if (user.username === 'admin' || user.username === 'testuser') {
+    if (user.username === 'admin') {
       return NextResponse.json(
-        { success: false, error: 'Admin ve testuser kullanıcıları silinemez' },
+        { success: false, error: 'Admin kullanıcısı silinemez' },
         { status: 400 }
       );
     }
