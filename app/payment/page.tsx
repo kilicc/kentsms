@@ -6,7 +6,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
-import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings, Visibility, Search, FilterList } from '@mui/icons-material';
+import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings, Visibility, Search, FilterList, CreditCard, TrendingUp, Star, Security, Speed, LocalOffer } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
 import ClientDate from '@/components/ClientDate';
@@ -652,31 +652,45 @@ export default function CryptoPaymentPage() {
                 ) : (
                   // Normal kullanıcı için kripto ödeme bölümü
                   <>
-                    <Typography 
-                      variant="h4" 
-                      component="h1" 
-                      gutterBottom 
-                      sx={{ 
-                        color: 'primary.main', 
-                        mb: 2.5,
-                        mt: 1,
-                        fontSize: '18px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Kripto Ödeme
-                    </Typography>
-
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ 
-                        mb: 2,
-                        fontSize: '14px',
-                      }}
-                    >
-                      Kripto para ile SMS kredisi satın alın. Kredi paketlerinden birini seçin ve ödeme yapın.
-                    </Typography>
+                    <Box sx={{ mb: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <AccountBalanceWallet sx={{ color: 'white', fontSize: 32 }} />
+                        </Box>
+                        <Box>
+                          <Typography 
+                            variant="h4" 
+                            component="h1" 
+                            sx={{ 
+                              color: 'primary.main', 
+                              fontSize: '24px',
+                              fontWeight: 700,
+                              mb: 0.5,
+                            }}
+                          >
+                            Kripto Ödeme
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary" 
+                            sx={{ 
+                              fontSize: '14px',
+                            }}
+                          >
+                            Güvenli ve hızlı kripto para ile SMS kredisi satın alın
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
 
                     {error && (
                       <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
@@ -690,146 +704,299 @@ export default function CryptoPaymentPage() {
                       </Alert>
                     )}
 
-                    {/* Paket Seçimi - Tam Genişlik */}
+                    {/* Paket Seçimi - Modern Tasarım */}
             <Card 
               sx={{ 
-                borderRadius: 2,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                mb: 2,
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                mb: 3,
+                border: '1px solid rgba(0,0,0,0.05)',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
               }}
             >
-              <CardContent sx={{ p: 1.5 }}>
-                <Typography 
-                  variant="h6" 
-                  gutterBottom
-                  sx={{
-                    fontSize: '16px',
-                    fontWeight: 500,
-                    mb: 2,
-                  }}
-                >
-                  Kredi Paketi Seç
-                </Typography>
-                <Grid container spacing={1.5}>
-                  {packages.map((pkg) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2.4 }} key={pkg.id}>
-                          <Card
-                            sx={{
-                              border: selectedPackage === pkg.id ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.12)',
-                              cursor: 'pointer',
-                              background: selectedPackage === pkg.id 
-                                ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)'
-                                : 'white',
-                              borderRadius: 2,
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                              },
-                            }}
-                            onClick={() => handlePackageSelect(pkg.id)}
-                          >
-                            <CardContent sx={{ p: 1.5 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                  <CreditCard sx={{ color: 'primary.main', fontSize: 24 }} />
+                  <Typography 
+                    variant="h6" 
+                    sx={{
+                      fontSize: '18px',
+                      fontWeight: 600,
+                      color: 'text.primary',
+                    }}
+                  >
+                    Kredi Paketi Seçin
+                  </Typography>
+                </Box>
+                <Grid container spacing={2}>
+                  {packages.map((pkg, index) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={pkg.id}>
+                      <Card
+                        sx={{
+                          border: selectedPackage === pkg.id 
+                            ? '2px solid #1976d2' 
+                            : '1px solid rgba(0,0,0,0.1)',
+                          cursor: 'pointer',
+                          background: selectedPackage === pkg.id 
+                            ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(220, 0, 78, 0.08) 100%)'
+                            : 'white',
+                          borderRadius: 3,
+                          boxShadow: selectedPackage === pkg.id
+                            ? '0 8px 24px rgba(25, 118, 210, 0.2)'
+                            : '0 2px 12px rgba(0,0,0,0.08)',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          '&::before': selectedPackage === pkg.id ? {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: 'linear-gradient(90deg, #1976d2 0%, #dc004e 100%)',
+                          } : {},
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+                            borderColor: selectedPackage === pkg.id ? '#1976d2' : 'rgba(25, 118, 210, 0.3)',
+                          },
+                        }}
+                        onClick={() => handlePackageSelect(pkg.id)}
+                      >
+                        <CardContent sx={{ p: 2.5, position: 'relative' }}>
+                          {selectedPackage === pkg.id && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                                p: 0.5,
+                                borderRadius: '50%',
+                                bgcolor: 'primary.main',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <CheckCircle sx={{ color: 'white', fontSize: 20 }} />
+                            </Box>
+                          )}
+                          {pkg.bonus > 0 && (
+                            <Chip
+                              icon={<LocalOffer sx={{ fontSize: 14 }} />}
+                              label={`+${pkg.bonus} Bonus`}
+                              color="success"
+                              size="small"
+                              sx={{ 
+                                position: 'absolute',
+                                top: 8,
+                                left: 8,
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                height: 24,
+                                boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
+                              }}
+                            />
+                          )}
+                          <Box sx={{ textAlign: 'center', mt: pkg.bonus > 0 ? 3 : 0 }}>
+                            <Typography 
+                              variant="body2"
+                              sx={{
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                color: 'text.secondary',
+                                mb: 1,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              {pkg.name}
+                            </Typography>
+                            <Typography 
+                              variant="h4" 
+                              color="primary"
+                              sx={{
+                                fontSize: '32px',
+                                fontWeight: 700,
+                                mb: 0.5,
+                                background: selectedPackage === pkg.id
+                                  ? 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)'
+                                  : 'linear-gradient(135deg, #1976d2 0%, #1976d2 100%)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                              }}
+                            >
+                              {pkg.credits}
+                            </Typography>
+                            <Typography 
+                              variant="body2" 
+                              sx={{
+                                fontSize: '12px',
+                                color: 'text.secondary',
+                                mb: 2,
+                              }}
+                            >
+                              SMS Kredisi
+                            </Typography>
+                            <Divider sx={{ my: 1.5 }} />
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 0.5 }}>
                               <Typography 
-                                variant="h6"
+                                variant="h6" 
                                 sx={{
-                                  fontSize: '16px',
-                                  fontWeight: 500,
-                                  mb: 1,
-                                }}
-                              >
-                                {pkg.name}
-                              </Typography>
-                              <Typography 
-                                variant="h5" 
-                                color="primary"
-                                sx={{
-                                  fontSize: '24px',
+                                  fontSize: '20px',
                                   fontWeight: 600,
-                                  mb: 0.5,
+                                  color: 'text.primary',
                                 }}
                               >
-                                {pkg.credits} SMS
+                                {pkg.price}
                               </Typography>
                               <Typography 
                                 variant="body2" 
                                 color="text.secondary"
                                 sx={{
-                                  fontSize: '13px',
-                                  mb: 1,
+                                  fontSize: '14px',
                                 }}
                               >
-                                {pkg.price} {pkg.currency}
+                                {pkg.currency}
                               </Typography>
-                              {pkg.bonus > 0 && (
-                                <Chip
-                                  label={`+${pkg.bonus} Bonus`}
-                                  color="success"
-                                  size="small"
-                                  sx={{ 
-                                    fontSize: '0.7rem',
+                            </Box>
+                            {pkg.bonus > 0 && (
+                              <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px dashed rgba(0,0,0,0.1)' }}>
+                                <Typography 
+                                  variant="caption" 
+                                  sx={{
+                                    fontSize: '11px',
+                                    color: 'success.main',
                                     fontWeight: 500,
-                                    height: 20,
                                   }}
-                                />
-                              )}
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      ))}
+                                >
+                                  <Star sx={{ fontSize: 12, verticalAlign: 'middle', mr: 0.5 }} />
+                                  {pkg.bonus} Bonus SMS Hediye!
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
                 </Grid>
               </CardContent>
             </Card>
 
-            {/* Kripto Para Seçimi ve Ödeme Oluştur */}
-            <Grid container spacing={1.5}>
+            {/* Kripto Para Seçimi ve Ödeme Oluştur - Modern Tasarım */}
+            <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <Card 
                   sx={{ 
-                    borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    borderRadius: 3,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                   }}
                 >
-                  <CardContent sx={{ p: 1.5 }}>
-                    <Typography 
-                      variant="h6" 
-                      gutterBottom
-                      sx={{
-                        fontSize: '16px',
-                        fontWeight: 500,
-                      }}
-                    >
-                      Kripto Para Seç
-                    </Typography>
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                      <InputLabel>Kripto Para</InputLabel>
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
+                      <Box
+                        sx={{
+                          p: 1,
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <TrendingUp sx={{ color: 'primary.main', fontSize: 24 }} />
+                      </Box>
+                      <Typography 
+                        variant="h6" 
+                        sx={{
+                          fontSize: '18px',
+                          fontWeight: 600,
+                          color: 'text.primary',
+                        }}
+                      >
+                        Kripto Para Seçin
+                      </Typography>
+                    </Box>
+                    <FormControl fullWidth sx={{ mb: 2.5 }}>
+                      <InputLabel sx={{ fontSize: '14px' }}>Kripto Para Birimi</InputLabel>
                       <Select
                         value={selectedCurrency}
                         onChange={(e) => handleCurrencySelect(e.target.value)}
-                        label="Kripto Para"
+                        label="Kripto Para Birimi"
                         sx={{
                           borderRadius: 2,
+                          fontSize: '14px',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(0,0,0,0.15)',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'primary.main',
+                          },
                         }}
                       >
                         {currencies.map((currency) => (
-                          <MenuItem key={currency.symbol} value={currency.symbol}>
-                            {currency.name} ({currency.symbol})
+                          <MenuItem key={currency.symbol} value={currency.symbol} sx={{ fontSize: '14px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'white',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {currency.symbol.substring(0, 2)}
+                              </Box>
+                              {currency.name} ({currency.symbol})
+                            </Box>
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
 
                     {cryptoPrice > 0 && selectedPackage && (
-                      <Box sx={{ mt: 2 }}>
+                      <Box 
+                        sx={{ 
+                          mt: 2,
+                          p: 2,
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+                          border: '1px solid rgba(25, 118, 210, 0.1)',
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <Info sx={{ color: 'primary.main', fontSize: 18 }} />
+                          <Typography 
+                            variant="body2" 
+                            sx={{
+                              fontSize: '13px',
+                              fontWeight: 500,
+                              color: 'text.secondary',
+                            }}
+                          >
+                            Güncel Fiyat
+                          </Typography>
+                        </Box>
                         <Typography 
-                          variant="body2" 
-                          color="text.secondary"
+                          variant="h6" 
                           sx={{
-                            fontSize: '14px',
+                            fontSize: '20px',
+                            fontWeight: 600,
+                            color: 'primary.main',
                           }}
                         >
-                          Fiyat: {cryptoPrice.toLocaleString('tr-TR')} TRY
+                          {cryptoPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TRY
                         </Typography>
                       </Box>
                     )}
@@ -842,56 +1009,170 @@ export default function CryptoPaymentPage() {
                       onClick={handleCreatePayment}
                       disabled={loading || !selectedPackage || !selectedCurrency}
                       sx={{
-                        mt: 2,
+                        mt: 3,
+                        py: 1.5,
                         background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                        boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                        boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
                         borderRadius: 2,
-                        padding: '8px 20px',
-                          fontSize: '14px',
-                          size: 'small',
-                        fontWeight: 500,
+                        fontSize: '16px',
+                        fontWeight: 600,
                         textTransform: 'none',
                         '&:hover': {
-                          boxShadow: '0 8px 25px rgba(25, 118, 210, 0.4)',
+                          boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
                           transform: 'translateY(-2px)',
                         },
-                        transition: 'all 0.3s',
+                        '&:disabled': {
+                          background: 'rgba(0,0,0,0.12)',
+                          color: 'rgba(0,0,0,0.26)',
+                        },
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       }}
                     >
-                      Ödeme Oluştur
+                      {loading ? 'Ödeme Oluşturuluyor...' : 'Ödeme Oluştur'}
                     </Button>
+
+                    {(!selectedPackage || !selectedCurrency) && (
+                      <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Warning sx={{ color: 'warning.main', fontSize: 18 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }}>
+                          Lütfen paket ve kripto para seçin
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card 
+                  sx={{ 
+                    borderRadius: 3,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                    height: '100%',
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
+                      <Box
+                        sx={{
+                          p: 1,
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(56, 142, 60, 0.1) 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Security sx={{ color: 'success.main', fontSize: 24 }} />
+                      </Box>
+                      <Typography 
+                        variant="h6" 
+                        sx={{
+                          fontSize: '18px',
+                          fontWeight: 600,
+                          color: 'text.primary',
+                        }}
+                      >
+                        Güvenli Ödeme
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                        <CheckCircle sx={{ color: 'success.main', fontSize: 20, mt: 0.5 }} />
+                        <Box>
+                          <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mb: 0.5 }}>
+                            Hızlı İşlem
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }}>
+                            Ödemeniz anında doğrulanır ve krediniz hesabınıza yüklenir
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                        <Security sx={{ color: 'primary.main', fontSize: 20, mt: 0.5 }} />
+                        <Box>
+                          <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mb: 0.5 }}>
+                            Güvenli Ödeme
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }}>
+                            Blockchain teknolojisi ile güvenli ödeme
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                        <Speed sx={{ color: 'info.main', fontSize: 20, mt: 0.5 }} />
+                        <Box>
+                          <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mb: 0.5 }}>
+                            Otomatik Doğrulama
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }}>
+                            Sistem otomatik olarak ödemenizi doğrular
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
 
-            {/* Ödeme Detayları - Sayfada gösterilecek */}
+            {/* Ödeme Detayları - Modern Tasarım */}
             {paymentData && (
-              <Grid container spacing={3} sx={{ mt: 3 }} ref={paymentInfoRef}>
+              <Grid container spacing={3} sx={{ mt: 4 }} ref={paymentInfoRef}>
                 <Grid size={{ xs: 12 }}>
                   <Card
                     sx={{
-                      borderRadius: 2,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+                      borderRadius: 3,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(220, 0, 78, 0.08) 100%)',
+                      border: '1px solid rgba(25, 118, 210, 0.1)',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'linear-gradient(90deg, #1976d2 0%, #dc004e 100%)',
+                      },
                     }}
                   >
-                    <CardContent sx={{ p: 1.5 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                        <CheckCircle sx={{ color: 'success.main', fontSize: 28 }} />
-                        <Typography
-                          variant="h5"
+                    <CardContent sx={{ p: 3 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                        <Box
                           sx={{
-                            fontSize: '24px',
-                            fontWeight: 600,
-                            color: 'primary.main',
+                            p: 1.5,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                           }}
                         >
-                          Ödeme Bilgileri
-                        </Typography>
+                          <CheckCircle sx={{ color: 'white', fontSize: 28 }} />
+                        </Box>
+                        <Box>
+                          <Typography
+                            variant="h5"
+                            sx={{
+                              fontSize: '26px',
+                              fontWeight: 700,
+                              color: 'primary.main',
+                              mb: 0.5,
+                            }}
+                          >
+                            Ödeme Bilgileri
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '13px' }}>
+                            Ödemenizi tamamlamak için aşağıdaki bilgileri kullanın
+                          </Typography>
+                        </Box>
                       </Box>
 
-                      <Divider sx={{ my: 2 }} />
+                      <Divider sx={{ my: 3 }} />
 
                       {/* Ödeme Otomatik Doğrulama Bilgilendirmesi */}
                       <Alert
@@ -911,131 +1192,195 @@ export default function CryptoPaymentPage() {
                         </Typography>
                       </Alert>
 
-                      <Grid container spacing={1.5}>
+                      <Grid container spacing={3}>
                         {/* Sol Panel - Cüzdan Adresi ve QR Kod */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                          <Box sx={{ mb: 3 }}>
-                            <Typography
-                              variant="h6"
-                              gutterBottom
-                              sx={{
-                                fontSize: '16px',
-                                fontWeight: 500,
-                                mb: 2,
-                              }}
-                            >
-                              {paymentData.currency} Cüzdan Adresi
-                            </Typography>
-                            <TextField
-                              fullWidth
-                              label="Cüzdan Adresi"
-                              value={paymentData.walletAddress}
-                              InputProps={{
-                                readOnly: true,
-                              }}
-                              sx={{
-                                mb: 2,
-                                '& .MuiOutlinedInput-root': {
-                                  borderRadius: 2,
-                                  bgcolor: 'white',
-                                },
-                              }}
-                            />
-                            <Button
-                              fullWidth
-                              variant="outlined"
-                              onClick={() => {
-                                navigator.clipboard.writeText(paymentData.walletAddress);
-                                setSuccess('Cüzdan adresi kopyalandı!');
-                              }}
-                              sx={{
-                                borderRadius: 2,
-                                textTransform: 'none',
-                                fontWeight: 500,
-                              }}
-                            >
-                              Adresi Kopyala
-                            </Button>
-                          </Box>
-
-                          <Box>
-                            <Typography
-                              variant="h6"
-                              gutterBottom
-                              sx={{
-                                fontSize: '16px',
-                                fontWeight: 500,
-                                mb: 2,
-                              }}
-                            >
-                              QR Kod
-                            </Typography>
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                p: 2,
-                                bgcolor: 'white',
-                                borderRadius: 2,
-                                border: '1px solid rgba(0,0,0,0.12)',
-                              }}
-                            >
-                              <Image
-                                src={paymentData.qrCodeData}
-                                alt="QR Code"
-                                width={250}
-                                height={250}
-                                style={{
-                                  maxWidth: '100%',
-                                  height: 'auto',
-                                  borderRadius: 8,
+                          <Card
+                            sx={{
+                              mb: 3,
+                              borderRadius: 3,
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                              border: '1px solid rgba(0,0,0,0.08)',
+                              background: 'white',
+                            }}
+                          >
+                            <CardContent sx={{ p: 2.5 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <AccountBalanceWallet sx={{ color: 'primary.main', fontSize: 22 }} />
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    fontSize: '17px',
+                                    fontWeight: 600,
+                                    color: 'text.primary',
+                                  }}
+                                >
+                                  {paymentData.currency} Cüzdan Adresi
+                                </Typography>
+                              </Box>
+                              <TextField
+                                fullWidth
+                                label="Cüzdan Adresi"
+                                value={paymentData.walletAddress}
+                                InputProps={{
+                                  readOnly: true,
+                                  sx: {
+                                    fontFamily: 'monospace',
+                                    fontSize: '13px',
+                                  },
+                                }}
+                                sx={{
+                                  mb: 2,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                    bgcolor: '#f5f5f5',
+                                    '&:hover': {
+                                      bgcolor: '#eeeeee',
+                                    },
+                                  },
                                 }}
                               />
-                            </Box>
-                          </Box>
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(paymentData.walletAddress);
+                                  setSuccess('Cüzdan adresi kopyalandı!');
+                                }}
+                                sx={{
+                                  borderRadius: 2,
+                                  textTransform: 'none',
+                                  fontWeight: 600,
+                                  py: 1.25,
+                                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                                  '&:hover': {
+                                    boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                                    transform: 'translateY(-1px)',
+                                  },
+                                  transition: 'all 0.3s',
+                                }}
+                              >
+                                Adresi Kopyala
+                              </Button>
+                            </CardContent>
+                          </Card>
+
+                          <Card
+                            sx={{
+                              borderRadius: 3,
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                              border: '1px solid rgba(0,0,0,0.08)',
+                              background: 'white',
+                            }}
+                          >
+                            <CardContent sx={{ p: 2.5 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <QrCode sx={{ color: 'primary.main', fontSize: 22 }} />
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    fontSize: '17px',
+                                    fontWeight: 600,
+                                    color: 'text.primary',
+                                  }}
+                                >
+                                  QR Kod
+                                </Typography>
+                              </Box>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  p: 3,
+                                  bgcolor: 'white',
+                                  borderRadius: 3,
+                                  border: '2px dashed rgba(25, 118, 210, 0.2)',
+                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                                }}
+                              >
+                                <Image
+                                  src={paymentData.qrCodeData}
+                                  alt="QR Code"
+                                  width={280}
+                                  height={280}
+                                  style={{
+                                    maxWidth: '100%',
+                                    height: 'auto',
+                                    borderRadius: 12,
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                  }}
+                                />
+                              </Box>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px', mt: 2, display: 'block', textAlign: 'center' }}>
+                                QR kodu taratarak hızlıca ödeme yapabilirsiniz
+                              </Typography>
+                            </CardContent>
+                          </Card>
                         </Grid>
 
                         {/* Sağ Panel - Ödeme Bilgileri ve Form */}
                         <Grid size={{ xs: 12, md: 6 }}>
-                          <Box sx={{ mb: 3 }}>
-                            <Typography
-                              variant="h6"
-                              gutterBottom
-                              sx={{
-                                fontSize: '16px',
-                                fontWeight: 500,
-                                mb: 2,
-                              }}
-                            >
-                              Ödeme Miktarı
-                            </Typography>
-                            <Card
-                              sx={{
-                                p: 2,
-                                bgcolor: 'white',
-                                borderRadius: 2,
-                                border: '1px solid rgba(0,0,0,0.12)',
-                              }}
-                            >
-                              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                Göndermeniz Gereken Tutar:
-                              </Typography>
-                              <Typography
-                                variant="h5"
-                                color="primary"
+                          <Card
+                            sx={{
+                              mb: 3,
+                              borderRadius: 3,
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                              border: '1px solid rgba(0,0,0,0.08)',
+                              background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+                            }}
+                          >
+                            <CardContent sx={{ p: 2.5 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <CreditCard sx={{ color: 'primary.main', fontSize: 22 }} />
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    fontSize: '17px',
+                                    fontWeight: 600,
+                                    color: 'text.primary',
+                                  }}
+                                >
+                                  Ödeme Miktarı
+                                </Typography>
+                              </Box>
+                              <Box
                                 sx={{
-                                  fontSize: '28px',
-                                  fontWeight: 600,
-                                  mb: 1,
+                                  p: 2.5,
+                                  bgcolor: 'white',
+                                  borderRadius: 2,
+                                  border: '1px solid rgba(25, 118, 210, 0.2)',
+                                  textAlign: 'center',
                                 }}
                               >
-                                {paymentData.cryptoAmount} {paymentData.currency}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                ≈ {paymentData.fiatAmount} TRY
-                              </Typography>
-                            </Card>
-                          </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '13px' }}>
+                                  Göndermeniz Gereken Tutar:
+                                </Typography>
+                                <Typography
+                                  variant="h4"
+                                  sx={{
+                                    fontSize: '32px',
+                                    fontWeight: 700,
+                                    mb: 1,
+                                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                  }}
+                                >
+                                  {paymentData.cryptoAmount} {paymentData.currency}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px' }}>
+                                    ≈
+                                  </Typography>
+                                  <Typography variant="h6" sx={{ fontSize: '18px', fontWeight: 600, color: 'text.secondary' }}>
+                                    {paymentData.fiatAmount} TRY
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </CardContent>
+                          </Card>
 
                           <Divider sx={{ my: 3 }} />
 
