@@ -96,12 +96,12 @@ export async function POST(request: NextRequest) {
         .from('short_links')
         .select('id')
         .eq('short_code', shortCode)
-        .maybeSingle();
+        .limit(1);
 
-      // Hata varsa (tablo yoksa veya başka bir hata) veya kayıt yoksa benzersiz kod bulundu
+      // Hata varsa veya kayıt yoksa benzersiz kod bulundu
       if (checkError) {
-        // Eğer hata "relation does not exist" ise tablo yok demektir, ilk kayıt olabilir
-        if (checkError.message?.includes('does not exist')) {
+        // Tablo yoksa veya başka bir hata varsa, ilk kayıt olabilir
+        if (checkError.message?.includes('does not exist') || checkError.message?.includes('relation')) {
           break; // Tablo yok, ilk kayıt olabilir
         }
         // Diğer hatalar için tekrar dene
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Kayıt yoksa benzersiz kod bulundu
-      if (!existing) {
+      if (!existing || existing.length === 0) {
         break; // Benzersiz kod bulundu
       }
 
@@ -143,23 +143,15 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    const shortLink = shortLinkData;
-
-    if (error) {
+    if (error || !shortLinkData) {
       console.error('Short link create Supabase error:', error);
       return NextResponse.json(
-        { success: false, message: error.message || 'Kısa link oluşturulamadı', error: error },
+        { success: false, message: error?.message || 'Kısa link oluşturulamadı', error: error },
         { status: 500 }
       );
     }
 
-    if (!shortLink || !Array.isArray(shortLink) && !shortLink.id) {
-      console.error('Short link create error: No data returned');
-      return NextResponse.json(
-        { success: false, message: 'Kısa link oluşturulamadı - veri dönmedi' },
-        { status: 500 }
-      );
-    }
+    const shortLink = shortLinkData;
 
     return NextResponse.json({
       success: true,
