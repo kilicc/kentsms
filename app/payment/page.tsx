@@ -6,6 +6,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { AccountBalanceWallet, QrCode, Info, CheckCircle, Warning, Edit, Delete, Add, Settings, Visibility, Search, FilterList, CreditCard, TrendingUp, Star, Security, Speed, LocalOffer } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import Image from 'next/image';
@@ -34,6 +35,7 @@ interface CryptoCurrency {
 
 export default function CryptoPaymentPage() {
   const { api, user } = useAuth();
+  const { mode } = useTheme();
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
   const [tabValue, setTabValue] = useState(0);
   const [packages, setPackages] = useState<PaymentPackage[]>([]);
@@ -342,7 +344,7 @@ export default function CryptoPaymentPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />
@@ -711,7 +713,9 @@ export default function CryptoPaymentPage() {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                 mb: 3,
                 border: '1px solid rgba(0,0,0,0.05)',
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                background: mode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
               }}
             >
               <CardContent sx={{ p: 3 }}>
@@ -894,7 +898,9 @@ export default function CryptoPaymentPage() {
                     borderRadius: 3,
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     border: '1px solid rgba(0,0,0,0.05)',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                    background: mode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
@@ -1048,7 +1054,9 @@ export default function CryptoPaymentPage() {
                     borderRadius: 3,
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     border: '1px solid rgba(0,0,0,0.05)',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                    background: mode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                     height: '100%',
                   }}
                 >
@@ -1201,7 +1209,7 @@ export default function CryptoPaymentPage() {
                               borderRadius: 3,
                               boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                               border: '1px solid rgba(0,0,0,0.08)',
-                              background: 'white',
+                              background: 'background.paper',
                             }}
                           >
                             <CardContent sx={{ p: 2.5 }}>
@@ -1233,9 +1241,9 @@ export default function CryptoPaymentPage() {
                                   mb: 2,
                                   '& .MuiOutlinedInput-root': {
                                     borderRadius: 2,
-                                    bgcolor: '#f5f5f5',
+                                    bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f5f5f5',
                                     '&:hover': {
-                                      bgcolor: '#eeeeee',
+                                      bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : '#eeeeee',
                                     },
                                   },
                                 }}
@@ -1271,7 +1279,7 @@ export default function CryptoPaymentPage() {
                               borderRadius: 3,
                               boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                               border: '1px solid rgba(0,0,0,0.08)',
-                              background: 'white',
+                              background: 'background.paper',
                             }}
                           >
                             <CardContent sx={{ p: 2.5 }}>
@@ -1293,10 +1301,12 @@ export default function CryptoPaymentPage() {
                                   display: 'flex',
                                   justifyContent: 'center',
                                   p: 3,
-                                  bgcolor: 'white',
+                                  bgcolor: 'background.paper',
                                   borderRadius: 3,
                                   border: '2px dashed rgba(25, 118, 210, 0.2)',
-                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                                  background: mode === 'dark' 
+                  ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                                 }}
                               >
                                 <Image
@@ -1347,7 +1357,7 @@ export default function CryptoPaymentPage() {
                               <Box
                                 sx={{
                                   p: 2.5,
-                                  bgcolor: 'white',
+                                  bgcolor: 'background.paper',
                                   borderRadius: 2,
                                   border: '1px solid rgba(25, 118, 210, 0.2)',
                                   textAlign: 'center',

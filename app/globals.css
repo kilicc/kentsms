@@ -59,6 +59,12 @@ body {
   background-color: #f5f5f5;
   overflow-x: hidden;
   font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme='dark'] body {
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #121212;
 }
 
 /* %15 büyütülmüş başlık boyutları */

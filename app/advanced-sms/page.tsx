@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Send, Group, Person, Add, Delete, Edit, Description, Message, People, CheckCircle, Info, Warning, Star, AutoAwesome, ContentCopy, Search, FilterList } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 
@@ -33,6 +34,7 @@ interface SMSTemplate {
 
 export default function AdvancedSMSPage() {
   const { api } = useAuth();
+  const { mode } = useTheme();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [groups, setGroups] = useState<ContactGroup[]>([]);
   const [templates, setTemplates] = useState<SMSTemplate[]>([]);
@@ -283,7 +285,7 @@ export default function AdvancedSMSPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />
@@ -364,7 +366,9 @@ export default function AdvancedSMSPage() {
                     borderRadius: 3,
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     border: '1px solid rgba(0,0,0,0.05)',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                    background: mode === 'dark' 
+                      ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                     height: '100%',
                   }}
                 >
@@ -457,7 +461,7 @@ export default function AdvancedSMSPage() {
                         width: '6px',
                       },
                       '&::-webkit-scrollbar-track': {
-                        background: '#f1f1f1',
+                        background: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f1f1f1',
                         borderRadius: '10px',
                       },
                       '&::-webkit-scrollbar-thumb': {
@@ -540,7 +544,9 @@ export default function AdvancedSMSPage() {
                     borderRadius: 3,
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     border: '1px solid rgba(0,0,0,0.05)',
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                    background: mode === 'dark' 
+                      ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
@@ -598,7 +604,9 @@ export default function AdvancedSMSPage() {
                         borderRadius: 2,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                         border: '1px solid rgba(0,0,0,0.08)',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
+                        background: mode === 'dark' 
+                      ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
                       }}
                     >
                       <CardContent sx={{ p: 2 }}>
@@ -760,7 +768,7 @@ export default function AdvancedSMSPage() {
                           borderRadius: 2,
                           boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                           border: '1px solid rgba(0,0,0,0.08)',
-                          background: 'white',
+                          background: 'background.paper',
                         }}
                       >
                         <CardContent sx={{ p: 2.5 }}>
@@ -831,7 +839,7 @@ export default function AdvancedSMSPage() {
                           </Box>
                           <Grid container spacing={2}>
                             <Grid size={{ xs: 12, sm: 4 }}>
-                              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'white', borderRadius: 2 }}>
+                              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'background.paper', borderRadius: 2 }}>
                                 <Typography variant="h4" sx={{ fontSize: '28px', fontWeight: 700, color: 'primary.main', mb: 0.5 }}>
                                   {selectedContacts.length}
                                 </Typography>
@@ -841,7 +849,7 @@ export default function AdvancedSMSPage() {
                               </Box>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 4 }}>
-                              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'white', borderRadius: 2 }}>
+                              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'background.paper', borderRadius: 2 }}>
                                 <Typography variant="h4" sx={{ fontSize: '28px', fontWeight: 700, color: 'success.main', mb: 0.5 }}>
                                   {selectedContacts.length}
                                 </Typography>
@@ -851,7 +859,7 @@ export default function AdvancedSMSPage() {
                               </Box>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 4 }}>
-                              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'white', borderRadius: 2 }}>
+                              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'background.paper', borderRadius: 2 }}>
                                 <Typography variant="h4" sx={{ fontSize: '28px', fontWeight: 700, color: 'warning.main', mb: 0.5 }}>
                                   {selectedContacts.length}
                                 </Typography>
@@ -1057,7 +1065,7 @@ export default function AdvancedSMSPage() {
                     Örnek Şablon:
                   </Typography>
                 </Box>
-                <Paper sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
+                <Paper sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
                   <Typography variant="body2" sx={{ fontSize: '13px', fontFamily: 'monospace', color: 'text.primary' }}>
                     {`Merhaba {{name}}, hoş geldiniz! Doğrulama kodunuz: {{code}}`}
                   </Typography>

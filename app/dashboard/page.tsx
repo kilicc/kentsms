@@ -8,6 +8,7 @@ import { AttachMoney, Send, Person, Warning, Visibility, Search, FilterList } fr
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
 
 interface DashboardStats {
@@ -49,6 +50,7 @@ interface BulkSmsReport {
 
 export default function DashboardPage() {
   const { user, api } = useAuth();
+  const { mode } = useTheme();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
@@ -343,7 +345,7 @@ export default function DashboardPage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         {/* Navbar */}
@@ -419,7 +421,9 @@ export default function DashboardPage() {
                       width: '100%',
                       background: isCreditCard
                         ? 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)'
-                        : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        : mode === 'dark' 
+                          ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                          : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
                       border: 'none',
                       borderRadius: 0,
                       borderLeft: isFirst ? 'none' : `1px solid ${alpha('#e0e0e0', 0.3)}`,
@@ -537,7 +541,9 @@ export default function DashboardPage() {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 border: `1px solid ${alpha('#e0e0e0', 0.5)}`,
                 p: 1.5,
-                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                background: mode === 'dark' 
+                  ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                  : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
                 mb: 2,
               }}
             >
@@ -764,7 +770,9 @@ export default function DashboardPage() {
               boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
               border: `1px solid ${alpha('#e0e0e0', 0.5)}`,
               p: 1.5,
-              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              background: mode === 'dark' 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>

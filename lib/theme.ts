@@ -41,6 +41,7 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
       secondary: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
       disabled: mode === 'dark' ? 'rgba(255, 255, 255, 0.38)' : 'rgba(0, 0, 0, 0.38)',
     },
+    divider: mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
@@ -126,7 +127,10 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
       styleOverrides: {
         root: {
           borderRadius: 11.04, // 9.6px × 1.15 = 11.04px
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: mode === 'dark' 
+            ? '0 2px 8px rgba(0,0,0,0.3)' 
+            : '0 2px 8px rgba(0,0,0,0.1)',
+          backgroundColor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
         },
       },
     },
@@ -146,13 +150,31 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
           '& .MuiOutlinedInput-root': {
             borderRadius: 7.36, // 6.4px × 1.15 = 7.36px
             fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+            backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
+            '& fieldset': {
+              borderColor: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.23)',
+            },
+            '&:hover fieldset': {
+              borderColor: mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.87)',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'primary.main',
+            },
           },
           '& .MuiInputLabel-root': {
             fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+            color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+            '&.Mui-focused': {
+              color: 'primary.main',
+            },
           },
           '& .MuiInputBase-input': {
             fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
             padding: '11.04px 12.88px', // 9.6px 11.2px × 1.15
+            color: mode === 'dark' ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+            '&::placeholder': {
+              color: mode === 'dark' ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.38)',
+            },
           },
         },
       },
@@ -238,6 +260,7 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
       styleOverrides: {
         root: {
           borderRadius: 11.04, // 9.6px × 1.15 = 11.04px
+          backgroundColor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
         },
       },
     },
@@ -298,6 +321,16 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
       styleOverrides: {
         root: {
           fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
+          backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'transparent',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.23)',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.87)',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'primary.main',
+          },
         },
       },
     },
@@ -307,6 +340,16 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
           fontSize: '0.805rem', // 0.7rem × 1.15 = 0.805rem
           padding: '7.36px 14.72px', // 6.4px 12.8px × 1.15
           minHeight: '36.8px', // 32px × 1.15 = 36.8px
+          color: mode === 'dark' ? 'rgba(255,255,255,0.87)' : 'rgba(0,0,0,0.87)',
+          '&:hover': {
+            backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+          },
+          '&.Mui-selected': {
+            backgroundColor: mode === 'dark' ? 'rgba(25, 118, 210, 0.16)' : 'rgba(25, 118, 210, 0.08)',
+            '&:hover': {
+              backgroundColor: mode === 'dark' ? 'rgba(25, 118, 210, 0.24)' : 'rgba(25, 118, 210, 0.12)',
+            },
+          },
         },
       },
     },

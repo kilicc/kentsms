@@ -6,11 +6,13 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Settings, Lock, Security, Person, Edit, CheckCircle, Info, Warning, QrCode, DarkMode, LightMode } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 
 export default function ProfilePage() {
   const { api, user } = useAuth();
+  const { mode } = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -169,7 +171,7 @@ export default function ProfilePage() {
         sx={{
           display: 'flex',
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5',
         }}
       >
         <Navbar />
@@ -244,7 +246,9 @@ export default function ProfilePage() {
               </Alert>
             )}
 
-            <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)', background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)' }}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)', background: mode === 'dark' 
+                      ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)' }}>
               <Box sx={{ borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
                 <Tabs 
                   value={tabValue} 
@@ -540,7 +544,7 @@ export default function ProfilePage() {
                                 </Typography>
                               </Box>
                             </Box>
-                            <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'white', borderRadius: 2, border: '2px dashed rgba(25, 118, 210, 0.2)' }}>
+                            <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '2px dashed rgba(25, 118, 210, 0.2)' }}>
                               <Image
                                 src={qrCode}
                                 alt="2FA QR Code"
