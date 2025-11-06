@@ -51,17 +51,15 @@ openssl rand -hex 32
   - `*/5 * * * *` = Her 5 dakikada bir
   - Örnek çalışma zamanları: 10:00, 10:05, 10:10, 10:15, ...
 
-**HTTP İsteği:**
-- **Method**: `POST`
-- **URL**: `https://panel.finsms.io/api/sms/check-status`
-  - **Not:** Eğer container içindeyse, `http://localhost:3000/api/sms/check-status` kullanabilirsiniz
-- **Headers**:
-  ```
-  x-secret-key: YOUR_CRON_SECRET_KEY
-  Content-Type: application/json
-  ```
-  - **Not:** `YOUR_CRON_SECRET_KEY` yerine Environment Variable'daki `CRON_SECRET_KEY` değerini yazın
-- **Body**: (Boş bırakabilirsiniz veya `{}`)
+**Command (Bash):**
+```bash
+curl -X POST -H "x-secret-key: $CRON_SECRET_KEY" -H "Content-Type: application/json" http://localhost:3000/api/sms/check-status
+```
+
+**Not:** 
+- `$CRON_SECRET_KEY` - Dokploy Environment Variable'ından otomatik alınır
+- Container içinden çağrıldığı için `http://localhost:3000` kullanıyoruz
+- Eğer dışarıdan çağrılıyorsa `https://panel.finsms.io` kullanabilirsiniz
 
 3. **"Save"** veya **"Create"** butonuna tıklayın
 
@@ -79,17 +77,15 @@ openssl rand -hex 32
   - Cron formatı: `dakika saat gün ay hafta-günü`
   - `0 * * * *` = Her saat başı (00:00, 01:00, 02:00, ...)
 
-**HTTP İsteği:**
-- **Method**: `POST`
-- **URL**: `https://panel.finsms.io/api/refunds/process-auto`
-  - **Not:** Eğer container içindeyse, `http://localhost:3000/api/refunds/process-auto` kullanabilirsiniz
-- **Headers**:
-  ```
-  x-secret-key: YOUR_CRON_SECRET_KEY
-  Content-Type: application/json
-  ```
-  - **Not:** `YOUR_CRON_SECRET_KEY` yerine Environment Variable'daki `CRON_SECRET_KEY` değerini yazın
-- **Body**: (Boş bırakabilirsiniz veya `{}`)
+**Command (Bash):**
+```bash
+curl -X POST -H "x-secret-key: $CRON_SECRET_KEY" -H "Content-Type: application/json" http://localhost:3000/api/refunds/process-auto
+```
+
+**Not:** 
+- `$CRON_SECRET_KEY` - Dokploy Environment Variable'ından otomatik alınır
+- Container içinden çağrıldığı için `http://localhost:3000` kullanıyoruz
+- Eğer dışarıdan çağrılıyorsa `https://panel.finsms.io` kullanabilirsiniz
 
 3. **"Save"** veya **"Create"** butonuna tıklayın
 
