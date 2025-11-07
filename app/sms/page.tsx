@@ -287,8 +287,14 @@ export default function SMSInterfacePage() {
                                       });
                                       if (response.data.success) {
                                         const shortCode = response.data.data.shortLink.short_code;
-                                        const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'urlci.com';
-                                        const shortLink = `https://${shortLinkDomain}/${shortCode}`;
+                                        const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || window.location.origin;
+                                        const normalizedDomain = shortLinkDomain.startsWith('http')
+                                          ? shortLinkDomain
+                                          : `https://${shortLinkDomain}`;
+                                        const normalizedBase = normalizedDomain.endsWith('/')
+                                          ? normalizedDomain.slice(0, -1)
+                                          : normalizedDomain;
+                                        const shortLink = `${normalizedBase}/s/${shortCode}`;
                                         
                                         // Dialog'u aç ve oluşturulan linki göster
                                         setCreatedShortLink({
