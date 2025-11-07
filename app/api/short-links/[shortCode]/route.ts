@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
+import { getIPGeolocation } from '@/lib/utils/ipGeolocation';
 
 // GET /api/short-links/[shortCode] - Kısa linke tıklama ve yönlendirme
 export async function GET(
@@ -74,6 +75,18 @@ export async function GET(
     const userAgent = request.headers.get('user-agent') || null;
     const referer = request.headers.get('referer') || null;
 
+    // IP'den coğrafi bilgi al (async olarak, hata olursa devam et)
+    let geoData: { country: string | null; city: string | null } = { country: null, city: null };
+    try {
+      const geo = await getIPGeolocation(ipAddress);
+      geoData = {
+        country: geo.country || null,
+        city: geo.city || null,
+      };
+    } catch (error: any) {
+      console.warn('IP geolocation error (continuing without geo data):', error);
+    }
+
     // Tıklama istatistiği kaydet
     const { error: clickError } = await supabaseServer
       .from('short_link_clicks')
@@ -82,6 +95,8 @@ export async function GET(
         ip_address: ipAddress || 'unknown',
         user_agent: userAgent,
         referer: referer,
+        country: geoData.country,
+        city: geoData.city,
       });
 
     if (!clickError) {

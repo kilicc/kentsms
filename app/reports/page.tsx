@@ -2443,7 +2443,7 @@ export default function SMSReportsPage() {
             </Box>
           </DialogTitle>
           <DialogContent>
-            {selectedShortLink && (
+            {selectedShortLink ? (
               <Box>
                 {/* Link Bilgileri */}
                 <Paper sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)' }}>
@@ -2560,6 +2560,64 @@ export default function SMSReportsPage() {
                   </Grid>
                 )}
 
+                {/* User Agent ve Referer İstatistikleri */}
+                {(selectedShortLink.stats?.userAgents?.length > 0 || selectedShortLink.stats?.referers?.length > 0) && (
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    {selectedShortLink.stats?.userAgents && selectedShortLink.stats.userAgents.length > 0 && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Paper sx={{ p: 2, borderRadius: 2 }}>
+                          <Typography variant="subtitle2" sx={{ fontSize: '13px', fontWeight: 600, mb: 1.5 }}>
+                            <Language sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
+                            User Agent'lar ({selectedShortLink.stats.userAgents.length})
+                          </Typography>
+                          <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                            {selectedShortLink.stats.userAgents.slice(0, 10).map((ua: string, index: number) => (
+                              <Chip
+                                key={index}
+                                label={ua.length > 50 ? ua.substring(0, 50) + '...' : ua}
+                                size="small"
+                                sx={{ fontSize: '10px', mb: 0.5, mr: 0.5, display: 'inline-block' }}
+                                title={ua}
+                              />
+                            ))}
+                            {selectedShortLink.stats.userAgents.length > 10 && (
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px', display: 'block', mt: 1 }}>
+                                +{selectedShortLink.stats.userAgents.length - 10} daha fazla
+                              </Typography>
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    )}
+                    {selectedShortLink.stats?.referers && selectedShortLink.stats.referers.length > 0 && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Paper sx={{ p: 2, borderRadius: 2 }}>
+                          <Typography variant="subtitle2" sx={{ fontSize: '13px', fontWeight: 600, mb: 1.5 }}>
+                            <Link sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
+                            Referer'lar ({selectedShortLink.stats.referers.length})
+                          </Typography>
+                          <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                            {selectedShortLink.stats.referers.slice(0, 10).map((ref: string, index: number) => (
+                              <Chip
+                                key={index}
+                                label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
+                                size="small"
+                                sx={{ fontSize: '10px', mb: 0.5, mr: 0.5, display: 'inline-block' }}
+                                title={ref}
+                              />
+                            ))}
+                            {selectedShortLink.stats.referers.length > 10 && (
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px', display: 'block', mt: 1 }}>
+                                +{selectedShortLink.stats.referers.length - 10} daha fazla
+                              </Typography>
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    )}
+                  </Grid>
+                )}
+
                 {/* Tıklama Detayları */}
                 {selectedShortLink.stats?.clicks && selectedShortLink.stats.clicks.length > 0 && (
                   <Paper sx={{ borderRadius: 2 }}>
@@ -2571,30 +2629,58 @@ export default function SMSReportsPage() {
                         <TableHead>
                           <TableRow>
                             <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>IP Adresi</TableCell>
-                            <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>User Agent</TableCell>
-                            <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>Referer</TableCell>
                             <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>Ülke</TableCell>
                             <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>Şehir</TableCell>
+                            <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>User Agent</TableCell>
+                            <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>Referer</TableCell>
                             <TableCell sx={{ fontSize: '11px', fontWeight: 600 }}>Tarih</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {selectedShortLink.stats.clicks.slice(0, 50).map((click: any) => (
+                          {selectedShortLink.stats.clicks.slice(0, 100).map((click: any) => (
                             <TableRow key={click.id}>
                               <TableCell sx={{ fontSize: '11px', fontFamily: 'monospace' }}>
                                 {click.ip_address}
                               </TableCell>
-                              <TableCell sx={{ fontSize: '11px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }} title={click.user_agent || ''}>
-                                {click.user_agent || '-'}
+                              <TableCell sx={{ fontSize: '11px' }}>
+                                {click.country ? (
+                                  <Chip
+                                    label={click.country}
+                                    size="small"
+                                    sx={{ fontSize: '10px', height: 20 }}
+                                  />
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '11px' }}>
+                                {click.city ? (
+                                  <Chip
+                                    label={click.city}
+                                    size="small"
+                                    sx={{ fontSize: '10px', height: 20 }}
+                                  />
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '11px', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis' }} title={click.user_agent || ''}>
+                                {click.user_agent ? (
+                                  <Typography variant="caption" sx={{ fontSize: '10px' }}>
+                                    {click.user_agent.length > 40 ? click.user_agent.substring(0, 40) + '...' : click.user_agent}
+                                  </Typography>
+                                ) : (
+                                  '-'
+                                )}
                               </TableCell>
                               <TableCell sx={{ fontSize: '11px', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }} title={click.referer || ''}>
-                                {click.referer || '-'}
-                              </TableCell>
-                              <TableCell sx={{ fontSize: '11px' }}>
-                                {click.country || '-'}
-                              </TableCell>
-                              <TableCell sx={{ fontSize: '11px' }}>
-                                {click.city || '-'}
+                                {click.referer ? (
+                                  <Typography variant="caption" sx={{ fontSize: '10px', color: 'primary.main' }}>
+                                    {click.referer.length > 30 ? click.referer.substring(0, 30) + '...' : click.referer}
+                                  </Typography>
+                                ) : (
+                                  '-'
+                                )}
                               </TableCell>
                               <TableCell sx={{ fontSize: '11px' }}>
                                 <ClientDate date={click.clicked_at} />
@@ -2604,15 +2690,22 @@ export default function SMSReportsPage() {
                         </TableBody>
                       </Table>
                     </TableContainer>
-                    {selectedShortLink.stats.clicks.length > 50 && (
+                    {selectedShortLink.stats.clicks.length > 100 && (
                       <Box sx={{ p: 2, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px' }}>
-                          Toplam {selectedShortLink.stats.clicks.length} tıklama var. İlk 50 tanesi gösteriliyor.
+                          Toplam {selectedShortLink.stats.clicks.length} tıklama var. İlk 100 tanesi gösteriliyor.
                         </Typography>
                       </Box>
                     )}
                   </Paper>
                 )}
+              </Box>
+            ) : (
+              <Box sx={{ p: 3, textAlign: 'center' }}>
+                <CircularProgress />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontSize: '12px' }}>
+                  Detaylar yükleniyor...
+                </Typography>
               </Box>
             )}
           </DialogContent>
