@@ -30,7 +30,7 @@ interface SmsMessage {
 }
 
 export default function SMSReportsPage() {
-  const { api, user } = useAuth();
+  const { api, user, loading: authLoading } = useAuth();
   const { mode } = useTheme();
   type ReportsTab = 'sms' | 'bulk' | 'stats' | 'payments';
   const [tabValue, setTabValue] = useState<ReportsTab>('sms');
@@ -93,7 +93,7 @@ export default function SMSReportsPage() {
   const [bulkDetailDialogOpen, setBulkDetailDialogOpen] = useState(false);
 
   const userRole = typeof user?.role === 'string' ? user.role.toLowerCase() : '';
-  const isAdmin = userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator';
+  const isAdmin = !authLoading && (userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator');
 
   useEffect(() => {
     if (isAdmin) {
@@ -538,7 +538,10 @@ export default function SMSReportsPage() {
             {/* Tabs */}
             <Tabs 
               value={tabValue} 
-              onChange={(e, newValue) => setTabValue(newValue as ReportsTab)}
+              onChange={(e, newValue) => {
+                console.log('Tab değişimi:', { oldValue: tabValue, newValue, isAdmin, userRole });
+                setTabValue(newValue as ReportsTab);
+              }}
               sx={{ mb: 2 }}
             >
               <Tab label="SMS Raporları" icon={<Assessment />} value="sms" />
