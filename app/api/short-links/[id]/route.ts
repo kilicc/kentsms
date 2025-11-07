@@ -42,8 +42,8 @@ export async function DELETE(
       );
     }
 
-    // Kullanıcı sadece kendi linklerini silebilir
-    if (shortLink.user_id !== auth.user.userId) {
+    // Kullanıcı sadece kendi linklerini silebilir (string karşılaştırması)
+    if (String(shortLink.user_id) !== String(auth.user.userId)) {
       return NextResponse.json(
         { success: false, message: 'Bu kısa linki silme yetkiniz yok' },
         { status: 403 }
@@ -55,7 +55,7 @@ export async function DELETE(
       .from('short_links')
       .update({ is_active: false })
       .eq('id', id)
-      .eq('user_id', auth.user.userId);
+      .eq('user_id', String(auth.user.userId));
 
     if (deleteError) {
       console.error('Short link delete error:', deleteError);

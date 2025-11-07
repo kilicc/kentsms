@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const url = request.nextUrl.clone();
-  const hostname = request.headers.get('host') || '';
-  
-  // Subdomain'i al (panel.finsms.io -> panel, platform.finsms.io -> platform)
-  const subdomain = hostname.split('.')[0];
+  try {
+    const url = request.nextUrl.clone();
+    const hostname = request.headers.get('host') || '';
+    
+    // Subdomain'i al (panel.finsms.io -> panel, platform.finsms.io -> platform)
+    const subdomain = hostname.split('.')[0];
   
   // Admin subdomain (panel.finsms.io)
   if (subdomain === 'panel') {
@@ -79,37 +80,48 @@ export function middleware(request: NextRequest) {
   
   // Kısa link subdomain (go.finsms.io)
   if (subdomain === 'go') {
-    // API route'ları ve Next.js internal route'ları hariç tut
-    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
+    try {
+      // API route'ları ve Next.js internal route'ları hariç tut
+      if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
+        return NextResponse.next();
+      }
+      
+      // Root path'e gidiyorsa ana sayfaya yönlendir
+      if (url.pathname === '/') {
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+      
+      // Kısa kod path'i (/[shortCode]) - API'ye yönlendir
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      if (pathParts.length === 1 && pathParts[0] && !pathParts[0].includes('.')) {
+        // Kısa kod gibi görünüyor, API'ye yönlendir
+        const shortCode = pathParts[0];
+        url.pathname = `/api/short-links/${shortCode}`;
+        return NextResponse.rewrite(url);
+      }
+      
+      // Diğer path'ler için normal çalış
+      return NextResponse.next();
+    } catch (error) {
+      // Hata durumunda normal devam et
+      console.error('Go subdomain middleware error:', error);
+      return NextResponse.next();
+    }
+  }
+  
+    // Localhost geliştirme için (subdomain yoksa)
+    if (subdomain === 'localhost' || subdomain === '127.0.0.1') {
+      // Geliştirme ortamında normal çalış
       return NextResponse.next();
     }
     
-    // Root path'e gidiyorsa ana sayfaya yönlendir
-    if (url.pathname === '/') {
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
-    }
-    
-    // Kısa kod path'i (/[shortCode]) - API'ye yönlendir
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    if (pathParts.length === 1 && pathParts[0] && !pathParts[0].includes('.')) {
-      // Kısa kod gibi görünüyor, API'ye yönlendir
-      const shortCode = pathParts[0];
-      url.pathname = `/api/short-links/${shortCode}`;
-      return NextResponse.rewrite(url);
-    }
-    
-    // Diğer path'ler için normal çalış
+    return NextResponse.next();
+  } catch (error) {
+    // Hata durumunda normal devam et
+    console.error('Middleware error:', error);
     return NextResponse.next();
   }
-  
-  // Localhost geliştirme için (subdomain yoksa)
-  if (subdomain === 'localhost' || subdomain === '127.0.0.1') {
-    // Geliştirme ortamında normal çalış
-    return NextResponse.next();
-  }
-  
-  return NextResponse.next();
 }
 
 export const config = {

@@ -17,7 +17,8 @@ export async function DELETE(
       );
     }
 
-    if (!requireAdmin(auth.user)) {
+    const userRole = typeof auth.user.role === 'string' ? auth.user.role.toLowerCase() : '';
+    if (userRole !== 'admin' && userRole !== 'moderator' && userRole !== 'administrator') {
       return NextResponse.json(
         { success: false, message: 'Admin yetkisi gerekli' },
         { status: 403 }
