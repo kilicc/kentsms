@@ -32,7 +32,8 @@ interface SmsMessage {
 export default function SMSReportsPage() {
   const { api, user } = useAuth();
   const { mode } = useTheme();
-  const [tabValue, setTabValue] = useState(0);
+  type ReportsTab = 'sms' | 'bulk' | 'stats' | 'payments';
+  const [tabValue, setTabValue] = useState<ReportsTab>('sms');
   const [messages, setMessages] = useState<SmsMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -104,7 +105,7 @@ export default function SMSReportsPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const today = params.get('today');
-      if (today === 'true' && tabValue === 0) {
+      if (today === 'true' && tabValue === 'sms') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const todayStr = today.toISOString().split('T')[0];
@@ -444,38 +445,38 @@ export default function SMSReportsPage() {
 
   // Main tab change effect - loads data when tab changes
   useEffect(() => {
-    if (tabValue === 0) {
+    if (tabValue === 'sms') {
       loadHistory();
-    } else if (tabValue === 1) {
+    } else if (tabValue === 'bulk') {
       loadBulkReports();
-    } else if (tabValue === 2 && isAdmin) {
+    } else if (tabValue === 'stats' && isAdmin) {
       loadStats();
-    } else if (tabValue === 3 && isAdmin) {
+    } else if (tabValue === 'payments' && isAdmin) {
       loadPaymentRequests();
     }
   }, [tabValue, isAdmin]);
 
   // Filter change effects
   useEffect(() => {
-    if (tabValue === 0) {
+    if (tabValue === 'sms') {
       loadHistory();
     }
   }, [filters.userId, filters.startDate, filters.endDate, filters.status, filters.phoneNumber, filters.messageSearch, tabValue]);
 
   useEffect(() => {
-    if (tabValue === 1) {
+    if (tabValue === 'bulk') {
       loadBulkReports();
     }
   }, [bulkFilters.startDate, bulkFilters.endDate, bulkFilters.status, bulkFilters.userId, bulkFilters.messageSearch, tabValue]);
 
   useEffect(() => {
-    if (tabValue === 2 && isAdmin) {
+    if (tabValue === 'stats' && isAdmin) {
       loadStats();
     }
   }, [statsFilters.startDate, statsFilters.endDate, tabValue, isAdmin]);
 
   useEffect(() => {
-    if (tabValue === 3 && isAdmin) {
+    if (tabValue === 'payments' && isAdmin) {
       loadPaymentRequests();
     }
   }, [paymentFilters.startDate, paymentFilters.endDate, paymentFilters.status, paymentFilters.userId, paymentFilters.paymentMethod, paymentFilters.minAmount, paymentFilters.maxAmount, paymentFilters.transactionId, tabValue, isAdmin]);
@@ -536,21 +537,21 @@ export default function SMSReportsPage() {
             {/* Tabs */}
             <Tabs 
               value={tabValue} 
-              onChange={(e, newValue) => setTabValue(newValue)}
+              onChange={(e, newValue) => setTabValue(newValue as ReportsTab)}
               sx={{ mb: 2 }}
             >
-              <Tab label="SMS Raporları" icon={<Assessment />} value={0} />
-              <Tab label="Toplu SMS" icon={<Send />} value={1} />
+              <Tab label="SMS Raporları" icon={<Assessment />} value="sms" />
+              <Tab label="Toplu SMS" icon={<Send />} value="bulk" />
               {isAdmin && (
                 <>
-                  <Tab label="İstatistikler" icon={<BarChart />} value={2} />
-                  <Tab label="Ödeme Raporları" icon={<Payment />} value={3} />
+                  <Tab label="İstatistikler" icon={<BarChart />} value="stats" />
+                  <Tab label="Ödeme Raporları" icon={<Payment />} value="payments" />
                 </>
               )}
             </Tabs>
 
             {/* SMS Reports Tab */}
-            {tabValue === 0 && (
+            {tabValue === 'sms' && (
               <Box>
                 <Typography 
                   variant="h6" 
@@ -792,7 +793,7 @@ export default function SMSReportsPage() {
             )}
 
             {/* Bulk SMS Tab */}
-            {tabValue === 1 && (
+            {tabValue === 'bulk' && (
               <Box>
                 <Typography 
                   variant="h6" 
@@ -1165,7 +1166,7 @@ export default function SMSReportsPage() {
             </Dialog>
 
             {/* Statistics Tab - Admin Only */}
-            {tabValue === 2 && isAdmin && (
+            {tabValue === 'stats' && isAdmin && (
               <Box>
                 <Typography 
                   variant="h6" 
@@ -1445,7 +1446,7 @@ export default function SMSReportsPage() {
             )}
 
             {/* Payment Reports Tab - Admin Only */}
-            {tabValue === 3 && isAdmin && (
+            {tabValue === 'payments' && isAdmin && (
               <Box>
                 <Typography 
                   variant="h6" 
