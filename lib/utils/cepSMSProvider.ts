@@ -196,27 +196,28 @@ export async function checkSMSStatus(messageId: string, phoneNumber?: string): P
   try {
     console.log('[CepSMS] Mesaj durumu kontrol ediliyor:', { messageId, phoneNumber });
 
-    // CepSMS API SMS Report endpoint'i
-    // Birden fazla olası endpoint'i sırayla dene
+    // CepSMS API SMS Report endpoint'i - resmi dokümana göre JSON POST
     const normalizedBaseUrl = CEPSMS_API_URL.replace(/\/$/, '');
     const candidateEndpoints = Array.from(
       new Set(
         [
+          normalizedBaseUrl,
           `${normalizedBaseUrl}/report`,
           normalizedBaseUrl.endsWith('/smsapi')
             ? `${normalizedBaseUrl.replace('/smsapi', '')}/report`
             : `${normalizedBaseUrl}/report`,
+          'https://panel4.cepsms.com/smsapi',
           'https://panel4.cepsms.com/smsapi/report',
           'https://panel4.cepsms.com/report',
         ].filter(Boolean)
       )
     );
 
-    const requestBody = new URLSearchParams({
+    const requestPayload = {
       User: CEPSMS_USERNAME,
       Pass: CEPSMS_PASSWORD,
       MessageId: messageId,
-    });
+    };
 
     let response: any = null;
     let lastError: any = null;
@@ -224,21 +225,35 @@ export async function checkSMSStatus(messageId: string, phoneNumber?: string): P
     for (const endpoint of candidateEndpoints) {
       try {
         console.log('[CepSMS] Rapor API isteği:', { endpoint, messageId });
-        response = await axios.post<any>(endpoint, requestBody.toString(), {
+
+        // İlk denemede JSON formatı kullan, HTML dönerse form-encoded ile tekrar dene
+        response = await axios.post<any>(endpoint, requestPayload, {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
           httpsAgent,
           timeout: 30000,
         });
 
         if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-          console.warn('[CepSMS] HTML yanıt alındı, bir sonraki endpoint denenecek');
-          lastError = new Error('HTML response received');
-          continue;
+          console.warn('[CepSMS] HTML yanıt alındı, form-encoded denenecek');
+
+          response = await axios.post<any>(endpoint, new URLSearchParams(requestPayload as any).toString(), {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            httpsAgent,
+            timeout: 30000,
+          });
+
+          if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+            console.warn('[CepSMS] HTML yanıt devam ediyor, bir sonraki endpoint denenecek');
+            lastError = new Error('HTML response received');
+            continue;
+          }
         }
 
-        break; // başarılı yanıt
+        break; // Başarılı yanıt
       } catch (error: any) {
         lastError = error;
         console.warn('[CepSMS] Rapor endpoint denemesi başarısız:', {
