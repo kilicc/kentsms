@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Link, BarChart, ContentCopy, Visibility, Add, OpenInNew } from '@mui/icons-material';
+import { Link, BarChart, ContentCopy, Visibility, Add, OpenInNew, Delete } from '@mui/icons-material';
 import ClientDate from '@/components/ClientDate';
 
 interface ShortLink {
@@ -125,6 +125,29 @@ export default function ShortLinksPage() {
       setError(err.response?.data?.message || 'Kısa link oluşturulamadı');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDeleteShortLink = async (linkId: string, shortCode: string) => {
+    if (!confirm(`Bu kısa linki (${shortCode}) silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+      const response = await api.delete(`/short-links/${linkId}`);
+      if (response.data.success) {
+        setSuccess('Kısa link başarıyla silindi!');
+        loadShortLinks();
+      } else {
+        setError(response.data.message || 'Kısa link silinemedi');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Kısa link silinirken bir hata oluştu');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -289,13 +312,24 @@ export default function ShortLinksPage() {
                           <ClientDate date={link.created_at} />
                         </TableCell>
                         <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleViewStats(link)}
-                            sx={{ p: 0.5 }}
-                          >
-                            <BarChart sx={{ fontSize: 16 }} />
-                          </IconButton>
+                          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewStats(link)}
+                              sx={{ p: 0.5 }}
+                              title="İstatistikler"
+                            >
+                              <BarChart sx={{ fontSize: 16 }} />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteShortLink(link.id, link.short_code)}
+                              sx={{ p: 0.5, color: 'error.main' }}
+                              title="Sil"
+                            >
+                              <Delete sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     ))}
