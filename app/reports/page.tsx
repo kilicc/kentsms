@@ -92,7 +92,8 @@ export default function SMSReportsPage() {
   const [loadingBulkDetails, setLoadingBulkDetails] = useState(false);
   const [bulkDetailDialogOpen, setBulkDetailDialogOpen] = useState(false);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const userRole = typeof user?.role === 'string' ? user.role.toLowerCase() : '';
+  const isAdmin = userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator';
 
   useEffect(() => {
     if (isAdmin) {
