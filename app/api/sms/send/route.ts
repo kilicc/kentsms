@@ -41,49 +41,65 @@ export async function POST(request: NextRequest) {
     // Şimdilik sadece ilk numaraya gönder (toplu SMS için bulk-sms endpoint'i kullanılmalı)
     const firstPhone = phoneNumbers[0];
 
-    // Get user to check credit using Supabase
-    const { data: user, error: userError } = await supabaseServer
-      .from('users')
-      .select('credit')
-      .eq('id', auth.user.userId)
-      .single();
+    // Admin kullanıcıları için rol kontrolü
+    const userRole = (auth.user.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator';
 
-    if (userError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Kullanıcı bulunamadı' },
-        { status: 404 }
-      );
-    }
-
-    // Check credit
-    // 180 karakter = 1 kredi
-    const messageLength = message.length;
-    const requiredCredit = Math.ceil(messageLength / 180) || 1; // En az 1 kredi
-    const userCredit = user.credit || 0;
+    // Get user to check credit using Supabase (admin değilse)
+    let userCredit = 0;
+    let requiredCredit = 0;
+    let updatedUser: any = null;
     
-    if (userCredit < requiredCredit) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Yetersiz kredi. Gerekli: ${requiredCredit} (${messageLength} karakter / 180 = ${requiredCredit} kredi), Mevcut: ${userCredit}`,
-        },
-        { status: 400 }
-      );
-    }
+    if (!isAdmin) {
+      const { data: user, error: userError } = await supabaseServer
+        .from('users')
+        .select('credit')
+        .eq('id', auth.user.userId)
+        .single();
 
-    // Kredi düş (başarılı veya başarısız olsun, kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek)
-    const { data: updatedUser, error: updateError } = await supabaseServer
-      .from('users')
-      .update({ credit: Math.max(0, (userCredit || 0) - requiredCredit) })
-      .eq('id', auth.user.userId)
-      .select('credit')
-      .single();
+      if (userError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Kullanıcı bulunamadı' },
+          { status: 404 }
+        );
+      }
 
-    if (updateError) {
-      return NextResponse.json(
-        { success: false, message: updateError.message || 'Kredi güncellenemedi' },
-        { status: 500 }
-      );
+      // Check credit
+      // 180 karakter = 1 kredi
+      const messageLength = message.length;
+      requiredCredit = Math.ceil(messageLength / 180) || 1; // En az 1 kredi
+      userCredit = user.credit || 0;
+      
+      if (userCredit < requiredCredit) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Yetersiz kredi. Gerekli: ${requiredCredit} (${messageLength} karakter / 180 = ${requiredCredit} kredi), Mevcut: ${userCredit}`,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Kredi düş (başarılı veya başarısız olsun, kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek)
+      const { data: updatedUserData, error: updateError } = await supabaseServer
+        .from('users')
+        .update({ credit: Math.max(0, (userCredit || 0) - requiredCredit) })
+        .eq('id', auth.user.userId)
+        .select('credit')
+        .single();
+
+      if (updateError) {
+        return NextResponse.json(
+          { success: false, message: updateError.message || 'Kredi güncellenemedi' },
+          { status: 500 }
+        );
+      }
+      
+      updatedUser = updatedUserData;
+    } else {
+      // Admin kullanıcıları için kredi hesaplama (sadece cost için)
+      const messageLength = message.length;
+      requiredCredit = Math.ceil(messageLength / 180) || 1; // En az 1 kredi (sadece cost için)
     }
 
     // Send SMS (birden fazla numara varsa sadece ilk numaraya gönder)
@@ -100,7 +116,7 @@ export async function POST(request: NextRequest) {
           message,
           sender: serviceName || null,
           status: 'gönderildi',
-          cost: requiredCredit, // 180 karakter = 1 kredi
+          cost: isAdmin ? 0 : requiredCredit, // Admin kullanıcıları için cost: 0
           cep_sms_message_id: smsResult.messageId,
           sent_at: new Date().toISOString(),
         })
@@ -108,11 +124,13 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError || !smsMessageData) {
-        // SMS kaydı oluşturulamadı, krediyi geri ver
-        await supabaseServer
-          .from('users')
-          .update({ credit: userCredit })
-          .eq('id', auth.user.userId);
+        // SMS kaydı oluşturulamadı, krediyi geri ver (admin değilse)
+        if (!isAdmin) {
+          await supabaseServer
+            .from('users')
+            .update({ credit: userCredit })
+            .eq('id', auth.user.userId);
+        }
         return NextResponse.json(
           { success: false, message: createError?.message || 'SMS kaydı oluşturulamadı' },
           { status: 500 }
@@ -125,7 +143,7 @@ export async function POST(request: NextRequest) {
         data: {
           messageId: smsMessageData.id,
           cepSmsMessageId: smsResult.messageId,
-          remainingCredit: updatedUser?.credit || 0,
+          remainingCredit: isAdmin ? null : (updatedUser ? updatedUser.credit : 0), // Admin için kredi gösterilmez
         },
       });
     } else {
@@ -138,14 +156,14 @@ export async function POST(request: NextRequest) {
           message,
           sender: serviceName || null,
           status: 'failed',
-          cost: requiredCredit,
+          cost: isAdmin ? 0 : requiredCredit, // Admin kullanıcıları için cost: 0
           failed_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (!failedError && failedSmsData) {
-        // Otomatik iade oluştur (48 saat sonra işlenecek)
+      if (!failedError && failedSmsData && !isAdmin) {
+        // Otomatik iade oluştur (48 saat sonra işlenecek) - Admin kullanıcıları için iade oluşturulmaz
         await supabaseServer
           .from('refunds')
           .insert({
@@ -161,9 +179,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: smsResult.error || 'SMS gönderim hatası. Kredi düşüldü, 48 saat içinde otomatik iade edilecektir.',
+          message: isAdmin 
+            ? (smsResult.error || 'SMS gönderim hatası.')
+            : (smsResult.error || 'SMS gönderim hatası. Kredi düşüldü, 48 saat içinde otomatik iade edilecektir.'),
           data: {
-            remainingCredit: updatedUser?.credit || 0,
+            remainingCredit: isAdmin ? null : (updatedUser ? updatedUser.credit : 0), // Admin için kredi gösterilmez
           },
         },
         { status: 400 }

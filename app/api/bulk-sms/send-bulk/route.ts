@@ -35,18 +35,29 @@ export async function POST(request: NextRequest) {
     // Remove duplicate contact IDs (eğer aynı kişi hem grup hem manuel seçilmişse)
     const uniqueContactIds = [...new Set(contactIds)];
 
-    // Get user to check credit using Supabase
-    const { data: user, error: userError } = await supabaseServer
-      .from('users')
-      .select('credit')
-      .eq('id', auth.user.userId)
-      .single();
+    // Admin kullanıcıları için rol kontrolü
+    const userRole = (auth.user.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator';
 
-    if (userError || !user) {
-      return NextResponse.json(
-        { success: false, message: 'Kullanıcı bulunamadı' },
-        { status: 404 }
-      );
+    // Get user to check credit using Supabase (admin değilse)
+    let userCredit = 0;
+    let requiredCredit = 0;
+    let creditPerMessage = 0;
+    
+    if (!isAdmin) {
+      const { data: user, error: userError } = await supabaseServer
+        .from('users')
+        .select('credit')
+        .eq('id', auth.user.userId)
+        .single();
+
+      if (userError || !user) {
+        return NextResponse.json(
+          { success: false, message: 'Kullanıcı bulunamadı' },
+          { status: 404 }
+        );
+      }
+      userCredit = user.credit || 0;
     }
 
     // Get contacts using Supabase
@@ -77,11 +88,10 @@ export async function POST(request: NextRequest) {
     // Kredi hesaplama: 180 karakter = 1 kredi
     // Her numara için mesaj uzunluğuna göre kredi hesaplanır
     const messageLength = message.length;
-    const creditPerMessage = Math.ceil(messageLength / 180) || 1; // En az 1 kredi
-    const requiredCredit = contacts.length * creditPerMessage; // Her numara için kredi
-    const userCredit = user.credit || 0;
+    creditPerMessage = Math.ceil(messageLength / 180) || 1; // En az 1 kredi
+    requiredCredit = contacts.length * creditPerMessage; // Her numara için kredi
     
-    if (userCredit < requiredCredit) {
+    if (!isAdmin && userCredit < requiredCredit) {
       return NextResponse.json(
         {
           success: false,
@@ -91,20 +101,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Kredi düş (başarılı veya başarısız olsun, tüm SMS'ler için kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek)
-    const { data: currentUser } = await supabaseServer
-      .from('users')
-      .select('credit')
-      .eq('id', auth.user.userId)
-      .single();
-
-    if (currentUser) {
-      // Tüm SMS'ler için kredi düş (başarısız olursa 48 saat sonra iade edilecek)
-      const newCredit = Math.max(0, (currentUser.credit || 0) - requiredCredit);
-      await supabaseServer
+    // Kredi düş (başarılı veya başarısız olsun, tüm SMS'ler için kredi düşülecek, başarısız olursa 48 saat sonra iade edilecek) - Admin değilse
+    if (!isAdmin) {
+      const { data: currentUser } = await supabaseServer
         .from('users')
-        .update({ credit: newCredit })
-        .eq('id', auth.user.userId);
+        .select('credit')
+        .eq('id', auth.user.userId)
+        .single();
+
+      if (currentUser) {
+        // Tüm SMS'ler için kredi düş (başarısız olursa 48 saat sonra iade edilecek)
+        const newCredit = Math.max(0, (currentUser.credit || 0) - requiredCredit);
+        await supabaseServer
+          .from('users')
+          .update({ credit: newCredit })
+          .eq('id', auth.user.userId);
+      }
     }
 
     const results = {
@@ -135,7 +147,7 @@ export async function POST(request: NextRequest) {
               message,
               sender: sender || null,
               status: 'gönderildi',
-              cost: creditPerMessage, // 180 karakter = 1 kredi
+              cost: isAdmin ? 0 : creditPerMessage, // Admin kullanıcıları için cost: 0
               cep_sms_message_id: smsResult.messageId,
               sent_at: new Date().toISOString(),
             })
@@ -175,15 +187,15 @@ export async function POST(request: NextRequest) {
                 phone_number: contact.phone,
                 message,
                 sender: sender || null,
-                status: 'failed',
-                cost: creditPerMessage,
-                failed_at: new Date().toISOString(),
+              status: 'failed',
+              cost: isAdmin ? 0 : creditPerMessage, // Admin kullanıcıları için cost: 0
+              failed_at: new Date().toISOString(),
               })
               .select()
               .single();
 
-            if (!failedError && failedSmsData) {
-              // Otomatik iade oluştur (48 saat sonra işlenecek)
+            if (!failedError && failedSmsData && !isAdmin) {
+              // Otomatik iade oluştur (48 saat sonra işlenecek) - Admin kullanıcıları için iade oluşturulmaz
               await supabaseServer
                 .from('refunds')
                 .insert({
@@ -207,21 +219,21 @@ export async function POST(request: NextRequest) {
               message,
               sender: sender || null,
               status: 'failed',
-              cost: 1,
+              cost: isAdmin ? 0 : creditPerMessage, // Admin kullanıcıları için cost: 0
               failed_at: new Date().toISOString(),
             })
             .select()
             .single();
 
-          if (!failedError && failedSmsData) {
-            // Otomatik iade oluştur (48 saat sonra işlenecek)
+          if (!failedError && failedSmsData && !isAdmin) {
+            // Otomatik iade oluştur (48 saat sonra işlenecek) - Admin kullanıcıları için iade oluşturulmaz
             await supabaseServer
               .from('refunds')
               .insert({
                 user_id: auth.user.userId,
                 sms_id: failedSmsData.id,
-                original_cost: 1,
-                refund_amount: 1,
+                original_cost: creditPerMessage,
+                refund_amount: creditPerMessage,
                 reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
                 status: 'pending',
               });

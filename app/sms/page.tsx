@@ -581,6 +581,116 @@ export default function SMSInterfacePage() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Kısa Link Seçimi ve Oluşturma Dialog */}
+        <Dialog
+          open={shortLinkSelectDialogOpen}
+          onClose={() => {
+            setShortLinkSelectDialogOpen(false);
+            setShortLinkUrl('');
+          }}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Link sx={{ color: 'primary.main' }} />
+                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
+                  Kısa Link Oluştur
+                </Typography>
+              </Box>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setShortLinkSelectDialogOpen(false);
+                  setShortLinkUrl('');
+                }}
+              >
+                <Close />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box>
+              <TextField
+                fullWidth
+                size="small"
+                label="URL"
+                value={shortLinkUrl}
+                onChange={(e) => setShortLinkUrl(e.target.value)}
+                placeholder="https://example.com"
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1.5,
+                    fontSize: '14px',
+                  },
+                }}
+              />
+              <Alert severity="info" sx={{ fontSize: '12px', mb: 2 }}>
+                Kısa linkiniz <strong>go.finsms.io</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
+              </Alert>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ px: 2, pb: 1.5 }}>
+            <Button
+              onClick={() => {
+                setShortLinkSelectDialogOpen(false);
+                setShortLinkUrl('');
+              }}
+              variant="outlined"
+              size="small"
+              sx={{ borderRadius: 1.5, textTransform: 'none', fontSize: '12px' }}
+            >
+              İptal
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!shortLinkUrl) {
+                  setError('URL gerekli');
+                  return;
+                }
+                try {
+                  const response = await api.post('/short-links', {
+                    originalUrl: shortLinkUrl,
+                    title: 'SMS Kısa Link',
+                  });
+                  if (response.data.success) {
+                    const shortCode = response.data.data.shortLink.short_code;
+                    const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                    const normalizedDomain = shortLinkDomain.startsWith('http')
+                      ? shortLinkDomain
+                      : `https://${shortLinkDomain}`;
+                    const normalizedBase = normalizedDomain.endsWith('/')
+                      ? normalizedDomain.slice(0, -1)
+                      : normalizedDomain;
+                    const shortLink = `${normalizedBase}/${shortCode}`;
+                    
+                    // Dialog'u aç ve oluşturulan linki göster
+                    setCreatedShortLink({
+                      shortCode,
+                      originalUrl: shortLinkUrl,
+                      shortLink,
+                    });
+                    setShortLinkSelectDialogOpen(false);
+                    setShortLinkDialogOpen(true);
+                    setShortLinkUrl('');
+                    loadShortLinks(); // Listeyi yenile
+                  }
+                } catch (err: any) {
+                  setError(err.response?.data?.message || 'Kısa link oluşturulamadı');
+                }
+              }}
+              variant="contained"
+              size="small"
+              disabled={!shortLinkUrl}
+              sx={{ borderRadius: 1.5, textTransform: 'none', fontSize: '12px' }}
+            >
+              Oluştur
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ProtectedRoute>
   );
