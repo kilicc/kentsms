@@ -19,14 +19,23 @@ export async function GET(
 
     const { id } = await params;
     const shortLinkId = id;
-    const supabaseServer = getSupabaseServer();
+    let supabaseServer;
+    try {
+      supabaseServer = getSupabaseServer();
+    } catch (error: any) {
+      console.error('Short link stats GET - Supabase server creation error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Database connection error', error: error.message },
+        { status: 500 }
+      );
+    }
 
     // Kısa linkin kullanıcıya ait olduğunu kontrol et
     const { data: shortLink, error: linkError } = await supabaseServer
       .from('short_links')
       .select('*')
       .eq('id', shortLinkId)
-      .eq('user_id', auth.user.userId)
+      .eq('user_id', String(auth.user.userId))
       .maybeSingle();
 
     if (linkError || !shortLink) {

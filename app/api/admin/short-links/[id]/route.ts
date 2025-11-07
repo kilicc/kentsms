@@ -26,7 +26,16 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const supabaseServer = getSupabaseServer();
+    let supabaseServer;
+    try {
+      supabaseServer = getSupabaseServer();
+    } catch (error: any) {
+      console.error('Admin short link DELETE - Supabase server creation error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Database connection error', error: error.message },
+        { status: 500 }
+      );
+    }
 
     // Kısa linki bul
     const { data: shortLink, error: findError } = await supabaseServer

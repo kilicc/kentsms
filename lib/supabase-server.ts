@@ -24,29 +24,38 @@ function getSupabaseServer(): SupabaseClient {
 
   // Runtime'da kontrol et (build sırasında değil)
   // Build sırasında environment variables olmayabilir, bu normal
-  if (typeof window === 'undefined' && (!supabaseUrl || !supabaseServiceKey)) {
-    // Build sırasında ise dummy client döndür (runtime'da hata verir)
-    if (process.env.NODE_ENV === 'production' && !process.env.SUPABASE_URL) {
-      // Production build sırasında environment variables olmayabilir
-      // Bu durumda runtime'da hata verilecek
-      throw new Error('Supabase URL ve Service Key environment variables\'da tanımlı olmalıdır.');
-    }
-    
-    // Development build sırasında dummy client oluştur
-    supabaseServerInstance = createClient(
-      supabaseUrl || 'https://placeholder.supabase.co',
-      supabaseServiceKey || 'placeholder-key',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
+  if (typeof window === 'undefined') {
+    if (!supabaseUrl || !supabaseServiceKey) {
+      // Production runtime'da environment variables olmalı
+      if (process.env.NODE_ENV === 'production') {
+        console.error('Supabase configuration missing:', { 
+          hasUrl: !!supabaseUrl, 
+          hasServiceKey: !!supabaseServiceKey 
+        });
+        throw new Error('Supabase URL ve Service Key environment variables\'da tanımlı olmalıdır.');
       }
-    );
-    return supabaseServerInstance;
+      
+      // Development build sırasında dummy client oluştur
+      console.warn('Supabase configuration missing in development, using placeholder');
+      supabaseServerInstance = createClient(
+        'https://placeholder.supabase.co',
+        'placeholder-key',
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
+      );
+      return supabaseServerInstance;
+    }
   }
 
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Supabase configuration missing:', { 
+      hasUrl: !!supabaseUrl, 
+      hasServiceKey: !!supabaseServiceKey 
+    });
     throw new Error('Supabase URL ve Service Key environment variables\'da tanımlı olmalıdır.');
   }
 

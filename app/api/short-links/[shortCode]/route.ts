@@ -9,7 +9,16 @@ export async function GET(
   try {
     const { shortCode } = await params;
     console.log('🔗 Kısa link yönlendirme isteği:', shortCode);
-    const supabaseServer = getSupabaseServer();
+    let supabaseServer;
+    try {
+      supabaseServer = getSupabaseServer();
+    } catch (error: any) {
+      console.error('Short link redirect - Supabase server creation error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Database connection error', error: error.message },
+        { status: 500 }
+      );
+    }
 
     // Kısa linki bul - RLS bypass için service key kullanılıyor
     const { data: shortLink, error } = await supabaseServer

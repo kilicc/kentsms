@@ -14,16 +14,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-
     console.log('Short links GET - userId:', auth.user.userId);
     
-    const supabaseServer = getSupabaseServer();
-    console.log('Short links GET - supabaseServer created');
+    let supabaseServer;
+    try {
+      supabaseServer = getSupabaseServer();
+      console.log('Short links GET - supabaseServer created');
+    } catch (error: any) {
+      console.error('Short links GET - Supabase server creation error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Database connection error', error: error.message },
+        { status: 500 }
+      );
+    }
     
     const { data: shortLinks, error } = await supabaseServer
       .from('short_links')
       .select('*')
-      .eq('user_id', auth.user.userId)
+      .eq('user_id', String(auth.user.userId))
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
@@ -110,8 +118,17 @@ export async function POST(request: NextRequest) {
     let attempts = 0;
     const maxAttempts = 10;
 
-    const supabaseServer = getSupabaseServer();
-    console.log('Short link POST - supabaseServer created');
+    let supabaseServer;
+    try {
+      supabaseServer = getSupabaseServer();
+      console.log('Short link POST - supabaseServer created');
+    } catch (error: any) {
+      console.error('Short link POST - Supabase server creation error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Database connection error', error: error.message },
+        { status: 500 }
+      );
+    }
     
     // Benzersiz kod bul
     while (attempts < maxAttempts) {
@@ -156,7 +173,7 @@ export async function POST(request: NextRequest) {
     const { data: shortLinkData, error } = await supabaseServer
       .from('short_links')
       .insert({
-        user_id: auth.user.userId,
+        user_id: String(auth.user.userId),
         original_url: originalUrl,
         short_code: shortCode,
         title: title || null,
