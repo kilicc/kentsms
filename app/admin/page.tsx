@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
-import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete } from '@mui/icons-material';
+import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import ClientDate from '@/components/ClientDate';
@@ -100,6 +100,13 @@ export default function AdminDashboardPage() {
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [paymentRequestDetailDialogOpen, setPaymentRequestDetailDialogOpen] = useState(false);
   const [selectedPaymentRequestDetail, setSelectedPaymentRequestDetail] = useState<any | null>(null);
+  // API Keys states
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [loadingApiKeys, setLoadingApiKeys] = useState(false);
+  const [createApiKeyDialogOpen, setCreateApiKeyDialogOpen] = useState(false);
+  const [newApiKey, setNewApiKey] = useState({ userId: '', name: '', description: '', credit: 0 });
+  const [apiKeyDetailDialogOpen, setApiKeyDetailDialogOpen] = useState(false);
+  const [selectedApiKeyDetail, setSelectedApiKeyDetail] = useState<any | null>(null);
   
   // User management search and filter
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -116,7 +123,7 @@ export default function AdminDashboardPage() {
       const tab = params.get('tab');
       if (tab) {
         const tabNum = parseInt(tab, 10);
-        if (!isNaN(tabNum) && tabNum >= 0 && tabNum <= 3) {
+        if (!isNaN(tabNum) && tabNum >= 0 && tabNum <= 4) {
           setTabValue(tabNum);
         }
       }
@@ -142,6 +149,10 @@ export default function AdminDashboardPage() {
       if (tabValue === 3) {
         loadPaymentRequests();
       }
+      if (tabValue === 4) {
+        loadApiKeys();
+        loadUsers(); // Kullanıcı listesi API key oluşturma için gerekli
+      }
     }
   }, [user, tabValue, selectedDate]);
 
@@ -164,6 +175,25 @@ export default function AdminDashboardPage() {
       }
     } catch (error) {
       console.error('Users load error:', error);
+    }
+  };
+
+  const loadApiKeys = async () => {
+    try {
+      setLoadingApiKeys(true);
+      setError('');
+      const response = await api.get('/admin/api-keys');
+      if (response.data.success) {
+        setApiKeys(response.data.data.apiKeys || []);
+      } else {
+        setError(response.data.message || 'API key\'ler yüklenirken bir hata oluştu');
+      }
+    } catch (error: any) {
+      console.error('API keys load error:', error);
+      setError(error.response?.data?.message || 'API key\'ler yüklenirken bir hata oluştu');
+      setApiKeys([]);
+    } finally {
+      setLoadingApiKeys(false);
     }
   };
 
@@ -536,6 +566,7 @@ export default function AdminDashboardPage() {
                 <Tab icon={<Sms />} label="Raporlar" />
                 <Tab icon={<Assessment />} label="İade Raporu" />
                 <Tab icon={<AccountBalanceWallet />} label="Ödeme Talepleri" />
+                <Tab icon={<VpnKey />} label="API Kullanıcıları" />
               </Tabs>
             </Paper>
 
@@ -1935,6 +1966,372 @@ export default function AdminDashboardPage() {
             </DialogContent>
             <DialogActions sx={{ px: 2, pb: 1.5 }}>
               <Button size="small" onClick={() => setUserDetailsDialogOpen(false)} sx={{ fontSize: '12px' }}>
+                Kapat
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* API Keys Tab */}
+          {tabValue === 4 && (
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
+                  API Kullanıcıları
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => setCreateApiKeyDialogOpen(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                    borderRadius: 1.5,
+                    padding: '6px 16px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    textTransform: 'none',
+                  }}
+                >
+                  Yeni API Key Oluştur
+                </Button>
+              </Box>
+
+              {loadingApiKeys ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : apiKeys.length === 0 ? (
+                <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Henüz API key oluşturulmamış
+                  </Typography>
+                </Paper>
+              ) : (
+                <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>API Key</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Kullanıcı</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>İsim</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }} align="center">Kredi</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }} align="center">Toplam SMS</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }} align="center">Toplam İade</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Durum</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }}>Son Kullanım</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600 }} align="center">İşlemler</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {apiKeys.map((key) => (
+                        <TableRow key={key.id}>
+                          <TableCell sx={{ fontSize: '12px', fontFamily: 'monospace' }}>
+                            {key.apiKey}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '12px' }}>
+                            {key.user ? (
+                              <Box>
+                                <Typography variant="body2" sx={{ fontSize: '12px', fontWeight: 500 }}>
+                                  {key.user.username}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
+                                  {key.user.email}
+                                </Typography>
+                              </Box>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '12px' }}>{key.name || '-'}</TableCell>
+                          <TableCell align="center" sx={{ fontSize: '12px', fontWeight: 600 }}>
+                            {key.user?.credit || 0}
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontSize: '12px', fontWeight: 600, color: '#2196f3' }}>
+                            {key.stats?.totalSms || 0}
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontSize: '12px', fontWeight: 600, color: '#ff9800' }}>
+                            {key.stats?.totalRefunds || 0}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={key.isActive ? 'Aktif' : 'Pasif'}
+                              color={key.isActive ? 'success' : 'default'}
+                              size="small"
+                              sx={{ fontSize: '0.65rem', height: 20 }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '11px' }}>
+                            {key.lastUsedAt ? <ClientDate date={key.lastUsedAt} /> : '-'}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Visibility />}
+                              onClick={() => {
+                                setSelectedApiKeyDetail(key);
+                                setApiKeyDetailDialogOpen(true);
+                              }}
+                              sx={{
+                                fontSize: '11px',
+                                textTransform: 'none',
+                                borderRadius: 1.5,
+                                mr: 0.5,
+                              }}
+                            >
+                              Detay
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<Delete />}
+                              onClick={async () => {
+                                if (confirm(`Bu API key'i silmek istediğinizden emin misiniz?`)) {
+                                  try {
+                                    setLoadingApiKeys(true);
+                                    const response = await api.delete(`/admin/api-keys/${key.id}`);
+                                    if (response.data.success) {
+                                      setSuccess('API key başarıyla silindi');
+                                      loadApiKeys();
+                                    } else {
+                                      setError(response.data.message || 'API key silinemedi');
+                                    }
+                                  } catch (err: any) {
+                                    setError(err.response?.data?.message || 'API key silinirken bir hata oluştu');
+                                  } finally {
+                                    setLoadingApiKeys(false);
+                                  }
+                                }
+                              }}
+                              sx={{
+                                fontSize: '11px',
+                                textTransform: 'none',
+                                borderRadius: 1.5,
+                              }}
+                            >
+                              Sil
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Box>
+          )}
+
+          {/* Create API Key Dialog */}
+          <Dialog open={createApiKeyDialogOpen} onClose={() => setCreateApiKeyDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>Yeni API Key Oluştur</DialogTitle>
+            <DialogContent sx={{ pt: 1.5 }}>
+              <FormControl fullWidth size="small" margin="dense">
+                <InputLabel sx={{ fontSize: '12px' }}>Kullanıcı *</InputLabel>
+                <Select
+                  value={newApiKey.userId}
+                  onChange={(e) => setNewApiKey({ ...newApiKey, userId: e.target.value })}
+                  label="Kullanıcı *"
+                  sx={{ fontSize: '12px' }}
+                >
+                  {users.map((u) => (
+                    <MenuItem key={u.id} value={u.id} sx={{ fontSize: '12px' }}>
+                      {u.username} ({u.email})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                fullWidth
+                size="small"
+                label="İsim"
+                value={newApiKey.name}
+                onChange={(e) => setNewApiKey({ ...newApiKey, name: e.target.value })}
+                margin="dense"
+                placeholder="Örn: Müşteri API Key"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '12px',
+                  },
+                }}
+              />
+              <TextField
+                fullWidth
+                size="small"
+                label="Açıklama"
+                value={newApiKey.description}
+                onChange={(e) => setNewApiKey({ ...newApiKey, description: e.target.value })}
+                margin="dense"
+                multiline
+                rows={2}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '12px',
+                  },
+                }}
+              />
+              <TextField
+                fullWidth
+                size="small"
+                label="Başlangıç Kredisi"
+                type="number"
+                value={newApiKey.credit}
+                onChange={(e) => setNewApiKey({ ...newApiKey, credit: parseInt(e.target.value) || 0 })}
+                margin="dense"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '12px',
+                  },
+                }}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+              <Button size="small" onClick={() => setCreateApiKeyDialogOpen(false)} sx={{ fontSize: '12px' }}>İptal</Button>
+              <Button
+                size="small"
+                onClick={async () => {
+                  if (!newApiKey.userId) {
+                    setError('Kullanıcı seçilmelidir');
+                    return;
+                  }
+                  try {
+                    setLoadingApiKeys(true);
+                    setError('');
+                    const response = await api.post('/admin/api-keys', newApiKey);
+                    if (response.data.success) {
+                      setSuccess('API key başarıyla oluşturuldu! API Key ve Secret bilgilerini kopyalayın.');
+                      setSelectedApiKeyDetail({
+                        apiKey: response.data.data.apiKey,
+                        apiSecret: response.data.data.apiSecret,
+                        name: response.data.data.name,
+                        username: response.data.data.username,
+                      });
+                      setApiKeyDetailDialogOpen(true);
+                      setCreateApiKeyDialogOpen(false);
+                      setNewApiKey({ userId: '', name: '', description: '', credit: 0 });
+                      loadApiKeys();
+                    } else {
+                      setError(response.data.message || 'API key oluşturulamadı');
+                    }
+                  } catch (err: any) {
+                    setError(err.response?.data?.message || 'API key oluşturulurken bir hata oluştu');
+                  } finally {
+                    setLoadingApiKeys(false);
+                  }
+                }}
+                variant="contained"
+                disabled={loadingApiKeys || !newApiKey.userId}
+                sx={{ fontSize: '12px' }}
+              >
+                {loadingApiKeys ? 'Oluşturuluyor...' : 'Oluştur'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* API Key Detail Dialog */}
+          <Dialog open={apiKeyDetailDialogOpen} onClose={() => setApiKeyDetailDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>
+              {selectedApiKeyDetail?.name ? `${selectedApiKeyDetail.name} - API Bilgileri` : 'API Key Bilgileri'}
+            </DialogTitle>
+            <DialogContent sx={{ pt: 1.5 }}>
+              {selectedApiKeyDetail?.apiKey && selectedApiKeyDetail?.apiSecret ? (
+                <Box>
+                  <Alert severity="warning" sx={{ mb: 2, fontSize: '12px' }}>
+                    Bu bilgileri güvenli bir yerde saklayın. API Secret bir daha gösterilmeyecektir!
+                  </Alert>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="API Key (User)"
+                    value={selectedApiKeyDetail.apiKey}
+                    margin="dense"
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedApiKeyDetail.apiKey);
+                              setSuccess('API Key kopyalandı!');
+                            }}
+                          >
+                            <ContentCopy sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                      },
+                    }}
+                  />
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="API Secret (Pass)"
+                    value={selectedApiKeyDetail.apiSecret}
+                    margin="dense"
+                    type="password"
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              navigator.clipboard.writeText(selectedApiKeyDetail.apiSecret);
+                              setSuccess('API Secret kopyalandı!');
+                            }}
+                          >
+                            <ContentCopy sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                      },
+                    }}
+                  />
+                  {selectedApiKeyDetail.username && (
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px', mt: 1, display: 'block' }}>
+                      Kullanıcı: {selectedApiKeyDetail.username}
+                    </Typography>
+                  )}
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
+                    <strong>API Key:</strong> {selectedApiKeyDetail?.apiKey || '-'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
+                    <strong>Kullanıcı:</strong> {selectedApiKeyDetail?.user?.username || '-'} ({selectedApiKeyDetail?.user?.email || '-'})
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
+                    <strong>Kredi:</strong> {selectedApiKeyDetail?.user?.credit || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
+                    <strong>Toplam SMS:</strong> {selectedApiKeyDetail?.stats?.totalSms || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
+                    <strong>Toplam İade:</strong> {selectedApiKeyDetail?.stats?.totalRefunds || 0}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
+                    <strong>Durum:</strong> {selectedApiKeyDetail?.isActive ? 'Aktif' : 'Pasif'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '12px' }}>
+                    <strong>Son Kullanım:</strong> {selectedApiKeyDetail?.lastUsedAt ? <ClientDate date={selectedApiKeyDetail.lastUsedAt} /> : '-'}
+                  </Typography>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+              <Button size="small" onClick={() => setApiKeyDetailDialogOpen(false)} sx={{ fontSize: '12px' }}>
                 Kapat
               </Button>
             </DialogActions>

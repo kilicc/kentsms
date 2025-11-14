@@ -193,7 +193,6 @@ export async function POST(request: NextRequest) {
         {
           MessageId: 0,
           Status: 'Error',
-          Error: smsResult.error || 'SMS gönderim hatası',
         },
         { status: 400 }
       );

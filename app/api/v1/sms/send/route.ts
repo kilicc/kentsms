@@ -137,6 +137,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // CepSMS formatına uyumlu: MessageId string veya number olabilir
       return NextResponse.json({
         MessageId: smsMessageData.id,
         Status: 'OK',
@@ -173,7 +174,6 @@ export async function POST(request: NextRequest) {
         {
           MessageId: 0,
           Status: 'Error',
-          Error: smsResult.error || 'SMS gönderim hatası',
         },
         { status: 400 }
       );

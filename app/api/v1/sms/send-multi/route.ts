@@ -214,6 +214,14 @@ export async function POST(request: NextRequest) {
         .eq('id', auth.user.id);
     }
 
+    // CepSMS formatına uyumlu: Eğer tek mesaj varsa MessageId döndür, çoklu ise MessageIds
+    if (Messages.length === 1) {
+      return NextResponse.json({
+        MessageId: messageIds[0] || 0,
+        Status: successCount > 0 ? 'OK' : 'Error',
+      });
+    }
+    
     return NextResponse.json({
       MessageIds: messageIds,
       Status: successCount > 0 ? 'OK' : 'Error',
