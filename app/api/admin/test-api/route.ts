@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
+import { hashPassword } from '@/lib/utils/password';
 import crypto from 'crypto';
 
 // Helper function to create NextRequest from URL and body
@@ -60,13 +61,16 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       userId = existingUser.id;
     } else {
+      // Şifreyi hash'le
+      const passwordHash = await hashPassword(demoPassword);
+
       // Kullanıcı oluştur
       const { data: newUser, error: userError } = await supabaseServer
         .from('users')
         .insert({
           username: demoUsername,
           email: demoEmail,
-          password: crypto.createHash('sha256').update(demoPassword).digest('hex'),
+          password_hash: passwordHash,
           role: 'user',
           credit: 1000, // 1000 SMS kredisi
         })
