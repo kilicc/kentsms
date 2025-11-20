@@ -38,7 +38,7 @@ export function formatPhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, '');
   
   // 12 haneli ve 90 ile başlıyorsa (905xxxxxxxxx) - bu geçerli bir format
-  if (cleaned.length === 12 && cleaned.startsWith('905')) {
+  if (cleaned.length === 12 && cleaned.startsWith('90') && cleaned.startsWith('905')) {
     return cleaned;
   }
   

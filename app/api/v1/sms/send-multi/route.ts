@@ -37,11 +37,8 @@ import { sendSMS, formatPhoneNumber } from '@/lib/utils/cepSMSProvider';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Request body'yi önce oku
-    const body = await request.json();
-    
-    // API Key authentication (body'yi parametre olarak geç)
-    const auth = await authenticateApiKey(request, body);
+    // API Key authentication
+    const auth = await authenticateApiKey(request);
     
     if (!auth.authenticated || !auth.user) {
       return NextResponse.json(
@@ -56,6 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const body = await request.json();
     const { From, Coding, StartDate, ValidityPeriod, Messages } = body;
 
     // Validation
@@ -80,34 +78,15 @@ export async function POST(request: NextRequest) {
     let userCredit = 0;
     let totalRequiredCredit = 0;
 
-    // Toplam kredi hesapla ve validasyon
-    try {
-      Messages.forEach((msg: any) => {
-        if (!msg.Message || !msg.GSM) {
-          throw new Error('Her mesajda Message ve GSM gerekli');
-        }
-        // Telefon numarası validasyonu
-        try {
-          formatPhoneNumber(msg.GSM);
-        } catch (error: any) {
-          throw new Error(`Geçersiz telefon numarası: ${msg.GSM}`);
-        }
-        const messageLength = msg.Message.length;
-        const requiredCredit = Math.ceil(messageLength / 180) || 1;
-        totalRequiredCredit += requiredCredit;
-      });
-    } catch (error: any) {
-      return NextResponse.json(
-        {
-          MessageIds: [],
-          Status: 'Error',
-          Error: error.message || 'Mesaj validasyon hatası',
-          SuccessCount: 0,
-          FailedCount: 0,
-        },
-        { status: 400 }
-      );
-    }
+    // Toplam kredi hesapla
+    Messages.forEach((msg: any) => {
+      if (!msg.Message || !msg.GSM) {
+        throw new Error('Her mesajda Message ve GSM gerekli');
+      }
+      const messageLength = msg.Message.length;
+      const requiredCredit = Math.ceil(messageLength / 180) || 1;
+      totalRequiredCredit += requiredCredit;
+    });
 
     if (!isAdmin) {
       const { data: user, error: userError } = await supabaseServer

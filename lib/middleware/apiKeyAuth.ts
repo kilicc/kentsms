@@ -21,28 +21,25 @@ export interface ApiKeyAuthResult {
  * API Key authentication middleware
  * CepSMS formatına benzer: User (API Key) ve Pass (API Secret) parametreleri ile
  */
-export async function authenticateApiKey(request: NextRequest, body?: any): Promise<ApiKeyAuthResult> {
+export async function authenticateApiKey(request: NextRequest): Promise<ApiKeyAuthResult> {
   try {
     // Request body'den User ve Pass parametrelerini al
-    let requestBody: any = body || {};
+    let body: any = {};
     
-    // Eğer body verilmediyse, request'ten oku
-    if (!body) {
-      try {
-        const clonedRequest = request.clone();
-        requestBody = await clonedRequest.json();
-      } catch {
-        // Body yoksa veya parse edilemiyorsa, query params veya headers'dan al
-        const { searchParams } = new URL(request.url);
-        requestBody = {
-          User: searchParams.get('User') || request.headers.get('x-api-key'),
-          Pass: searchParams.get('Pass') || request.headers.get('x-api-secret'),
-        };
-      }
+    try {
+      const clonedRequest = request.clone();
+      body = await clonedRequest.json();
+    } catch {
+      // Body yoksa veya parse edilemiyorsa, query params veya headers'dan al
+      const { searchParams } = new URL(request.url);
+      body = {
+        User: searchParams.get('User') || request.headers.get('x-api-key'),
+        Pass: searchParams.get('Pass') || request.headers.get('x-api-secret'),
+      };
     }
 
-    const apiKey = requestBody.User || requestBody.user || requestBody.apiKey;
-    const apiSecret = requestBody.Pass || requestBody.pass || requestBody.apiSecret;
+    const apiKey = body.User || body.user || body.apiKey;
+    const apiSecret = body.Pass || body.pass || body.apiSecret;
 
     if (!apiKey || !apiSecret) {
       return {
