@@ -41,13 +41,37 @@ export async function POST(request: NextRequest) {
     }
 
     // Telefon numarası validasyonu
-    const phoneNumbers = Numbers.map((num: string) => {
-      try {
-        return formatPhoneNumber(num);
-      } catch (error: any) {
-        throw new Error(`Geçersiz telefon numarası: ${num}`);
-      }
-    });
+    let phoneNumbers: string[] = [];
+    try {
+      phoneNumbers = Numbers.map((num: string) => {
+        try {
+          return formatPhoneNumber(num);
+        } catch (error: any) {
+          throw new Error(`Geçersiz telefon numarası: ${num}`);
+        }
+      });
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          MessageId: 0,
+          Status: 'Error',
+          Error: error.message || 'Telefon numarası validasyon hatası',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Birden fazla numara varsa, send-multi endpoint'ini kullanmalarını öner
+    if (phoneNumbers.length > 1) {
+      return NextResponse.json(
+        {
+          MessageId: 0,
+          Status: 'Error',
+          Error: `Birden fazla numara için /api/v1/sms/send-multi endpoint'ini kullanın. ${phoneNumbers.length} numara tespit edildi.`,
+        },
+        { status: 400 }
+      );
+    }
 
     // Kredi kontrolü (admin değilse)
     const userRole = (auth.user.role || '').toLowerCase();
@@ -78,14 +102,13 @@ export async function POST(request: NextRequest) {
       userCredit = user.credit || 0;
       const messageLength = Message.length;
       requiredCredit = Math.ceil(messageLength / 180) || 1; // 180 karakter = 1 kredi
-      const totalRequiredCredit = phoneNumbers.length * requiredCredit;
 
-      if (userCredit < totalRequiredCredit) {
+      if (userCredit < requiredCredit) {
         return NextResponse.json(
           {
             MessageId: 0,
             Status: 'Error',
-            Error: `Yetersiz kredi. Gerekli: ${totalRequiredCredit}, Mevcut: ${userCredit}`,
+            Error: `Yetersiz kredi. Gerekli: ${requiredCredit}, Mevcut: ${userCredit}`,
           },
           { status: 400 }
         );
@@ -94,16 +117,16 @@ export async function POST(request: NextRequest) {
       // Kredi düş
       await supabaseServer
         .from('users')
-        .update({ credit: Math.max(0, userCredit - totalRequiredCredit) })
+        .update({ credit: Math.max(0, userCredit - requiredCredit) })
         .eq('id', auth.user.id);
     } else {
       const messageLength = Message.length;
       requiredCredit = Math.ceil(messageLength / 180) || 1;
     }
 
-    // İlk numaraya SMS gönder (basit send için sadece ilk numara)
-    const firstPhone = phoneNumbers[0];
-    const smsResult = await sendSMS(firstPhone, Message);
+    // Tek numaraya SMS gönder
+    const phone = phoneNumbers[0];
+    const smsResult = await sendSMS(phone, Message);
 
     if (smsResult.success && smsResult.messageId) {
       // SMS kaydı oluştur
@@ -111,7 +134,7 @@ export async function POST(request: NextRequest) {
         .from('sms_messages')
         .insert({
           user_id: auth.user.id,
-          phone_number: firstPhone,
+          phone_number: phone,
           message: Message,
           status: 'gönderildi',
           cost: isAdmin ? 0 : requiredCredit,
@@ -150,7 +173,7 @@ export async function POST(request: NextRequest) {
         .from('sms_messages')
         .insert({
           user_id: auth.user.id,
-          phone_number: firstPhone,
+          phone_number: phone,
           message: Message,
           status: 'failed',
           cost: isAdmin ? 0 : requiredCredit,

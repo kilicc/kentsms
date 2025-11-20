@@ -80,15 +80,34 @@ export async function POST(request: NextRequest) {
     let userCredit = 0;
     let totalRequiredCredit = 0;
 
-    // Toplam kredi hesapla
-    Messages.forEach((msg: any) => {
-      if (!msg.Message || !msg.GSM) {
-        throw new Error('Her mesajda Message ve GSM gerekli');
-      }
-      const messageLength = msg.Message.length;
-      const requiredCredit = Math.ceil(messageLength / 180) || 1;
-      totalRequiredCredit += requiredCredit;
-    });
+    // Toplam kredi hesapla ve validasyon
+    try {
+      Messages.forEach((msg: any) => {
+        if (!msg.Message || !msg.GSM) {
+          throw new Error('Her mesajda Message ve GSM gerekli');
+        }
+        // Telefon numarası validasyonu
+        try {
+          formatPhoneNumber(msg.GSM);
+        } catch (error: any) {
+          throw new Error(`Geçersiz telefon numarası: ${msg.GSM}`);
+        }
+        const messageLength = msg.Message.length;
+        const requiredCredit = Math.ceil(messageLength / 180) || 1;
+        totalRequiredCredit += requiredCredit;
+      });
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          MessageIds: [],
+          Status: 'Error',
+          Error: error.message || 'Mesaj validasyon hatası',
+          SuccessCount: 0,
+          FailedCount: 0,
+        },
+        { status: 400 }
+      );
+    }
 
     if (!isAdmin) {
       const { data: user, error: userError } = await supabaseServer
