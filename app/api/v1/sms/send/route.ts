@@ -9,8 +9,11 @@ import { sendSMS, formatPhoneNumber } from '@/lib/utils/cepSMSProvider';
  */
 export async function POST(request: NextRequest) {
   try {
-    // API Key authentication
-    const auth = await authenticateApiKey(request);
+    // Request body'yi önce oku
+    const body = await request.json();
+    
+    // API Key authentication (body'yi parametre olarak geç)
+    const auth = await authenticateApiKey(request, body);
     
     if (!auth.authenticated || !auth.user) {
       return NextResponse.json(
@@ -23,7 +26,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
     const { Message, Numbers } = body;
 
     // Validation
