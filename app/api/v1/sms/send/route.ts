@@ -23,7 +23,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (error: any) {
+      return NextResponse.json(
+        {
+          MessageId: 0,
+          Status: 'Error',
+          Error: 'Geçersiz JSON formatı veya request body okunamadı',
+        },
+        { status: 400 }
+      );
+    }
     const { Message, Numbers } = body;
 
     // Validation
@@ -174,6 +186,7 @@ export async function POST(request: NextRequest) {
         {
           MessageId: 0,
           Status: 'Error',
+          Error: smsResult.error || 'SMS gönderim başarısız',
         },
         { status: 400 }
       );
