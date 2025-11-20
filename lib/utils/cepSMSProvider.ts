@@ -140,8 +140,26 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       };
     }
 
-    // Hata varsa göster
-    const errorMessage = error || `Status: ${status}, MessageId: ${messageId || 'yok'}`;
+    // Hata mesajını oluştur - özel durumlar için anlaşılır mesajlar
+    let errorMessage = error;
+    
+    if (!errorMessage) {
+      const statusStrUpper = String(status || '').toUpperCase();
+      
+      // Özel hata durumları için anlaşılır mesajlar
+      if (statusStrUpper.includes('PAYMENT') || statusStrUpper.includes('PAYMENT REQUIRED') || statusStrUpper === '402') {
+        errorMessage = 'CepSMS hesabında yetersiz bakiye. Lütfen hesabınıza bakiye yükleyin.';
+      } else if (statusStrUpper.includes('UNAUTHORIZED') || statusStrUpper === '401') {
+        errorMessage = 'CepSMS API kimlik doğrulama hatası. Kullanıcı adı veya şifre hatalı.';
+      } else if (statusStrUpper.includes('FORBIDDEN') || statusStrUpper === '403') {
+        errorMessage = 'CepSMS API erişim hatası. Hesabınızın SMS gönderme yetkisi yok.';
+      } else if (statusStrUpper.includes('INVALID') || statusStrUpper.includes('GEÇERSİZ')) {
+        errorMessage = 'Geçersiz istek. Telefon numarası veya mesaj formatı hatalı.';
+      } else {
+        errorMessage = `CepSMS API hatası: ${status || 'Bilinmeyen durum'}`;
+      }
+    }
+    
     console.error('[CepSMS] SMS gönderim hatası:', errorMessage);
     
     return {
