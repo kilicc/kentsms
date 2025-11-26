@@ -37,8 +37,8 @@ export function formatPhoneNumber(phone: string): string {
   // Sadece rakamları al
   let cleaned = phone.replace(/\D/g, '');
   
-  // 12 haneli ve 90 ile başlıyorsa (905xxxxxxxxx) - bu geçerli bir format
-  if (cleaned.length === 12 && cleaned.startsWith('90') && cleaned.startsWith('905')) {
+  // 12 haneli ve 905 ile başlıyorsa (905xxxxxxxxx) - bu geçerli bir format
+  if (cleaned.length === 12 && cleaned.startsWith('905')) {
     return cleaned;
   }
   
@@ -47,7 +47,7 @@ export function formatPhoneNumber(phone: string): string {
     return cleaned;
   }
   
-  // 0 ile başlıyorsa (0xxxxxxxxx)
+  // 0 ile başlıyorsa (0xxxxxxxxx) - 050******** formatı için
   if (cleaned.startsWith('0')) {
     cleaned = cleaned.substring(1); // 0'ı kaldır
     if (cleaned.length === 10 && cleaned.startsWith('5')) {
@@ -55,17 +55,17 @@ export function formatPhoneNumber(phone: string): string {
     }
   }
   
-  // 10 haneli ve 5 ile başlıyorsa (5xxxxxxxxx)
+  // 10 haneli ve 5 ile başlıyorsa (5xxxxxxxxx) - 50******** formatı için
   if (cleaned.length === 10 && cleaned.startsWith('5')) {
     return '90' + cleaned;
   }
   
-  // 11 haneli ve 5 ile başlıyorsa (5xxxxxxxxxx) - 0 eksik, 90 ekle
+  // 11 haneli ve 5 ile başlıyorsa (5xxxxxxxxxx) - fazla hane varsa ilk 10'unu al
   if (cleaned.length === 11 && cleaned.startsWith('5')) {
     return '90' + cleaned.substring(0, 10);
   }
   
-  // 12 haneli ve 5 ile başlıyorsa (5xxxxxxxxxxx) - başındaki 5'i kaldır ve 90 ekle
+  // 12 haneli ve 5 ile başlıyorsa (5xxxxxxxxxxx) - fazla hane varsa ilk 10'unu al
   if (cleaned.length === 12 && cleaned.startsWith('5')) {
     return '90' + cleaned.substring(0, 10);
   }
