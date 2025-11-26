@@ -25,9 +25,14 @@ const CEPSMS_PASSWORD = process.env.CEPSMS_PASSWORD || 'Qaswed';
 const CEPSMS_FROM = process.env.CEPSMS_FROM || 'CepSMS';
 const CEPSMS_API_URL = 'https://panel4.cepsms.com/smsapi';
 
-// HTTPS agent - SSL sertifika doğrulamasını atla (development için)
+// HTTPS agent - SSL sertifika doğrulaması
+// CepSMS API için SSL sertifika doğrulaması
+// Bazı sunucularda (özellikle Docker/Vercel) SSL sertifika zinciri sorunu olabilir
+// CEPSMS_REJECT_UNAUTHORIZED=false ile sertifika doğrulamasını devre dışı bırakabilirsiniz
 const httpsAgent = new https.Agent({
-  rejectUnauthorized: process.env.NODE_ENV === 'production' ? true : false,
+  rejectUnauthorized: process.env.CEPSMS_REJECT_UNAUTHORIZED === 'true', // Varsayılan: false (sertifika doğrulaması yapılmaz)
+  keepAlive: true,
+  keepAliveMsecs: 1000,
 });
 
 /**
@@ -107,9 +112,11 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       {
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         httpsAgent: httpsAgent,
         timeout: 30000, // 30 saniye timeout
+        validateStatus: (status) => status < 500, // 5xx hataları dışında tüm status kodlarını kabul et
       }
     );
 
@@ -173,6 +180,12 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       status: error.response?.status,
       statusText: error.response?.statusText,
       code: error.code,
+      errno: error.errno,
+      syscall: error.syscall,
+      hostname: error.hostname,
+      address: error.address,
+      port: error.port,
+      stack: error.stack,
     });
 
     // Axios hata yanıtı varsa
@@ -185,11 +198,33 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       };
     }
 
-    // Network hatası
+    // Network hatası - daha detaylı hata mesajı
     if (error.request) {
+      let detailedError = 'API\'ye bağlanılamadı.';
+      
+      if (error.code === 'ECONNREFUSED') {
+        detailedError = 'CepSMS API sunucusuna bağlanılamadı. Sunucu çalışmıyor olabilir.';
+      } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+        detailedError = 'CepSMS API\'ye bağlantı zaman aşımına uğradı.';
+      } else if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') {
+        detailedError = 'CepSMS API sunucu adresi bulunamadı. DNS hatası olabilir.';
+      } else if (error.code === 'CERT_HAS_EXPIRED' || error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
+        detailedError = 'CepSMS API SSL sertifika hatası.';
+      } else if (error.code) {
+        detailedError = `CepSMS API bağlantı hatası: ${error.code}. ${error.message || ''}`;
+      } else {
+        detailedError = `CepSMS API bağlantı hatası: ${error.message || 'Bilinmeyen hata'}`;
+      }
+      
+      console.error('[CepSMS] Network hatası detayları:', {
+        code: error.code,
+        message: error.message,
+        hostname: error.hostname || CEPSMS_API_URL,
+      });
+      
       return {
         success: false,
-        error: 'API\'ye bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.',
+        error: detailedError,
       };
     }
 
