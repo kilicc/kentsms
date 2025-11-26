@@ -1,7 +1,7 @@
 'use client';
 
-import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Collapse } from '@mui/material';
-import { Close, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Collapse, Pagination, Stack } from '@mui/material';
+import { Close, ExpandMore, ExpandLess, FileDownload, PictureAsPdf, TableChart } from '@mui/icons-material';
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -98,6 +98,21 @@ export default function SMSReportsPage() {
   const [bulkReportDetails, setBulkReportDetails] = useState<any[]>([]);
   const [loadingBulkDetails, setLoadingBulkDetails] = useState(false);
   const [bulkDetailDialogOpen, setBulkDetailDialogOpen] = useState(false);
+  
+  // Pagination states
+  const [smsPage, setSmsPage] = useState(1);
+  const [smsPageSize, setSmsPageSize] = useState(20);
+  const [smsTotal, setSmsTotal] = useState(0);
+  const [bulkPage, setBulkPage] = useState(1);
+  const [bulkPageSize, setBulkPageSize] = useState(20);
+  const [bulkTotal, setBulkTotal] = useState(0);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [paymentPageSize, setPaymentPageSize] = useState(20);
+  const [paymentTotal, setPaymentTotal] = useState(0);
+  const [shortLinksPage, setShortLinksPage] = useState(1);
+  const [shortLinksPageSize, setShortLinksPageSize] = useState(20);
+  const [bulkDetailsPage, setBulkDetailsPage] = useState(1);
+  const [bulkDetailsPageSize, setBulkDetailsPageSize] = useState(20);
 
   const userRole = typeof user?.role === 'string' ? user.role.toLowerCase() : '';
   const isAdmin = !authLoading && (userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator');
@@ -144,7 +159,10 @@ export default function SMSReportsPage() {
     setLoading(true);
     setError('');
     try {
-      const params: any = {};
+      const params: any = {
+        page: smsPage,
+        limit: smsPageSize,
+      };
       if (filters.startDate) params.startDate = filters.startDate;
       if (filters.endDate) params.endDate = filters.endDate;
       if (filters.status) params.status = filters.status;
@@ -157,6 +175,13 @@ export default function SMSReportsPage() {
       const response = await api.get(endpoint, { params });
       if (response.data.success) {
         let messages = response.data.data.messages || [];
+        
+        // Pagination bilgisi
+        if (response.data.data.pagination) {
+          setSmsTotal(response.data.data.pagination.total || messages.length);
+        } else {
+          setSmsTotal(messages.length);
+        }
         
         // Client-side filtering for phone and message if API doesn't support it
         if (filters.phoneNumber && !params.phoneNumber) {
@@ -186,7 +211,10 @@ export default function SMSReportsPage() {
   const loadBulkReports = async () => {
     try {
       setLoadingBulkReports(true);
-      const params: any = { limit: 100 };
+      const params: any = { 
+        page: bulkPage,
+        limit: bulkPageSize,
+      };
       if (bulkFilters.startDate) params.startDate = bulkFilters.startDate;
       if (bulkFilters.endDate) params.endDate = bulkFilters.endDate;
       if (bulkFilters.status) params.status = bulkFilters.status;
@@ -291,6 +319,13 @@ export default function SMSReportsPage() {
           reports = reports.filter((report) => report.status === bulkFilters.status);
         }
 
+        // Pagination bilgisi
+        if (response.data.data.pagination) {
+          setBulkTotal(response.data.data.pagination.total || reports.length);
+        } else {
+          setBulkTotal(reports.length);
+        }
+
         setBulkSmsReports(reports);
       }
     } catch (error) {
@@ -371,6 +406,10 @@ export default function SMSReportsPage() {
       const response = await api.get('/short-links/report', { params });
       if (response.data.success) {
         setShortLinksStats(response.data.data);
+        if (response.data.data?.shortLinks) {
+          // Short links total count
+          // Already set in state
+        }
       } else {
         setShortLinksStatsError(response.data.message || 'Kısa link istatistikleri yüklenirken bir hata oluştu');
       }
@@ -448,6 +487,7 @@ export default function SMSReportsPage() {
         }
         
         setPaymentRequests(requests);
+        setPaymentTotal(requests.length);
       } else {
         setPaymentRequestsError(response.data.message || 'Ödeme raporları yüklenirken bir hata oluştu');
       }
@@ -455,6 +495,7 @@ export default function SMSReportsPage() {
       console.error('Payment requests load error:', error);
       setPaymentRequestsError(error.response?.data?.message || 'Ödeme raporları yüklenirken bir hata oluştu');
       setPaymentRequests([]);
+      setPaymentTotal(0);
     } finally {
       setLoadingPaymentRequests(false);
     }
@@ -489,18 +530,90 @@ export default function SMSReportsPage() {
     }
   }, [tabValue, isAdmin]);
 
+  // Export functions
+  const handleExportSMS = async (format: 'excel' | 'pdf') => {
+    try {
+      const params: any = {};
+      if (filters.startDate) params.startDate = filters.startDate;
+      if (filters.endDate) params.endDate = filters.endDate;
+      if (filters.status) params.status = filters.status;
+      if (filters.phoneNumber) params.phoneNumber = filters.phoneNumber;
+      if (filters.messageSearch) params.messageSearch = filters.messageSearch;
+      params.format = format;
+
+      const response = await api.get('/reports/sms/export', { 
+        params,
+        responseType: 'blob',
+      });
+
+      if (response.data) {
+        const blob = new Blob([response.data], { 
+          type: format === 'excel' 
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/html'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sms-raporlari-${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'html'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setError('Export işlemi sırasında bir hata oluştu');
+    }
+  };
+
+  const handleExportBulkSMS = async (format: 'excel' | 'pdf') => {
+    try {
+      const params: any = {};
+      if (bulkFilters.startDate) params.startDate = bulkFilters.startDate;
+      if (bulkFilters.endDate) params.endDate = bulkFilters.endDate;
+      if (bulkFilters.status) params.status = bulkFilters.status;
+      if (bulkFilters.messageSearch) params.messageSearch = bulkFilters.messageSearch;
+      params.format = format;
+
+      const response = await api.get('/reports/bulk-sms/export', { 
+        params,
+        responseType: 'blob',
+      });
+
+      if (response.data) {
+        const blob = new Blob([response.data], { 
+          type: format === 'excel' 
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/html'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `toplu-sms-raporlari-${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'html'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setError('Export işlemi sırasında bir hata oluştu');
+    }
+  };
+
   // Filter change effects
   useEffect(() => {
     if (tabValue === 'sms') {
       loadHistory();
     }
-  }, [filters.userId, filters.startDate, filters.endDate, filters.status, filters.phoneNumber, filters.messageSearch, tabValue]);
+  }, [filters.userId, filters.startDate, filters.endDate, filters.status, filters.phoneNumber, filters.messageSearch, tabValue, smsPage, smsPageSize]);
 
   useEffect(() => {
     if (tabValue === 'bulk') {
       loadBulkReports();
     }
-  }, [bulkFilters.startDate, bulkFilters.endDate, bulkFilters.status, bulkFilters.userId, bulkFilters.messageSearch, tabValue]);
+  }, [bulkFilters.startDate, bulkFilters.endDate, bulkFilters.status, bulkFilters.userId, bulkFilters.messageSearch, tabValue, bulkPage, bulkPageSize]);
 
   useEffect(() => {
     if (tabValue === 'stats' && isAdmin) {
@@ -720,30 +833,23 @@ export default function SMSReportsPage() {
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: isAdmin ? 2.4 : 3 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Durum"
-                    select
-                    SelectProps={{ native: true }}
-                    value={filters.status}
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 1.5,
+                  <FormControl fullWidth size="small">
+                    <InputLabel sx={{ fontSize: '12px' }}>Durum</InputLabel>
+                    <Select
+                      value={filters.status}
+                      onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                      label="Durum"
+                      sx={{
                         fontSize: '12px',
-                      },
-                    }}
-                    inputProps={{
-                      'aria-label': 'SMS durumu filtresi',
-                      title: 'SMS durumu filtresi',
-                    }}
-                  >
-                    <option value="">Tümü</option>
-                    <option value="sent">Gönderildi</option>
-                    <option value="delivered">İletildi</option>
-                    <option value="failed">Başarısız</option>
-                  </TextField>
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      <MenuItem value="">Tümü</MenuItem>
+                      <MenuItem value="sent">Gönderildi</MenuItem>
+                      <MenuItem value="delivered">İletildi</MenuItem>
+                      <MenuItem value="failed">Başarısız</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: isAdmin ? 2.4 : 3 }}>
                   <TextField
@@ -812,6 +918,50 @@ export default function SMSReportsPage() {
               </Alert>
             )}
 
+            {/* Export Buttons */}
+            {messages.length > 0 && (
+              <Box sx={{ mb: 1.5, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<TableChart />}
+                  onClick={() => handleExportSMS('excel')}
+                  sx={{
+                    borderRadius: 1.5,
+                    textTransform: 'none',
+                    fontSize: '12px',
+                    borderColor: '#4caf50',
+                    color: '#4caf50',
+                    '&:hover': {
+                      borderColor: '#4caf50',
+                      backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                    },
+                  }}
+                >
+                  Excel İndir
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PictureAsPdf />}
+                  onClick={() => handleExportSMS('pdf')}
+                  sx={{
+                    borderRadius: 1.5,
+                    textTransform: 'none',
+                    fontSize: '12px',
+                    borderColor: '#f44336',
+                    color: '#f44336',
+                    '&:hover': {
+                      borderColor: '#f44336',
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                    },
+                  }}
+                >
+                  PDF İndir
+                </Button>
+              </Box>
+            )}
+
             {/* Messages Table */}
             <Paper sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               {loading ? (
@@ -827,57 +977,101 @@ export default function SMSReportsPage() {
                   </Typography>
                 </Box>
               ) : (
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        {isAdmin && (
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
-                        )}
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kişi</TableCell>
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj</TableCell>
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Maliyet</TableCell>
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {messages.map((message) => (
-                        <TableRow key={message.id}>
+                <>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
                           {isAdmin && (
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              {message.user?.username || '-'}
-                              <br />
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                                {message.user?.email || '-'}
-                              </Typography>
-                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
                           )}
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.contact?.name || '-'}</TableCell>
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.phoneNumber}</TableCell>
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.message.substring(0, 50)}...</TableCell>
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                            <Chip
-                              label={message.status}
-                              color={getStatusColor(message.status)}
-                              size="small"
-                              sx={{
-                                fontSize: '0.65rem',
-                                fontWeight: 500,
-                                height: 20,
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{Number(message.cost)} kredi</TableCell>
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                            <ClientDate date={message.sentAt} />
-                          </TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kişi</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Maliyet</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                      </TableHead>
+                      <TableBody>
+                        {messages.map((message) => (
+                          <TableRow key={message.id}>
+                            {isAdmin && (
+                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                {message.user?.username || '-'}
+                                <br />
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
+                                  {message.user?.email || '-'}
+                                </Typography>
+                              </TableCell>
+                            )}
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.contact?.name || '-'}</TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.phoneNumber}</TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.message.substring(0, 50)}...</TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <Chip
+                                label={message.status}
+                                color={getStatusColor(message.status)}
+                                size="small"
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  height: 20,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{Number(message.cost)} kredi</TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <ClientDate date={message.sentAt} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  
+                  {/* Pagination */}
+                  {smsTotal > smsPageSize && (
+                    <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
+                        Toplam {smsTotal} kayıt, Sayfa {smsPage} / {Math.ceil(smsTotal / smsPageSize)}
+                      </Typography>
+                      <Stack spacing={2}>
+                        <Pagination
+                          count={Math.ceil(smsTotal / smsPageSize)}
+                          page={smsPage}
+                          onChange={(e, page) => {
+                            setSmsPage(page);
+                          }}
+                          size="small"
+                          color="primary"
+                          sx={{
+                            '& .MuiPaginationItem-root': {
+                              fontSize: '12px',
+                            },
+                          }}
+                        />
+                      </Stack>
+                      <FormControl size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel sx={{ fontSize: '12px' }}>Sayfa Boyutu</InputLabel>
+                        <Select
+                          value={smsPageSize}
+                          onChange={(e) => {
+                            setSmsPageSize(Number(e.target.value));
+                            setSmsPage(1);
+                          }}
+                          label="Sayfa Boyutu"
+                          sx={{ fontSize: '12px' }}
+                        >
+                          <MenuItem value={10}>10 / sayfa</MenuItem>
+                          <MenuItem value={20}>20 / sayfa</MenuItem>
+                          <MenuItem value={50}>50 / sayfa</MenuItem>
+                          <MenuItem value={100}>100 / sayfa</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  )}
+                </>
               )}
             </Paper>
               </Box>
@@ -961,30 +1155,23 @@ export default function SMSReportsPage() {
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Durum"
-                          select
-                          SelectProps={{ native: true }}
-                          value={bulkFilters.status}
-                          onChange={(e) => setBulkFilters({ ...bulkFilters, status: e.target.value })}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 1.5,
+                        <FormControl fullWidth size="small">
+                          <InputLabel sx={{ fontSize: '12px' }}>Durum</InputLabel>
+                          <Select
+                            value={bulkFilters.status}
+                            onChange={(e) => setBulkFilters({ ...bulkFilters, status: e.target.value })}
+                            label="Durum"
+                            sx={{
                               fontSize: '12px',
-                            },
-                          }}
-                          inputProps={{
-                            'aria-label': 'Toplu SMS durumu filtresi',
-                            title: 'Toplu SMS durumu filtresi',
-                          }}
-                        >
-                          <option value="">Tümü</option>
-                          <option value="sent">Başarılı</option>
-                          <option value="failed">Başarısız</option>
-                          <option value="partial">Kısmen Başarılı</option>
-                        </TextField>
+                              borderRadius: 1.5,
+                            }}
+                          >
+                            <MenuItem value="">Tümü</MenuItem>
+                            <MenuItem value="sent">Başarılı</MenuItem>
+                            <MenuItem value="failed">Başarısız</MenuItem>
+                            <MenuItem value="partial">Kısmen Başarılı</MenuItem>
+                          </Select>
+                        </FormControl>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
                         <TextField
@@ -1006,6 +1193,50 @@ export default function SMSReportsPage() {
                   </Paper>
                 )}
 
+                {/* Export Buttons */}
+                {bulkSmsReports.length > 0 && (
+                  <Box sx={{ mb: 1.5, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<TableChart />}
+                      onClick={() => handleExportBulkSMS('excel')}
+                      sx={{
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontSize: '12px',
+                        borderColor: '#4caf50',
+                        color: '#4caf50',
+                        '&:hover': {
+                          borderColor: '#4caf50',
+                          backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                        },
+                      }}
+                    >
+                      Excel İndir
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<PictureAsPdf />}
+                      onClick={() => handleExportBulkSMS('pdf')}
+                      sx={{
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontSize: '12px',
+                        borderColor: '#f44336',
+                        color: '#f44336',
+                        '&:hover': {
+                          borderColor: '#f44336',
+                          backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                        },
+                      }}
+                    >
+                      PDF İndir
+                    </Button>
+                  </Box>
+                )}
+
                 {loadingBulkReports ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                     <CircularProgress />
@@ -1017,20 +1248,23 @@ export default function SMSReportsPage() {
                     </Typography>
                   </Paper>
                 ) : (
-                  <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj Şablonu</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Alıcılar</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarılı</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarısız</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {bulkSmsReports.map((report, index) => {
+                  <>
+                    <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj Şablonu</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Alıcılar</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarılı</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarısız</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {bulkSmsReports
+                            .slice((bulkPage - 1) * bulkPageSize, bulkPage * bulkPageSize)
+                            .map((report, index) => {
                           const getStatusColor = (status: string) => {
                             switch (status) {
                               case 'sent':
@@ -1099,10 +1333,53 @@ export default function SMSReportsPage() {
                               </TableCell>
                             </TableRow>
                           );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                            })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                    
+                    {/* Pagination */}
+                    {bulkTotal > bulkPageSize && (
+                      <Box sx={{ mt: 2, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
+                          Toplam {bulkTotal} kayıt, Sayfa {bulkPage} / {Math.ceil(bulkTotal / bulkPageSize)}
+                        </Typography>
+                        <Stack spacing={2}>
+                          <Pagination
+                            count={Math.ceil(bulkTotal / bulkPageSize)}
+                            page={bulkPage}
+                            onChange={(e, page) => {
+                              setBulkPage(page);
+                            }}
+                            size="small"
+                            color="primary"
+                            sx={{
+                              '& .MuiPaginationItem-root': {
+                                fontSize: '12px',
+                              },
+                            }}
+                          />
+                        </Stack>
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                          <InputLabel sx={{ fontSize: '12px' }}>Sayfa Boyutu</InputLabel>
+                          <Select
+                            value={bulkPageSize}
+                            onChange={(e) => {
+                              setBulkPageSize(Number(e.target.value));
+                              setBulkPage(1);
+                            }}
+                            label="Sayfa Boyutu"
+                            sx={{ fontSize: '12px' }}
+                          >
+                            <MenuItem value={10}>10 / sayfa</MenuItem>
+                            <MenuItem value={20}>20 / sayfa</MenuItem>
+                            <MenuItem value={50}>50 / sayfa</MenuItem>
+                            <MenuItem value={100}>100 / sayfa</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    )}
+                  </>
                 )}
               </Box>
             )}
@@ -1193,55 +1470,101 @@ export default function SMSReportsPage() {
                     Detay bulunamadı
                   </Typography>
                 ) : (
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Operatör</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {bulkReportDetails.map((detail: any) => (
-                          <TableRow key={detail.id}>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              {detail.phoneNumber || detail.phone_number}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              <Chip
-                                label={detail.status === 'iletildi' ? 'İletildi' : 
-                                       detail.status === 'iletilmedi' ? 'İletilmedi' : 
-                                       detail.status === 'zaman_aşımı' ? 'Zaman Aşımı' : 
-                                       detail.status === 'rapor_bekliyor' ? 'Rapor Bekliyor' : 
-                                       detail.status === 'gönderildi' ? 'Gönderildi' : 
-                                       detail.status || '-'}
-                                color={
-                                  detail.status === 'iletildi' ? 'success' : 
-                                  detail.status === 'iletilmedi' || detail.status === 'zaman_aşımı' ? 'error' : 
-                                  detail.status === 'rapor_bekliyor' ? 'warning' : 
-                                  'default'
-                                }
-                                size="small"
-                                sx={{
-                                  fontSize: '0.65rem',
-                                  fontWeight: 500,
-                                  height: 20,
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              {detail.network || '-'}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              <ClientDate date={detail.sentAt || detail.sent_at} />
-                            </TableCell>
+                  <>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Operatör</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                          {bulkReportDetails
+                            .slice((bulkDetailsPage - 1) * bulkDetailsPageSize, bulkDetailsPage * bulkDetailsPageSize)
+                            .map((detail: any) => (
+                            <TableRow key={detail.id}>
+                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                {detail.phoneNumber || detail.phone_number}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                <Chip
+                                  label={detail.status === 'iletildi' ? 'İletildi' : 
+                                         detail.status === 'iletilmedi' ? 'İletilmedi' : 
+                                         detail.status === 'zaman_aşımı' ? 'Zaman Aşımı' : 
+                                         detail.status === 'rapor_bekliyor' ? 'Rapor Bekliyor' : 
+                                         detail.status === 'gönderildi' ? 'Gönderildi' : 
+                                         detail.status || '-'}
+                                  color={
+                                    detail.status === 'iletildi' ? 'success' : 
+                                    detail.status === 'iletilmedi' || detail.status === 'zaman_aşımı' ? 'error' : 
+                                    detail.status === 'rapor_bekliyor' ? 'warning' : 
+                                    'default'
+                                  }
+                                  size="small"
+                                  sx={{
+                                    fontSize: '0.65rem',
+                                    fontWeight: 500,
+                                    height: 20,
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                {detail.network || '-'}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                <ClientDate date={detail.sentAt || detail.sent_at} />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                    
+                    {/* Pagination */}
+                    {bulkReportDetails.length > bulkDetailsPageSize && (
+                      <Box sx={{ mt: 2, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
+                          Toplam {bulkReportDetails.length} kayıt, Sayfa {bulkDetailsPage} / {Math.ceil(bulkReportDetails.length / bulkDetailsPageSize)}
+                        </Typography>
+                        <Stack spacing={2}>
+                          <Pagination
+                            count={Math.ceil(bulkReportDetails.length / bulkDetailsPageSize)}
+                            page={bulkDetailsPage}
+                            onChange={(e, page) => {
+                              setBulkDetailsPage(page);
+                            }}
+                            size="small"
+                            color="primary"
+                            sx={{
+                              '& .MuiPaginationItem-root': {
+                                fontSize: '12px',
+                              },
+                            }}
+                          />
+                        </Stack>
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                          <InputLabel sx={{ fontSize: '12px' }}>Sayfa Boyutu</InputLabel>
+                          <Select
+                            value={bulkDetailsPageSize}
+                            onChange={(e) => {
+                              setBulkDetailsPageSize(Number(e.target.value));
+                              setBulkDetailsPage(1);
+                            }}
+                            label="Sayfa Boyutu"
+                            sx={{ fontSize: '12px' }}
+                          >
+                            <MenuItem value={10}>10 / sayfa</MenuItem>
+                            <MenuItem value={20}>20 / sayfa</MenuItem>
+                            <MenuItem value={50}>50 / sayfa</MenuItem>
+                            <MenuItem value={100}>100 / sayfa</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    )}
+                  </>
                 )}
               </DialogContent>
               <DialogActions sx={{ p: 1.5 }}>
@@ -1718,7 +2041,9 @@ export default function SMSReportsPage() {
                         </TableHead>
                         <TableBody>
                           {shortLinksStats.shortLinks && shortLinksStats.shortLinks.length > 0 ? (
-                            shortLinksStats.shortLinks.map((link: any) => {
+                            shortLinksStats.shortLinks
+                              .slice((shortLinksPage - 1) * shortLinksPageSize, shortLinksPage * shortLinksPageSize)
+                              .map((link: any) => {
                               const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
                               const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
                               const isExpanded = expandedShortLinkId === link.id;
@@ -2074,6 +2399,48 @@ export default function SMSReportsPage() {
                         </TableBody>
                       </Table>
                     </TableContainer>
+                    
+                    {/* Pagination */}
+                    {shortLinksStats.shortLinks && shortLinksStats.shortLinks.length > shortLinksPageSize && (
+                      <Box sx={{ mt: 2, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
+                          Toplam {shortLinksStats.shortLinks.length} kayıt, Sayfa {shortLinksPage} / {Math.ceil(shortLinksStats.shortLinks.length / shortLinksPageSize)}
+                        </Typography>
+                        <Stack spacing={2}>
+                          <Pagination
+                            count={Math.ceil(shortLinksStats.shortLinks.length / shortLinksPageSize)}
+                            page={shortLinksPage}
+                            onChange={(e, page) => {
+                              setShortLinksPage(page);
+                            }}
+                            size="small"
+                            color="primary"
+                            sx={{
+                              '& .MuiPaginationItem-root': {
+                                fontSize: '12px',
+                              },
+                            }}
+                          />
+                        </Stack>
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                          <InputLabel sx={{ fontSize: '12px' }}>Sayfa Boyutu</InputLabel>
+                          <Select
+                            value={shortLinksPageSize}
+                            onChange={(e) => {
+                              setShortLinksPageSize(Number(e.target.value));
+                              setShortLinksPage(1);
+                            }}
+                            label="Sayfa Boyutu"
+                            sx={{ fontSize: '12px' }}
+                          >
+                            <MenuItem value={10}>10 / sayfa</MenuItem>
+                            <MenuItem value={20}>20 / sayfa</MenuItem>
+                            <MenuItem value={50}>50 / sayfa</MenuItem>
+                            <MenuItem value={100}>100 / sayfa</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    )}
                   </Box>
                 ) : (
                   <Paper sx={{ p: 2, borderRadius: 2, textAlign: 'center' }}>
@@ -2162,30 +2529,23 @@ export default function SMSReportsPage() {
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Durum"
-                        select
-                        SelectProps={{ native: true }}
+                    <FormControl fullWidth size="small">
+                      <InputLabel sx={{ fontSize: '12px' }}>Durum</InputLabel>
+                      <Select
                         value={paymentFilters.status}
                         onChange={(e) => setPaymentFilters({ ...paymentFilters, status: e.target.value })}
+                        label="Durum"
                         sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 1.5,
-                            fontSize: '12px',
-                          },
-                        }}
-                        inputProps={{
-                          'aria-label': 'Ödeme durumu filtresi',
-                          title: 'Ödeme durumu filtresi',
+                          fontSize: '12px',
+                          borderRadius: 1.5,
                         }}
                       >
-                        <option value="">Tümü</option>
-                        <option value="pending">Beklemede</option>
-                        <option value="approved">Onaylandı</option>
-                        <option value="rejected">Reddedildi</option>
-                      </TextField>
+                        <MenuItem value="">Tümü</MenuItem>
+                        <MenuItem value="pending">Beklemede</MenuItem>
+                        <MenuItem value="approved">Onaylandı</MenuItem>
+                        <MenuItem value="rejected">Reddedildi</MenuItem>
+                      </Select>
+                    </FormControl>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
                       <TextField
@@ -2383,7 +2743,9 @@ export default function SMSReportsPage() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {paymentRequests.map((request) => {
+                          {paymentRequests
+                            .slice((paymentPage - 1) * paymentPageSize, paymentPage * paymentPageSize)
+                            .map((request) => {
                             const getStatusColor = (status: string) => {
                               switch (status) {
                                 case 'approved':
@@ -2492,6 +2854,48 @@ export default function SMSReportsPage() {
                         </TableBody>
                       </Table>
                     </TableContainer>
+                    
+                    {/* Pagination */}
+                    {paymentTotal > paymentPageSize && (
+                      <Box sx={{ mt: 2, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
+                          Toplam {paymentTotal} kayıt, Sayfa {paymentPage} / {Math.ceil(paymentTotal / paymentPageSize)}
+                        </Typography>
+                        <Stack spacing={2}>
+                          <Pagination
+                            count={Math.ceil(paymentTotal / paymentPageSize)}
+                            page={paymentPage}
+                            onChange={(e, page) => {
+                              setPaymentPage(page);
+                            }}
+                            size="small"
+                            color="primary"
+                            sx={{
+                              '& .MuiPaginationItem-root': {
+                                fontSize: '12px',
+                              },
+                            }}
+                          />
+                        </Stack>
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                          <InputLabel sx={{ fontSize: '12px' }}>Sayfa Boyutu</InputLabel>
+                          <Select
+                            value={paymentPageSize}
+                            onChange={(e) => {
+                              setPaymentPageSize(Number(e.target.value));
+                              setPaymentPage(1);
+                            }}
+                            label="Sayfa Boyutu"
+                            sx={{ fontSize: '12px' }}
+                          >
+                            <MenuItem value={10}>10 / sayfa</MenuItem>
+                            <MenuItem value={20}>20 / sayfa</MenuItem>
+                            <MenuItem value={50}>50 / sayfa</MenuItem>
+                            <MenuItem value={100}>100 / sayfa</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    )}
 
                     {/* Ödeme Detayları Dialog */}
                     <Dialog
