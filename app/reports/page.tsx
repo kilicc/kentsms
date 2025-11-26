@@ -602,6 +602,48 @@ export default function SMSReportsPage() {
     }
   };
 
+  const handleExportSingleBulkReport = async (report: any, format: 'excel' | 'pdf') => {
+    try {
+      // Bu raporun messageIds'lerini kullanarak sadece bu raporun detaylarını export et
+      if (!report.messageIds || report.messageIds.length === 0) {
+        setError('Bu rapor için export yapılamıyor: Mesaj ID\'leri bulunamadı');
+        return;
+      }
+
+      // API'den bu messageIds'lere ait SMS detaylarını al
+      const params: any = {
+        messageIds: report.messageIds.join(','),
+        format: format,
+      };
+
+      const response = await api.get('/reports/bulk-sms/export', { 
+        params,
+        responseType: 'blob',
+      });
+
+      if (response.data) {
+        const blob = new Blob([response.data], { 
+          type: format === 'excel' 
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/html'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = report.sentAt ? new Date(report.sentAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        const messagePreview = (report.fullMessage || report.message || '').substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
+        a.href = url;
+        a.download = `toplu-sms-raporu-${dateStr}-${messagePreview}.${format === 'excel' ? 'xlsx' : 'html'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setError('Export işlemi sırasında bir hata oluştu');
+    }
+  };
+
   // Filter change effects
   useEffect(() => {
     if (tabValue === 'sms') {
@@ -1193,50 +1235,6 @@ export default function SMSReportsPage() {
                   </Paper>
                 )}
 
-                {/* Export Buttons */}
-                {bulkSmsReports.length > 0 && (
-                  <Box sx={{ mb: 1.5, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<TableChart />}
-                      onClick={() => handleExportBulkSMS('excel')}
-                      sx={{
-                        borderRadius: 1.5,
-                        textTransform: 'none',
-                        fontSize: '12px',
-                        borderColor: '#4caf50',
-                        color: '#4caf50',
-                        '&:hover': {
-                          borderColor: '#4caf50',
-                          backgroundColor: 'rgba(76, 175, 80, 0.08)',
-                        },
-                      }}
-                    >
-                      Excel İndir
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<PictureAsPdf />}
-                      onClick={() => handleExportBulkSMS('pdf')}
-                      sx={{
-                        borderRadius: 1.5,
-                        textTransform: 'none',
-                        fontSize: '12px',
-                        borderColor: '#f44336',
-                        color: '#f44336',
-                        '&:hover': {
-                          borderColor: '#f44336',
-                          backgroundColor: 'rgba(244, 67, 54, 0.08)',
-                        },
-                      }}
-                    >
-                      PDF İndir
-                    </Button>
-                  </Box>
-                )}
-
                 {loadingBulkReports ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                     <CircularProgress />
@@ -1259,6 +1257,7 @@ export default function SMSReportsPage() {
                             <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarısız</TableCell>
                             <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
                             <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }} align="center">İşlemler</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -1330,6 +1329,44 @@ export default function SMSReportsPage() {
                               </TableCell>
                               <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                 <ClientDate date={report.sentAt} />
+                              </TableCell>
+                              <TableCell sx={{ fontSize: '12px', py: 0.75 }} align="center">
+                                <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleExportSingleBulkReport(report, 'excel');
+                                    }}
+                                    sx={{
+                                      color: '#4caf50',
+                                      '&:hover': {
+                                        backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                                      },
+                                      p: 0.5,
+                                    }}
+                                    title="Excel İndir"
+                                  >
+                                    <TableChart sx={{ fontSize: '18px' }} />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleExportSingleBulkReport(report, 'pdf');
+                                    }}
+                                    sx={{
+                                      color: '#f44336',
+                                      '&:hover': {
+                                        backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                                      },
+                                      p: 0.5,
+                                    }}
+                                    title="PDF İndir"
+                                  >
+                                    <PictureAsPdf sx={{ fontSize: '18px' }} />
+                                  </IconButton>
+                                </Box>
                               </TableCell>
                             </TableRow>
                           );
