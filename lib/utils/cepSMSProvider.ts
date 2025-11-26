@@ -82,29 +82,30 @@ export function formatPhoneNumber(phone: string): string {
  * CepSMS API ile SMS gönder
  */
 export async function sendSMS(phone: string, message: string): Promise<SendSMSResult> {
+  const formattedPhone = formatPhoneNumber(phone);
+  
+  console.log('[CepSMS] SMS gönderiliyor:', {
+    phone: formattedPhone,
+    messageLength: message.length,
+    from: CEPSMS_FROM,
+    username: CEPSMS_USERNAME,
+  });
+
+  // CepSMS API isteği - From parametresi opsiyonel ve bazı hesaplarda geçersiz olabilir
+  const requestData: any = {
+    User: CEPSMS_USERNAME,
+    Pass: CEPSMS_PASSWORD,
+    Message: message,
+    Numbers: [formattedPhone],
+  };
+
+  // From parametresi sadece geçerli bir değer varsa ekle
+  // CepSMS hesabında kayıtlı gönderen adı yoksa From parametresini kaldır
+  if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '' && CEPSMS_FROM !== 'CepSMS') {
+    requestData.From = CEPSMS_FROM;
+  }
+
   try {
-    const formattedPhone = formatPhoneNumber(phone);
-    
-    console.log('[CepSMS] SMS gönderiliyor:', {
-      phone: formattedPhone,
-      messageLength: message.length,
-      from: CEPSMS_FROM,
-      username: CEPSMS_USERNAME,
-    });
-
-    // CepSMS API isteği - From parametresi opsiyonel ve bazı hesaplarda geçersiz olabilir
-    const requestData: any = {
-      User: CEPSMS_USERNAME,
-      Pass: CEPSMS_PASSWORD,
-      Message: message,
-      Numbers: [formattedPhone],
-    };
-
-    // From parametresi sadece geçerli bir değer varsa ekle
-    // CepSMS hesabında kayıtlı gönderen adı yoksa From parametresini kaldır
-    if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '' && CEPSMS_FROM !== 'CepSMS') {
-      requestData.From = CEPSMS_FROM;
-    }
 
     const response = await axios.post<CepSMSResponse>(
       CEPSMS_API_URL,
