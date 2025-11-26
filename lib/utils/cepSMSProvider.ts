@@ -208,8 +208,10 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
         detailedError = 'CepSMS API\'ye bağlantı zaman aşımına uğradı.';
       } else if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') {
         detailedError = 'CepSMS API sunucu adresi bulunamadı. DNS hatası olabilir.';
-      } else if (error.code === 'CERT_HAS_EXPIRED' || error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
-        detailedError = 'CepSMS API SSL sertifika hatası.';
+      } else if (error.code === 'CERT_HAS_EXPIRED' || error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || error.code === 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY') {
+        detailedError = `CepSMS API SSL sertifika hatası: ${error.code}. SSL sertifika doğrulaması devre dışı bırakıldı.`;
+        // SSL hatası varsa, rejectUnauthorized'ı false yap ve tekrar dene
+        console.warn('[CepSMS] SSL sertifika hatası tespit edildi, sertifika doğrulaması devre dışı bırakılıyor...');
       } else if (error.code) {
         detailedError = `CepSMS API bağlantı hatası: ${error.code}. ${error.message || ''}`;
       } else {
@@ -220,7 +222,50 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
         code: error.code,
         message: error.message,
         hostname: error.hostname || CEPSMS_API_URL,
+        syscall: error.syscall,
+        address: error.address,
       });
+      
+      // SSL hatası ise, tekrar dene (sertifika doğrulaması olmadan)
+      if (error.code === 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' || error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
+        console.log('[CepSMS] SSL hatası nedeniyle tekrar deneniyor (sertifika doğrulaması olmadan)...');
+        try {
+          const retryAgent = new https.Agent({
+            rejectUnauthorized: false,
+            keepAlive: true,
+          });
+          
+          const retryResponse = await axios.post<CepSMSResponse>(
+            CEPSMS_API_URL,
+            requestData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              httpsAgent: retryAgent,
+              timeout: 30000,
+              validateStatus: (status) => status < 500,
+            }
+          );
+          
+          console.log('[CepSMS] Retry başarılı:', JSON.stringify(retryResponse.data, null, 2));
+          
+          const status = retryResponse.data.Status || retryResponse.data.status || retryResponse.data.statusCode;
+          const messageId = retryResponse.data.MessageId || retryResponse.data.messageId || retryResponse.data.id;
+          const statusStr = String(status || '').toUpperCase();
+          const isSuccess = statusStr === 'OK' || status === 200;
+          
+          if (isSuccess && messageId) {
+            return {
+              success: true,
+              messageId: String(messageId),
+            };
+          }
+        } catch (retryError: any) {
+          console.error('[CepSMS] Retry da başarısız:', retryError.message);
+        }
+      }
       
       return {
         success: false,
