@@ -123,11 +123,49 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Kredi düş
-      await supabaseServer
+      // Kredi düş - güncel krediyi al ve düş
+      const { data: currentUser, error: currentUserError } = await supabaseServer
         .from('users')
-        .update({ credit: Math.max(0, userCredit - totalRequiredCredit) })
+        .select('credit')
+        .eq('id', auth.user.id)
+        .single();
+
+      if (currentUserError || !currentUser) {
+        return NextResponse.json(
+          {
+            MessageIds: [],
+            Status: 'Error',
+            Error: 'Kullanıcı kredisi alınamadı',
+            SuccessCount: 0,
+            FailedCount: 0,
+          },
+          { status: 500 }
+        );
+      }
+
+      const currentCredit = currentUser.credit || 0;
+      const newCredit = Math.max(0, currentCredit - totalRequiredCredit);
+
+      const { error: updateError } = await supabaseServer
+        .from('users')
+        .update({ credit: newCredit })
         .eq('id', auth.user.id);
+
+      if (updateError) {
+        return NextResponse.json(
+          {
+            MessageIds: [],
+            Status: 'Error',
+            Error: `Kredi güncellenemedi: ${updateError.message}`,
+            SuccessCount: 0,
+            FailedCount: 0,
+          },
+          { status: 500 }
+        );
+      }
+
+      // Güncel krediyi sakla (geri verme için)
+      userCredit = currentCredit;
     }
 
     // Her mesajı gönder
