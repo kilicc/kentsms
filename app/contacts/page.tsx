@@ -218,7 +218,7 @@ export default function ContactsPage() {
       const response = await fetch(`${window.location.origin}/api/contacts/export?format=${format}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
 
