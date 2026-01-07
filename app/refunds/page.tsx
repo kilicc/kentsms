@@ -200,15 +200,15 @@ export default function RefundsPage() {
                         onClick={loadAdminReport}
                         disabled={loadingAdminReport}
                         sx={{
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 6px 20px rgba(30, 64, 175, 0.3)',
                           borderRadius: 2,
                           padding: '6px 16px',
                           fontSize: '12px',
                           fontWeight: 500,
                           textTransform: 'none',
                           '&:hover': {
-                            boxShadow: '0 6px 16px rgba(25, 118, 210, 0.35)',
+                            boxShadow: '0 6px 16px rgba(30, 64, 175, 0.35)',
                             transform: 'translateY(-1px)',
                           },
                           transition: 'all 0.3s',
@@ -239,9 +239,9 @@ export default function RefundsPage() {
                       borderRadius: 2, 
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       background: mode === 'dark' 
-                        ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)'
-                        : 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                      border: '1px solid rgba(25, 118, 210, 0.2)',
+                        ? 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)'
+                        : 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                      border: '1px solid rgba(30, 64, 175, 0.2)',
                     }}>
                       <Typography variant="h6" sx={{ fontSize: '15px', fontWeight: 600, mb: 1.5 }}>
                         📊 İade Raporu Özeti - {new Date(adminReport.date).toLocaleDateString('tr-TR')}
@@ -297,19 +297,19 @@ export default function RefundsPage() {
                           borderRadius: 2, 
                           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                           background: mode === 'dark'
-                            ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.15) 0%, rgba(220, 0, 78, 0.15) 100%)'
-                            : 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
-                          border: '1px solid rgba(25, 118, 210, 0.2)',
+                            ? 'linear-gradient(135deg, rgba(30, 64, 175, 0.15) 0%, rgba(249, 115, 22, 0.15) 100%)'
+                            : 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
+                          border: '1px solid rgba(30, 64, 175, 0.2)',
                           transition: 'all 0.3s',
                           '&:hover': {
                             transform: 'translateY(-4px)',
-                            boxShadow: '0 8px 20px rgba(25, 118, 210, 0.25)',
+                            boxShadow: '0 8px 20px rgba(30, 64, 175, 0.25)',
                           },
                         }}>
                           <CardContent>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                               <People sx={{ color: 'primary.main', fontSize: 28 }} />
-                              <Typography variant="caption" sx={{ fontSize: '10px', color: 'text.secondary', bgcolor: 'rgba(25, 118, 210, 0.1)', px: 1, py: 0.5, borderRadius: 1 }}>
+                              <Typography variant="caption" sx={{ fontSize: '10px', color: 'text.secondary', bgcolor: 'rgba(30, 64, 175, 0.1)', px: 1, py: 0.5, borderRadius: 1 }}>
                                 Kullanıcılar
                               </Typography>
                             </Box>
@@ -327,8 +327,8 @@ export default function RefundsPage() {
                           borderRadius: 2, 
                           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                           background: mode === 'dark'
-                            ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(25, 118, 210, 0.15) 100%)'
-                            : 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(25, 118, 210, 0.1) 100%)',
+                            ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(30, 64, 175, 0.15) 100%)'
+                            : 'linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(30, 64, 175, 0.1) 100%)',
                           border: '1px solid rgba(33, 150, 243, 0.2)',
                           transition: 'all 0.3s',
                           '&:hover': {
@@ -779,9 +779,9 @@ export default function RefundsPage() {
                   sx={{
                     mb: 2,
                     borderRadius: 2,
-                    bgcolor: alpha('#1976d2', 0.1),
+                    bgcolor: alpha('#1e40af', 0.1),
                     border: '1px solid',
-                    borderColor: alpha('#1976d2', 0.3),
+                    borderColor: alpha('#1e40af', 0.3),
                     py: 3,
                     px: 3,
                   }}

@@ -5,15 +5,15 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
   palette: {
     mode,
     primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
+      main: '#1e40af', // Koyu mavi/lacivert
+      light: '#3b82f6',
+      dark: '#1e3a8a',
       contrastText: '#fff',
     },
     secondary: {
-      main: '#dc004e',
-      light: '#ff5983',
-      dark: '#9a0036',
+      main: '#f97316', // Turuncu
+      light: '#fb923c',
+      dark: '#ea580c',
       contrastText: '#fff',
     },
     success: {
@@ -353,9 +353,9 @@ export const getTheme = (mode: 'light' | 'dark') => createTheme({
             backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
           },
           '&.Mui-selected': {
-            backgroundColor: mode === 'dark' ? 'rgba(25, 118, 210, 0.16)' : 'rgba(25, 118, 210, 0.08)',
+            backgroundColor: mode === 'dark' ? 'rgba(30, 64, 175, 0.16)' : 'rgba(30, 64, 175, 0.08)',
             '&:hover': {
-              backgroundColor: mode === 'dark' ? 'rgba(25, 118, 210, 0.24)' : 'rgba(25, 118, 210, 0.12)',
+              backgroundColor: mode === 'dark' ? 'rgba(30, 64, 175, 0.24)' : 'rgba(30, 64, 175, 0.12)',
             },
           },
         },
@@ -437,9 +437,9 @@ export const theme = getTheme('light');
 
 // Gradient renkleri (export için)
 export const gradients = {
-  login: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  navbar: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-  cardLight: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+  login: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+  navbar: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+  cardLight: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
   cardMedium: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
-  button: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+  button: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
 };

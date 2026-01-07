@@ -76,7 +76,7 @@ export default function Navbar() {
       <Box
         sx={{
           p: 1.5,
-          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
           color: 'white',
           borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
         }}
@@ -105,7 +105,7 @@ export default function Navbar() {
       <Box
         sx={{
           p: 1.5,
-          background: alpha('#1976d2', 0.05),
+          background: alpha('#1e40af', 0.05),
           borderBottom: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.12)',
         }}
       >
@@ -156,7 +156,7 @@ export default function Navbar() {
               sx={{
                 color: 'text.secondary',
                 '&:hover': {
-                  bgcolor: alpha('#1976d2', 0.1),
+                  bgcolor: alpha('#1e40af', 0.1),
                 },
               }}
             >
@@ -178,14 +178,14 @@ export default function Navbar() {
               mb: 0.25,
               py: 0.75,
               px: 1,
-              bgcolor: isActive(item.path) ? alpha('#1976d2', 0.1) : 'transparent',
+              bgcolor: isActive(item.path) ? alpha('#1e40af', 0.1) : 'transparent',
               '&:hover': {
-                bgcolor: alpha('#1976d2', 0.05),
+                bgcolor: alpha('#1e40af', 0.05),
               },
               '&.Mui-selected': {
-                bgcolor: alpha('#1976d2', 0.1),
+                bgcolor: alpha('#1e40af', 0.1),
                 '&:hover': {
-                  bgcolor: alpha('#1976d2', 0.15),
+                  bgcolor: alpha('#1e40af', 0.15),
                 },
               },
             }}
@@ -228,14 +228,14 @@ export default function Navbar() {
                   mb: 0.25,
                   py: 0.75,
                   px: 1,
-                  bgcolor: isActive(item.path) ? alpha('#dc004e', 0.1) : 'transparent',
+                  bgcolor: isActive(item.path) ? alpha('#f97316', 0.1) : 'transparent',
                   '&:hover': {
-                    bgcolor: alpha('#dc004e', 0.05),
+                    bgcolor: alpha('#f97316', 0.05),
                   },
                   '&.Mui-selected': {
-                    bgcolor: alpha('#dc004e', 0.1),
+                    bgcolor: alpha('#f97316', 0.1),
                     '&:hover': {
-                      bgcolor: alpha('#dc004e', 0.15),
+                      bgcolor: alpha('#f97316', 0.15),
                     },
                   },
                 }}

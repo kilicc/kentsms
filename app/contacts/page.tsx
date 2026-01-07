@@ -71,7 +71,7 @@ export default function ContactsPage() {
   const [groupForm, setGroupForm] = useState({
     name: '',
     description: '',
-    color: '#1976d2',
+    color: '#1e40af',
     icon: 'group',
   });
 
@@ -139,7 +139,7 @@ export default function ContactsPage() {
         setSuccess('Grup oluşturuldu');
       }
       setGroupDialogOpen(false);
-      setGroupForm({ name: '', description: '', color: '#1976d2', icon: 'group' });
+      setGroupForm({ name: '', description: '', color: '#1e40af', icon: 'group' });
       setEditingGroup(null);
       loadGroups();
     } catch (err: any) {
@@ -421,13 +421,13 @@ export default function ContactsPage() {
                       setContactDialogOpen(true);
                     } else {
                       setEditingGroup(null);
-                      setGroupForm({ name: '', description: '', color: '#1976d2', icon: 'group' });
+                      setGroupForm({ name: '', description: '', color: '#1e40af', icon: 'group' });
                       setGroupDialogOpen(true);
                     }
                   }}
                   sx={{
-                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                    boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                    boxShadow: '0 6px 20px rgba(30, 64, 175, 0.3)',
                     borderRadius: 2,
                     padding: '8px 20px',
                     fontSize: '12px',
@@ -435,7 +435,7 @@ export default function ContactsPage() {
                     fontWeight: 500,
                     textTransform: 'none',
                     '&:hover': {
-                      boxShadow: '0 8px 25px rgba(25, 118, 210, 0.4)',
+                      boxShadow: '0 8px 25px rgba(30, 64, 175, 0.4)',
                       transform: 'translateY(-2px)',
                     },
                     transition: 'all 0.3s',
@@ -708,8 +708,8 @@ export default function ContactsPage() {
                         <Card 
                           sx={{ 
                             borderRadius: 2, 
-                            background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                            border: '1px solid rgba(25, 118, 210, 0.1)',
+                            background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                            border: '1px solid rgba(30, 64, 175, 0.1)',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                             mb: 2,
                           }}

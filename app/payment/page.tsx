@@ -660,7 +660,7 @@ export default function CryptoPaymentPage() {
                           sx={{
                             p: 1.5,
                             borderRadius: 2,
-                            background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                            background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -738,15 +738,15 @@ export default function CryptoPaymentPage() {
                       <Card
                         sx={{
                           border: selectedPackage === pkg.id 
-                            ? '2px solid #1976d2' 
+                            ? '2px solid #1e40af' 
                             : '1px solid rgba(0,0,0,0.1)',
                           cursor: 'pointer',
                           background: selectedPackage === pkg.id 
-                            ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(220, 0, 78, 0.08) 100%)'
+                            ? 'linear-gradient(135deg, rgba(30, 64, 175, 0.08) 0%, rgba(249, 115, 22, 0.08) 100%)'
                             : 'white',
                           borderRadius: 3,
                           boxShadow: selectedPackage === pkg.id
-                            ? '0 8px 24px rgba(25, 118, 210, 0.2)'
+                            ? '0 8px 24px rgba(30, 64, 175, 0.2)'
                             : '0 2px 12px rgba(0,0,0,0.08)',
                           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           position: 'relative',
@@ -758,12 +758,12 @@ export default function CryptoPaymentPage() {
                             left: 0,
                             right: 0,
                             height: '4px',
-                            background: 'linear-gradient(90deg, #1976d2 0%, #dc004e 100%)',
+                            background: 'linear-gradient(90deg, #1e40af 0%, #f97316 100%)',
                           } : {},
                           '&:hover': {
                             transform: 'translateY(-4px)',
                             boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
-                            borderColor: selectedPackage === pkg.id ? '#1976d2' : 'rgba(25, 118, 210, 0.3)',
+                            borderColor: selectedPackage === pkg.id ? '#1e40af' : 'rgba(30, 64, 175, 0.3)',
                           },
                         }}
                         onClick={() => handlePackageSelect(pkg.id)}
@@ -825,8 +825,8 @@ export default function CryptoPaymentPage() {
                                 fontWeight: 700,
                                 mb: 0.5,
                                 background: selectedPackage === pkg.id
-                                  ? 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)'
-                                  : 'linear-gradient(135deg, #1976d2 0%, #1976d2 100%)',
+                                  ? 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)'
+                                  : 'linear-gradient(135deg, #1e40af 0%, #1e40af 100%)',
                                 backgroundClip: 'text',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
@@ -909,7 +909,7 @@ export default function CryptoPaymentPage() {
                         sx={{
                           p: 1,
                           borderRadius: 2,
-                          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                          background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -953,7 +953,7 @@ export default function CryptoPaymentPage() {
                                   width: 24,
                                   height: 24,
                                   borderRadius: '50%',
-                                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                                  background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -977,8 +977,8 @@ export default function CryptoPaymentPage() {
                           mt: 2,
                           p: 2,
                           borderRadius: 2,
-                          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                          border: '1px solid rgba(25, 118, 210, 0.1)',
+                          background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                          border: '1px solid rgba(30, 64, 175, 0.1)',
                         }}
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -1017,14 +1017,14 @@ export default function CryptoPaymentPage() {
                       sx={{
                         mt: 3,
                         py: 1.5,
-                        background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                        boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                        background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                        boxShadow: '0 8px 24px rgba(30, 64, 175, 0.3)',
                         borderRadius: 2,
                         fontSize: '16px',
                         fontWeight: 600,
                         textTransform: 'none',
                         '&:hover': {
-                          boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+                          boxShadow: '0 12px 32px rgba(30, 64, 175, 0.4)',
                           transform: 'translateY(-2px)',
                         },
                         '&:disabled': {
@@ -1133,8 +1133,8 @@ export default function CryptoPaymentPage() {
                     sx={{
                       borderRadius: 3,
                       boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(220, 0, 78, 0.08) 100%)',
-                      border: '1px solid rgba(25, 118, 210, 0.1)',
+                      background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.08) 0%, rgba(249, 115, 22, 0.08) 100%)',
+                      border: '1px solid rgba(30, 64, 175, 0.1)',
                       position: 'relative',
                       overflow: 'hidden',
                       '&::before': {
@@ -1144,7 +1144,7 @@ export default function CryptoPaymentPage() {
                         left: 0,
                         right: 0,
                         height: '4px',
-                        background: 'linear-gradient(90deg, #1976d2 0%, #dc004e 100%)',
+                        background: 'linear-gradient(90deg, #1e40af 0%, #f97316 100%)',
                       },
                     }}
                   >
@@ -1189,7 +1189,7 @@ export default function CryptoPaymentPage() {
                         sx={{
                           mb: 2,
                           borderRadius: 2,
-                          bgcolor: alpha('#1976d2', 0.1),
+                          bgcolor: alpha('#1e40af', 0.1),
                         }}
                       >
                         <Typography variant="body2" sx={{ fontSize: '14px', fontWeight: 500, mb: 0.5 }}>
@@ -1260,10 +1260,10 @@ export default function CryptoPaymentPage() {
                                   textTransform: 'none',
                                   fontWeight: 600,
                                   py: 1.25,
-                                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                                  background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                                  boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
                                   '&:hover': {
-                                    boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                                    boxShadow: '0 6px 16px rgba(30, 64, 175, 0.4)',
                                     transform: 'translateY(-1px)',
                                   },
                                   transition: 'all 0.3s',
@@ -1303,7 +1303,7 @@ export default function CryptoPaymentPage() {
                                   p: 3,
                                   bgcolor: 'background.paper',
                                   borderRadius: 3,
-                                  border: '2px dashed rgba(25, 118, 210, 0.2)',
+                                  border: '2px dashed rgba(30, 64, 175, 0.2)',
                                   background: mode === 'dark' 
                   ? 'linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(42,42,42,0.9) 100%)'
                   : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%)',
@@ -1337,7 +1337,7 @@ export default function CryptoPaymentPage() {
                               borderRadius: 3,
                               boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                               border: '1px solid rgba(0,0,0,0.08)',
-                              background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+                              background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
                             }}
                           >
                             <CardContent sx={{ p: 2.5 }}>
@@ -1359,7 +1359,7 @@ export default function CryptoPaymentPage() {
                                   p: 2.5,
                                   bgcolor: 'background.paper',
                                   borderRadius: 2,
-                                  border: '1px solid rgba(25, 118, 210, 0.2)',
+                                  border: '1px solid rgba(30, 64, 175, 0.2)',
                                   textAlign: 'center',
                                 }}
                               >
@@ -1372,7 +1372,7 @@ export default function CryptoPaymentPage() {
                                     fontSize: '32px',
                                     fontWeight: 700,
                                     mb: 1,
-                                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                                    background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
                                     backgroundClip: 'text',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
@@ -1459,8 +1459,8 @@ export default function CryptoPaymentPage() {
                             onClick={handleSubmitPayment}
                             disabled={submittingPayment || !txHash || !exactAmount}
                             sx={{
-                              background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                              boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                              background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                              boxShadow: '0 6px 20px rgba(30, 64, 175, 0.3)',
                               borderRadius: 2,
                               padding: '8px 20px',
                               fontSize: '14px',
@@ -1468,7 +1468,7 @@ export default function CryptoPaymentPage() {
                               textTransform: 'none',
                               size: 'small',
                               '&:hover': {
-                                boxShadow: '0 8px 25px rgba(25, 118, 210, 0.4)',
+                                boxShadow: '0 8px 25px rgba(30, 64, 175, 0.4)',
                                 transform: 'translateY(-2px)',
                               },
                               transition: 'all 0.3s',
@@ -1674,8 +1674,8 @@ export default function CryptoPaymentPage() {
                           setPackageDialogOpen(true);
                         }}
                         sx={{
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 6px 20px rgba(30, 64, 175, 0.3)',
                           borderRadius: 2,
                           padding: '6px 16px',
                           fontSize: '12px',
@@ -1767,8 +1767,8 @@ export default function CryptoPaymentPage() {
                           setCryptoDialogOpen(true);
                         }}
                         sx={{
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 6px 20px rgba(30, 64, 175, 0.3)',
                           borderRadius: 2,
                           padding: '6px 16px',
                           fontSize: '12px',
@@ -2099,7 +2099,7 @@ export default function CryptoPaymentPage() {
                         <Typography variant="subtitle2" sx={{ fontSize: '12px', fontWeight: 600, mb: 0.5 }}>
                           Kullanıcı Bilgileri
                         </Typography>
-                        <Paper sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha('#1976d2', 0.05) }}>
+                        <Paper sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha('#1e40af', 0.05) }}>
                           <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
                             <strong>Kullanıcı Adı:</strong> {selectedRequest.user?.username || '-'}
                           </Typography>

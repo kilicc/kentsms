@@ -753,8 +753,8 @@ export default function AdminDashboardPage() {
                   <Card 
                     sx={{ 
                       borderRadius: 2, 
-                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                      border: '1px solid rgba(25, 118, 210, 0.1)',
+                      background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                      border: '1px solid rgba(30, 64, 175, 0.1)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     }}
                   >
@@ -785,8 +785,8 @@ export default function AdminDashboardPage() {
                   <Card 
                     sx={{ 
                       borderRadius: 2, 
-                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                      border: '1px solid rgba(25, 118, 210, 0.1)',
+                      background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                      border: '1px solid rgba(30, 64, 175, 0.1)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     }}
                   >
@@ -817,8 +817,8 @@ export default function AdminDashboardPage() {
                   <Card 
                     sx={{ 
                       borderRadius: 2, 
-                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                      border: '1px solid rgba(25, 118, 210, 0.1)',
+                      background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                      border: '1px solid rgba(30, 64, 175, 0.1)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     }}
                   >
@@ -887,8 +887,8 @@ export default function AdminDashboardPage() {
                         setCreateUserDialogOpen(true);
                       }}
                       sx={{
-                        background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                        background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                        boxShadow: '0 4px 12px rgba(30, 64, 175, 0.25)',
                         borderRadius: 1.5,
                         textTransform: 'none',
                         fontSize: '12px',
@@ -1207,8 +1207,8 @@ export default function AdminDashboardPage() {
                     onClick={loadRefundsReport}
                     disabled={refundsReportLoading}
                     sx={{
-                      background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                      background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                      boxShadow: '0 4px 12px rgba(30, 64, 175, 0.25)',
                       borderRadius: 1.5,
                       textTransform: 'none',
                       fontSize: '12px',
@@ -1226,7 +1226,7 @@ export default function AdminDashboardPage() {
                     {/* Summary Cards */}
                     <Grid container spacing={2} sx={{ mb: 3 }}>
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                           <CardContent>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
                               Toplam Kullanıcı
@@ -1238,7 +1238,7 @@ export default function AdminDashboardPage() {
                         </Card>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                           <CardContent sx={{ p: 1.5 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
                               Toplam SMS
@@ -1250,7 +1250,7 @@ export default function AdminDashboardPage() {
                         </Card>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                           <CardContent sx={{ p: 1.5 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
                               Toplam İade
@@ -1262,7 +1262,7 @@ export default function AdminDashboardPage() {
                         </Card>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                        <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                           <CardContent sx={{ p: 1.5 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
                               Toplam İade Tutarı
@@ -1492,7 +1492,7 @@ export default function AdminDashboardPage() {
                                 sx={{
                                   cursor: 'pointer',
                                   '&:hover': {
-                                    backgroundColor: alpha('#1976d2', 0.05),
+                                    backgroundColor: alpha('#1e40af', 0.05),
                                   },
                                 }}
                               >
@@ -2230,8 +2230,8 @@ export default function AdminDashboardPage() {
                     startIcon={<Add />}
                     onClick={() => setCreateApiKeyDialogOpen(true)}
                     sx={{
-                      background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                      boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                      background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                      boxShadow: '0 4px 12px rgba(30, 64, 175, 0.25)',
                       borderRadius: 1.5,
                       padding: '6px 16px',
                       fontSize: '12px',
@@ -2606,10 +2606,10 @@ export default function AdminDashboardPage() {
                     fontSize: '12px',
                     fontWeight: 500,
                     textTransform: 'none',
-                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                    boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
                     '&:hover': {
-                      boxShadow: '0 4px 16px rgba(25, 118, 210, 0.4)',
+                      boxShadow: '0 4px 16px rgba(30, 64, 175, 0.4)',
                       transform: 'translateY(-1px)',
                     },
                     transition: 'all 0.3s',
@@ -2736,8 +2736,8 @@ export default function AdminDashboardPage() {
                 disabled={loading || systemCreditAmount <= 0}
                 sx={{
                   fontSize: '12px',
-                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                  background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                  boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
                 }}
               >
                 {loading ? <CircularProgress size={16} /> : systemCreditAction === 'set' ? 'Güncelle' : 'Ekle'}

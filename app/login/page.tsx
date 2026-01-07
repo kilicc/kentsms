@@ -37,7 +37,7 @@ export default function LoginPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -60,7 +60,7 @@ export default function LoginPage() {
         {/* Header with gradient - HTML_TEMPLATES.html'e göre */}
         <Box
           sx={{
-            background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+            background: 'linear-gradient(45deg, #1e40af 30%, #f97316 90%)',
             padding: 2,
             textAlign: 'center',
             color: 'white',
@@ -164,15 +164,15 @@ export default function LoginPage() {
               sx={{
                 mt: 1.5,
                 mb: 1.5,
-                background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                boxShadow: '0 4px 12px rgba(30, 64, 175, 0.25)',
                 borderRadius: 1.5,
                 padding: '8px 20px',
                 fontWeight: 500,
                 fontSize: '13px',
                 textTransform: 'none',
                 '&:hover': {
-                  boxShadow: '0 6px 16px rgba(25, 118, 210, 0.35)',
+                  boxShadow: '0 6px 16px rgba(30, 64, 175, 0.35)',
                   transform: 'translateY(-1px)',
                 },
                 transition: 'all 0.3s',

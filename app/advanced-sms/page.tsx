@@ -336,7 +336,7 @@ export default function AdvancedSMSPage() {
                   sx={{
                     p: 1.5,
                     borderRadius: 2,
-                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                    background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -402,7 +402,7 @@ export default function AdvancedSMSPage() {
                         sx={{
                           p: 1,
                           borderRadius: 2,
-                          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                          background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -467,8 +467,8 @@ export default function AdvancedSMSPage() {
                       mb: 2, 
                       p: 1.5, 
                       borderRadius: 2, 
-                      background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                      border: '1px solid rgba(25, 118, 210, 0.1)',
+                      background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                      border: '1px solid rgba(30, 64, 175, 0.1)',
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <CheckCircle sx={{ color: 'success.main', fontSize: 18 }} />
@@ -511,13 +511,13 @@ export default function AdvancedSMSPage() {
                               mb: 1.5,
                               borderRadius: 2,
                               border: selectedContacts.includes(contact.id)
-                                ? '2px solid #1976d2'
+                                ? '2px solid #1e40af'
                                 : '1px solid rgba(0,0,0,0.1)',
                               background: selectedContacts.includes(contact.id)
-                                ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(220, 0, 78, 0.08) 100%)'
+                                ? 'linear-gradient(135deg, rgba(30, 64, 175, 0.08) 0%, rgba(249, 115, 22, 0.08) 100%)'
                                 : 'white',
                               boxShadow: selectedContacts.includes(contact.id)
-                                ? '0 4px 12px rgba(25, 118, 210, 0.2)'
+                                ? '0 4px 12px rgba(30, 64, 175, 0.2)'
                                 : '0 1px 4px rgba(0,0,0,0.08)',
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -580,7 +580,7 @@ export default function AdvancedSMSPage() {
                           sx={{
                             p: 1,
                             borderRadius: 2,
-                            background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                            background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -608,10 +608,10 @@ export default function AdvancedSMSPage() {
                           borderRadius: 2,
                           textTransform: 'none',
                           fontWeight: 600,
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)',
                           '&:hover': {
-                            boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                            boxShadow: '0 6px 16px rgba(30, 64, 175, 0.4)',
                             transform: 'translateY(-1px)',
                           },
                           transition: 'all 0.3s',
@@ -708,8 +708,8 @@ export default function AdvancedSMSPage() {
                           mt: 2,
                           p: 1.5, 
                           borderRadius: 2,
-                          border: '1px solid rgba(25, 118, 210, 0.2)',
-                          bgcolor: 'rgba(25, 118, 210, 0.05)',
+                          border: '1px solid rgba(30, 64, 175, 0.2)',
+                          bgcolor: 'rgba(30, 64, 175, 0.05)',
                         }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -851,8 +851,8 @@ export default function AdvancedSMSPage() {
                           <Box sx={{ 
                             p: 1.5, 
                             borderRadius: 2, 
-                            background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
-                            border: '1px solid rgba(25, 118, 210, 0.1)',
+                            background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
+                            border: '1px solid rgba(30, 64, 175, 0.1)',
                           }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                               <Info sx={{ color: 'primary.main', fontSize: 16 }} />
@@ -876,7 +876,7 @@ export default function AdvancedSMSPage() {
                                     height: 26,
                                     cursor: 'pointer',
                                     '&:hover': {
-                                      bgcolor: alpha('#1976d2', 0.1),
+                                      bgcolor: alpha('#1e40af', 0.1),
                                     },
                                   }}
                                 />
@@ -968,7 +968,7 @@ export default function AdvancedSMSPage() {
                           borderRadius: 2,
                           boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                           border: '1px solid rgba(0,0,0,0.08)',
-                          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+                          background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
                         }}
                       >
                         <CardContent sx={{ p: 2.5 }}>
@@ -1029,14 +1029,14 @@ export default function AdvancedSMSPage() {
                         disabled={loading || selectedContacts.length === 0}
                         sx={{
                           py: 1.75,
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 8px 24px rgba(30, 64, 175, 0.3)',
                           borderRadius: 2,
                           fontWeight: 600,
                           textTransform: 'none',
                           fontSize: '16px',
                           '&:hover': {
-                            boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+                            boxShadow: '0 12px 32px rgba(30, 64, 175, 0.4)',
                             transform: 'translateY(-2px)',
                           },
                           '&:disabled': {
@@ -1084,7 +1084,7 @@ export default function AdvancedSMSPage() {
               sx={{
                 p: 1,
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1158,7 +1158,7 @@ export default function AdvancedSMSPage() {
             />
 
             {templateForm.variables.length > 0 && (
-              <Box sx={{ mb: 2, p: 1.5, borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)' }}>
+              <Box sx={{ mb: 2, p: 1.5, borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                   <Info sx={{ color: 'primary.main', fontSize: 16 }} />
                   <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 500 }}>
@@ -1181,7 +1181,7 @@ export default function AdvancedSMSPage() {
                         height: 26,
                         cursor: 'pointer',
                         '&:hover': {
-                          bgcolor: alpha('#1976d2', 0.1),
+                          bgcolor: alpha('#1e40af', 0.1),
                         },
                       }}
                     />
@@ -1196,7 +1196,7 @@ export default function AdvancedSMSPage() {
                 borderRadius: 2,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 border: '1px solid rgba(0,0,0,0.08)',
-                background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)',
+                background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)',
               }}
             >
               <CardContent sx={{ p: 2 }}>
@@ -1231,15 +1231,15 @@ export default function AdvancedSMSPage() {
             onClick={handleTemplateSubmit}
             variant="contained"
             sx={{
-              background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-              boxShadow: '0 6px 20px rgba(25, 118, 210, 0.3)',
+              background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+              boxShadow: '0 6px 20px rgba(30, 64, 175, 0.3)',
               borderRadius: 2,
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '14px',
               px: 3,
               '&:hover': {
-                boxShadow: '0 8px 25px rgba(25, 118, 210, 0.4)',
+                boxShadow: '0 8px 25px rgba(30, 64, 175, 0.4)',
                 transform: 'translateY(-1px)',
               },
               transition: 'all 0.3s',

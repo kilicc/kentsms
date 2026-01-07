@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       userId: group.user_id,
       name: group.name,
       description: group.description,
-      color: group.color || '#1976d2',
+      color: group.color || '#1e40af',
       icon: group.icon || 'group',
       isDefault: group.is_default ?? false,
       isActive: group.is_active ?? true,
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         user_id: auth.user.userId,
         name,
         description: description || null,
-        color: color || '#1976d2',
+        color: color || '#1e40af',
         icon: icon || 'group',
       })
       .select()
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       userId: groupData.user_id,
       name: groupData.name,
       description: groupData.description,
-      color: groupData.color || '#1976d2',
+      color: groupData.color || '#1e40af',
       icon: groupData.icon || 'group',
       isDefault: groupData.is_default ?? false,
       isActive: groupData.is_active ?? true,

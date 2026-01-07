@@ -261,8 +261,8 @@ export default function SMSInterfacePage() {
                     <Box sx={{ 
                       p: 1.5, 
                       borderRadius: 1.5,
-                      border: '1px solid rgba(25, 118, 210, 0.2)',
-                      bgcolor: 'rgba(25, 118, 210, 0.05)',
+                      border: '1px solid rgba(30, 64, 175, 0.2)',
+                      bgcolor: 'rgba(30, 64, 175, 0.05)',
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -395,7 +395,7 @@ export default function SMSInterfacePage() {
                   <Grid size={{ xs: 12 }}>
                     <Box sx={{ 
                       p: 1.5, 
-                      bgcolor: 'rgba(25, 118, 210, 0.05)', 
+                      bgcolor: 'rgba(30, 64, 175, 0.05)', 
                       borderRadius: 1.5,
                       mb: 1.5,
                     }}>
@@ -423,15 +423,15 @@ export default function SMSInterfacePage() {
                       disabled={loading}
                       fullWidth
                       sx={{
-                        background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.25)',
+                        background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                        boxShadow: '0 4px 12px rgba(30, 64, 175, 0.25)',
                         borderRadius: 1.5,
                         padding: '8px 20px',
                         fontWeight: 500,
                         fontSize: '14px',
                         textTransform: 'none',
                         '&:hover': {
-                          boxShadow: '0 6px 16px rgba(25, 118, 210, 0.35)',
+                          boxShadow: '0 6px 16px rgba(30, 64, 175, 0.35)',
                           transform: 'translateY(-1px)',
                         },
                         transition: 'all 0.3s',
@@ -489,7 +489,7 @@ export default function SMSInterfacePage() {
                   <Paper
                     sx={{
                       p: 1.5,
-                      bgcolor: mode === 'dark' ? 'rgba(25, 118, 210, 0.1)' : 'rgba(25, 118, 210, 0.05)',
+                      bgcolor: mode === 'dark' ? 'rgba(30, 64, 175, 0.1)' : 'rgba(30, 64, 175, 0.05)',
                       borderRadius: 1,
                       border: '1px solid',
                       borderColor: 'primary.main',

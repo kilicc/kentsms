@@ -212,10 +212,10 @@ export async function GET(request: NextRequest) {
             <meta charset="UTF-8">
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; }
-              h1 { color: #1976d2; }
+              h1 { color: #1e40af; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
               th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #1976d2; color: white; }
+              th { background-color: #1e40af; color: white; }
               tr:nth-child(even) { background-color: #f2f2f2; }
             </style>
           </head>

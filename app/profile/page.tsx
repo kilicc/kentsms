@@ -199,7 +199,7 @@ export default function ProfilePage() {
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                      background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -276,7 +276,7 @@ export default function ProfilePage() {
                       sx={{
                         p: 1,
                         borderRadius: 2,
-                        background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                        background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -339,14 +339,14 @@ export default function ProfilePage() {
                         sx={{
                           py: 1.5,
                           px: 3,
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 8px 24px rgba(30, 64, 175, 0.3)',
                           borderRadius: 2,
                           fontSize: '16px',
                           fontWeight: 600,
                           textTransform: 'none',
                           '&:hover': {
-                            boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+                            boxShadow: '0 12px 32px rgba(30, 64, 175, 0.4)',
                             transform: 'translateY(-2px)',
                           },
                           '&:disabled': {
@@ -371,7 +371,7 @@ export default function ProfilePage() {
                       sx={{
                         p: 1,
                         borderRadius: 2,
-                        background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                        background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -383,7 +383,7 @@ export default function ProfilePage() {
                       Şifre Değiştir
                     </Typography>
                   </Box>
-                  <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)' }}>
+                  <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)' }}>
                     <Box sx={{ display: 'flex', alignItems: 'start', gap: 1 }}>
                       <Info sx={{ color: 'primary.main', fontSize: 20, mt: 0.5 }} />
                       <Box>
@@ -472,14 +472,14 @@ export default function ProfilePage() {
                         sx={{
                           py: 1.5,
                           px: 3,
-                          background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                          boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                          background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                          boxShadow: '0 8px 24px rgba(30, 64, 175, 0.3)',
                           borderRadius: 2,
                           fontSize: '16px',
                           fontWeight: 600,
                           textTransform: 'none',
                           '&:hover': {
-                            boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+                            boxShadow: '0 12px 32px rgba(30, 64, 175, 0.4)',
                             transform: 'translateY(-2px)',
                           },
                           '&:disabled': {
@@ -504,7 +504,7 @@ export default function ProfilePage() {
                       sx={{
                         p: 1,
                         borderRadius: 2,
-                        background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(220, 0, 78, 0.1) 100%)',
+                        background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -532,7 +532,7 @@ export default function ProfilePage() {
                     <>
                       {qrCode ? (
                         <>
-                          <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)' }}>
+                          <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)' }}>
                             <Box sx={{ display: 'flex', alignItems: 'start', gap: 1, mb: 2 }}>
                               <Info sx={{ color: 'primary.main', fontSize: 20, mt: 0.5 }} />
                               <Box>
@@ -544,7 +544,7 @@ export default function ProfilePage() {
                                 </Typography>
                               </Box>
                             </Box>
-                            <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '2px dashed rgba(25, 118, 210, 0.2)' }}>
+                            <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '2px dashed rgba(30, 64, 175, 0.2)' }}>
                               <Image
                                 src={qrCode}
                                 alt="2FA QR Code"
@@ -581,14 +581,14 @@ export default function ProfilePage() {
                             sx={{
                               py: 1.5,
                               px: 3,
-                              background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                              boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                              background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                              boxShadow: '0 8px 24px rgba(30, 64, 175, 0.3)',
                               borderRadius: 2,
                               fontSize: '16px',
                               fontWeight: 600,
                               textTransform: 'none',
                               '&:hover': {
-                                boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+                                boxShadow: '0 12px 32px rgba(30, 64, 175, 0.4)',
                                 transform: 'translateY(-2px)',
                               },
                               '&:disabled': {
@@ -603,7 +603,7 @@ export default function ProfilePage() {
                         </>
                       ) : (
                         <>
-                          <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%)', border: '1px solid rgba(25, 118, 210, 0.1)' }}>
+                          <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%)', border: '1px solid rgba(30, 64, 175, 0.1)' }}>
                             <Box sx={{ display: 'flex', alignItems: 'start', gap: 1 }}>
                               <Info sx={{ color: 'primary.main', fontSize: 20, mt: 0.5 }} />
                               <Box>
@@ -624,14 +624,14 @@ export default function ProfilePage() {
                             sx={{
                               py: 1.5,
                               px: 3,
-                              background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
-                              boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+                              background: 'linear-gradient(135deg, #1e40af 0%, #f97316 100%)',
+                              boxShadow: '0 8px 24px rgba(30, 64, 175, 0.3)',
                               borderRadius: 2,
                               fontSize: '16px',
                               fontWeight: 600,
                               textTransform: 'none',
                               '&:hover': {
-                                boxShadow: '0 12px 32px rgba(25, 118, 210, 0.4)',
+                                boxShadow: '0 12px 32px rgba(30, 64, 175, 0.4)',
                                 transform: 'translateY(-2px)',
                               },
                               '&:disabled': {

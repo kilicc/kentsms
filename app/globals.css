@@ -4,14 +4,14 @@
 
 /* ===== THEME COLORS (Exported Styles) ===== */
 :root {
-  --primary-main: #1976d2;
-  --primary-light: rgba(25, 118, 210, 0.1);
-  --primary-medium: rgba(25, 118, 210, 0.2);
-  --primary-dark: rgba(25, 118, 210, 0.3);
+  --primary-main: #1e40af;
+  --primary-light: rgba(30, 64, 175, 0.1);
+  --primary-medium: rgba(30, 64, 175, 0.2);
+  --primary-dark: rgba(30, 64, 175, 0.3);
   
-  --secondary-main: #dc004e;
-  --secondary-light: rgba(220, 0, 78, 0.1);
-  --secondary-medium: rgba(220, 0, 78, 0.2);
+  --secondary-main: #f97316;
+  --secondary-light: rgba(249, 115, 22, 0.1);
+  --secondary-medium: rgba(249, 115, 22, 0.2);
   
   --success-main: #4caf50;
   --success-light: rgba(76, 175, 80, 0.2);
@@ -32,11 +32,11 @@
   --text-secondary: rgba(0, 0, 0, 0.6);
   --text-disabled: rgba(0, 0, 0, 0.38);
   
-  --gradient-login: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-navbar: linear-gradient(135deg, #1976d2 0%, #dc004e 100%);
-  --gradient-card-light: linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(220, 0, 78, 0.05) 100%);
+  --gradient-login: linear-gradient(135deg, #1e40af 0%, #f97316 100%);
+  --gradient-navbar: linear-gradient(135deg, #1e40af 0%, #f97316 100%);
+  --gradient-card-light: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(249, 115, 22, 0.05) 100%);
   --gradient-card-medium: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  --gradient-button: linear-gradient(135deg, #1976d2 0%, #dc004e 100%);
+  --gradient-button: linear-gradient(135deg, #1e40af 0%, #f97316 100%);
 }
 
 /* Global CSS - %15 büyütülmüş çözünürlük */
