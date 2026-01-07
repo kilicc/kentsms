@@ -100,22 +100,22 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
     });
 
     // CepSMS API isteği
-    // Farklı API versiyonları farklı parametre isimleri kullanabilir:
-    // - User/Pass veya username/password
-    // - Numbers veya gsm veya to
-    // - Message veya text veya msg
+    // Test sonuçlarına göre çalışan format:
+    // - User/Pass (zorunlu)
+    // - Message (zorunlu)
+    // - Numbers (zorunlu, ARRAY formatında olmalı)
+    // - From (opsiyonel)
     const requestData: any = {
       User: CEPSMS_USERNAME,
       Pass: CEPSMS_PASSWORD,
       Message: message,
-      Numbers: formattedPhone, // String format (bazı API'ler array yerine string bekler)
+      Numbers: [formattedPhone], // ARRAY format (CepSMS API array bekliyor)
     };
 
-    // From/Baslik parametresi sadece geçerli bir değer varsa ekle
+    // From parametresi sadece geçerli bir değer varsa ekle
     // CepSMS hesabında kayıtlı gönderen adı yoksa bu parametre eklenmez
     if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '') {
       requestData.From = CEPSMS_FROM;
-      requestData.Baslik = CEPSMS_FROM; // Alternatif parametre adı
     }
     
     console.log('[CepSMS] Request Data:', JSON.stringify(requestData, null, 2));
@@ -155,16 +155,14 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       useFormData = true;
     }
 
-    // Form-data format dene
+    // Form-data format dene (test sonuçlarına göre çalışmıyor ama fallback olarak bırakıyoruz)
     if (useFormData) {
       const formData = new FormData();
       formData.append('User', CEPSMS_USERNAME);
       formData.append('Pass', CEPSMS_PASSWORD);
       formData.append('Message', message);
-      // CepSMS API bazı versiyonlarında Numbers string olarak bekliyor (virgülle ayrılmış)
-      // İlk string formatını dene, sonra JSON array'i dene
-      formData.append('Numbers', formattedPhone); // String format
-      if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '' && CEPSMS_FROM !== 'CepSMS') {
+      formData.append('Numbers', JSON.stringify([formattedPhone])); // Array formatı JSON string olarak
+      if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '') {
         formData.append('From', CEPSMS_FROM);
       }
 
