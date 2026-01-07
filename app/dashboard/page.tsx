@@ -121,14 +121,10 @@ export default function DashboardPage() {
         }
       } else {
         // User dashboard - load user stats
-        const [contactsStats, smsHistory, systemCreditRes] = await Promise.all([
+        const [contactsStats, smsHistory] = await Promise.all([
           api.get('/contacts/stats'),
           api.get('/bulk-sms/history?limit=100'),
-          api.get('/system-credit'),
         ]);
-
-        // Sistem kredisini al
-        const systemCredit = systemCreditRes.data.success ? systemCreditRes.data.data.systemCredit : 0;
 
         if (contactsStats.data.success) {
           const statsData = contactsStats.data.data;
@@ -160,7 +156,6 @@ export default function DashboardPage() {
 
           setStats((prev) => ({
             ...prev,
-            systemCredit,
             sentThisMonth,
             sentToday,
           }));
@@ -312,14 +307,6 @@ export default function DashboardPage() {
         },
       ]
     : [
-        {
-          title: 'Sistem Kredisi',
-          value: stats.systemCredit.toString(),
-          subtitle: 'SMS',
-          icon: <AttachMoney />,
-          color: '#4caf50',
-          path: '/payment',
-        },
         {
           title: 'Bu Ay Gönderilen',
           value: stats.sentThisMonth.toString(),
