@@ -12,7 +12,7 @@ WORKDIR /app
 # which will be copied later. Prisma generate will be run explicitly in the builder stage.
 COPY package.json package-lock.json* ./
 RUN \
-  if [ -f package-lock.json ]; then npm install --legacy-peer-deps --ignore-scripts; \
+  if [ -f package-lock.json ]; then npm ci --legacy-peer-deps --ignore-scripts; \
   else npm install --legacy-peer-deps --ignore-scripts; \
   fi
 
