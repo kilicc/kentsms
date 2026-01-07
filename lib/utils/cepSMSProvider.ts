@@ -43,6 +43,7 @@ const httpsAgent = new https.Agent({
 
 /**
  * Telefon numarasını CepSMS formatına dönüştür (905xxxxxxxxx)
+ * Türkiye mobil numaraları 5XX ile başlar (örn: 505, 532, 542, 543, 545, 551, 553, 554, 555, vb.)
  */
 export function formatPhoneNumber(phone: string): string {
   // Sadece rakamları al
@@ -53,9 +54,15 @@ export function formatPhoneNumber(phone: string): string {
     return cleaned;
   }
   
-  // 11 haneli ve 90 ile başlıyorsa (90xxxxxxxxx) - bu da geçerli
+  // 11 haneli ve 90 ile başlıyorsa (90xxxxxxxxx)
+  // Ancak 3. hane 5 olmalı (mobil numara)
   if (cleaned.length === 11 && cleaned.startsWith('90')) {
-    return cleaned;
+    const thirdDigit = cleaned.charAt(2);
+    if (thirdDigit === '5') {
+      return cleaned;
+    } else {
+      throw new Error(`Geçersiz telefon numarası: ${phone}. Sadece mobil numaralar (5XX) kabul edilir. Sabit hat numaraları (${thirdDigit}XX) desteklenmez.`);
+    }
   }
   
   // 0 ile başlıyorsa (0xxxxxxxxx) - 050******** formatı için
@@ -81,7 +88,7 @@ export function formatPhoneNumber(phone: string): string {
     return '90' + cleaned.substring(0, 10);
   }
   
-  throw new Error(`Geçersiz telefon numarası formatı: ${phone}. Lütfen geçerli bir Türkiye telefon numarası girin (örn: 905551234567, 05551234567, 551234567)`);
+  throw new Error(`Geçersiz telefon numarası formatı: ${phone}. Sadece mobil numaralar kabul edilir (örn: 905551234567, 05551234567, 5551234567). Lütfen 5XX ile başlayan bir numara girin.`);
 }
 
 /**
