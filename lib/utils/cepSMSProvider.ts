@@ -89,6 +89,8 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       messageLength: message.length,
       from: CEPSMS_FROM,
       username: CEPSMS_USERNAME,
+      apiUrl: CEPSMS_API_URL,
+      hasPassword: !!CEPSMS_PASSWORD,
     });
 
     // CepSMS API isteği - From parametresi opsiyonel ve bazı hesaplarda geçersiz olabilir
@@ -151,9 +153,13 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
     // Hata mesajını oluştur - özel durumlar için anlaşılır mesajlar
     let errorMessage = error;
     
-    if (!errorMessage) {
-      const statusStrUpper = String(status || '').toUpperCase();
-      
+    // "User Error" veya benzeri hatalar için özel mesaj
+    const errorStr = String(error || '').toLowerCase();
+    const statusStrUpper = String(status || '').toUpperCase();
+    
+    if (errorStr.includes('user error') || errorStr.includes('user') || errorStr.includes('kullanıcı')) {
+      errorMessage = 'CepSMS API kimlik doğrulama hatası. Kullanıcı adı veya şifre hatalı. Lütfen CEPSMS_USERNAME ve CEPSMS_PASSWORD environment variable\'larını kontrol edin.';
+    } else if (!errorMessage) {
       // Özel hata durumları için anlaşılır mesajlar
       if (statusStrUpper.includes('PAYMENT') || statusStrUpper.includes('PAYMENT REQUIRED') || statusStrUpper === '402') {
         errorMessage = 'CepSMS hesabında yetersiz bakiye. Lütfen hesabınıza bakiye yükleyin.';
@@ -164,7 +170,7 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       } else if (statusStrUpper.includes('INVALID') || statusStrUpper.includes('GEÇERSİZ')) {
         errorMessage = 'Geçersiz istek. Telefon numarası veya mesaj formatı hatalı.';
       } else {
-        errorMessage = `CepSMS API hatası: ${status || 'Bilinmeyen durum'}`;
+        errorMessage = `CepSMS API hatası: ${error || status || 'Bilinmeyen durum'}`;
       }
     }
     
