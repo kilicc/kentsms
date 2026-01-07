@@ -23,8 +23,13 @@ interface SendSMSResult {
 
 const CEPSMS_USERNAME = process.env.CEPSMS_USERNAME || 'Testfn';
 const CEPSMS_PASSWORD = process.env.CEPSMS_PASSWORD || 'Qaswed';
-const CEPSMS_FROM = process.env.CEPSMS_FROM || 'CepSMS';
-const CEPSMS_API_URL = 'https://panel4.cepsms.com/smsapi';
+const CEPSMS_FROM = process.env.CEPSMS_FROM || '';
+// CepSMS API URL - farklı versiyonlar için environment variable ile değiştirilebilir
+// Alternatif URL'ler: 
+// - https://panel4.cepsms.com/smsapi
+// - https://api.cepsms.com/sms/send
+// - https://www.cepsms.com/api/sms/send
+const CEPSMS_API_URL = process.env.CEPSMS_API_URL || 'https://panel4.cepsms.com/smsapi';
 
 // HTTPS agent - SSL sertifika doğrulaması
 // CepSMS API için SSL sertifika doğrulaması
@@ -94,21 +99,26 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       hasPassword: !!CEPSMS_PASSWORD,
     });
 
-    // CepSMS API isteği - From parametresi opsiyonel ve bazı hesaplarda geçersiz olabilir
-    // CepSMS API bazı versiyonlarında Numbers string olarak bekliyor (virgülle ayrılmış)
-    // İlk array formatını dene, hata alırsa string formatı dene
+    // CepSMS API isteği
+    // Farklı API versiyonları farklı parametre isimleri kullanabilir:
+    // - User/Pass veya username/password
+    // - Numbers veya gsm veya to
+    // - Message veya text veya msg
     const requestData: any = {
       User: CEPSMS_USERNAME,
       Pass: CEPSMS_PASSWORD,
       Message: message,
-      Numbers: [formattedPhone], // Array format (JSON için)
+      Numbers: formattedPhone, // String format (bazı API'ler array yerine string bekler)
     };
 
-    // From parametresi sadece geçerli bir değer varsa ekle
-    // CepSMS hesabında kayıtlı gönderen adı yoksa From parametresini kaldır
-    if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '' && CEPSMS_FROM !== 'CepSMS') {
+    // From/Baslik parametresi sadece geçerli bir değer varsa ekle
+    // CepSMS hesabında kayıtlı gönderen adı yoksa bu parametre eklenmez
+    if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '') {
       requestData.From = CEPSMS_FROM;
+      requestData.Baslik = CEPSMS_FROM; // Alternatif parametre adı
     }
+    
+    console.log('[CepSMS] Request Data:', JSON.stringify(requestData, null, 2));
 
   try {
     // CepSMS API bazı versiyonlarda form-data bekliyor olabilir
