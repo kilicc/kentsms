@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', password: '', credit: 0 });
+  const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', credit: 0 });
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
@@ -527,13 +527,14 @@ export default function AdminDashboardPage() {
       const response = await api.post('/admin/users', {
         username: newUser.username,
         password: newUser.password,
+        role: newUser.role,
         credit: newUser.credit || 0,
       });
 
       if (response.data.success) {
         setSuccess('Kullanıcı başarıyla oluşturuldu');
         setCreateUserDialogOpen(false);
-        setNewUser({ username: '', password: '', credit: 0 });
+        setNewUser({ username: '', password: '', role: 'user', credit: 0 });
         loadUsers();
         loadStats();
       }
@@ -881,7 +882,7 @@ export default function AdminDashboardPage() {
                       variant="contained"
                       startIcon={<PersonAdd />}
                       onClick={() => {
-                        setNewUser({ username: '', password: '', credit: 0 });
+                        setNewUser({ username: '', password: '', role: 'user', credit: 0 });
                         setCreateUserDialogOpen(true);
                       }}
                       sx={{
@@ -1975,6 +1976,19 @@ export default function AdminDashboardPage() {
                   },
                 }}
               />
+              <FormControl fullWidth size="small" margin="dense" sx={{ mt: 1 }}>
+                <InputLabel sx={{ fontSize: '12px' }}>Rol</InputLabel>
+                <Select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  label="Rol"
+                  sx={{ fontSize: '12px' }}
+                >
+                  <MenuItem value="user" sx={{ fontSize: '12px' }}>Kullanıcı</MenuItem>
+                  <MenuItem value="admin" sx={{ fontSize: '12px' }}>Admin</MenuItem>
+                  <MenuItem value="moderator" sx={{ fontSize: '12px' }}>Moderatör</MenuItem>
+                </Select>
+              </FormControl>
               <TextField
                 fullWidth
                 size="small"
