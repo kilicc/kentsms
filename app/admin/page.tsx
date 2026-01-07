@@ -386,7 +386,47 @@ export default function AdminDashboardPage() {
       });
 
       if (response.data.success) {
-        setSuccess('Kredi yüklendi');
+        const creditAdded = response.data.data?.creditAdded || creditAmount;
+        const remainingSystemCredit = response.data.data?.remainingSystemCredit;
+        
+        if (remainingSystemCredit !== undefined) {
+          setSystemCredit(remainingSystemCredit);
+        }
+        
+        setSuccess(`Kredi yüklendi: ${creditAdded.toLocaleString()} kredi (ana krediden paylaştırıldı)`);
+        setCreditDialogOpen(false);
+        setCreditAmount(0);
+        setSelectedUser(null);
+        loadUsers();
+        loadStats(); // Sistem kredisi de yenilenecek
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Kredi yükleme hatası');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetCredit = async () => {
+    if (!selectedUser) {
+      setError('Kullanıcı seçilmedi');
+      return;
+    }
+
+    if (!confirm(`${selectedUser.username} kullanıcısının kredisini sıfırlamak istediğinizden emin misiniz?`)) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await api.put(`/admin/users/${selectedUser.id}/credit`);
+
+      if (response.data.success) {
+        const previousCredit = response.data.data?.previousCredit || 0;
+        setSuccess(`Kullanıcı kredisi sıfırlandı (önceki kredi: ${previousCredit.toLocaleString()})`);
         setCreditDialogOpen(false);
         setCreditAmount(0);
         setSelectedUser(null);
@@ -394,7 +434,7 @@ export default function AdminDashboardPage() {
         loadStats();
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Kredi yükleme hatası');
+      setError(err.response?.data?.message || 'Kredi sıfırlama hatası');
     } finally {
       setLoading(false);
     }
@@ -1845,28 +1885,61 @@ export default function AdminDashboardPage() {
 
           {/* Credit Dialog */}
           <Dialog open={creditDialogOpen} onClose={() => setCreditDialogOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>Kredi Yükle - {selectedUser?.username}</DialogTitle>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>Kredi Yönetimi - {selectedUser?.username}</DialogTitle>
             <DialogContent sx={{ pt: 1.5 }}>
+              {selectedUser && (
+                <Alert severity="info" sx={{ mb: 2, fontSize: '12px' }}>
+                  Mevcut Kredi: <strong>{selectedUser.credit?.toLocaleString('tr-TR') || 0}</strong>
+                  <br />
+                  Ana Sistem Kredisi: <strong>{systemCredit.toLocaleString('tr-TR')}</strong>
+                </Alert>
+              )}
               <TextField
                 fullWidth
                 size="small"
-                label="Kredi Miktarı"
+                label="Eklenecek Kredi Miktarı"
                 type="number"
                 value={creditAmount}
                 onChange={(e) => setCreditAmount(parseInt(e.target.value) || 0)}
                 margin="dense"
-                required
+                inputProps={{ min: 0 }}
+                helperText={`Yazılan sayı kadar kredi eklenecek (${(selectedUser?.credit || 0) + creditAmount} toplam)`}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     fontSize: '12px',
                   },
+                  mb: 2,
                 }}
               />
+              {selectedUser && selectedUser.credit && selectedUser.credit > 0 && (
+                <Alert severity="warning" sx={{ fontSize: '12px' }}>
+                  Bu kullanıcının {selectedUser.credit.toLocaleString('tr-TR')} kredisi var. 
+                  Sıfırlamak için aşağıdaki "Sıfırla" butonunu kullanın.
+                </Alert>
+              )}
             </DialogContent>
-            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+            <DialogActions sx={{ px: 2, pb: 1.5, gap: 1 }}>
               <Button size="small" onClick={() => setCreditDialogOpen(false)} sx={{ fontSize: '12px' }}>İptal</Button>
-              <Button size="small" onClick={handleCreditSubmit} variant="contained" disabled={loading} sx={{ fontSize: '12px' }}>
-                {loading ? 'Yükleniyor...' : 'Yükle'}
+              {selectedUser && selectedUser.credit && selectedUser.credit > 0 && (
+                <Button 
+                  size="small" 
+                  onClick={handleResetCredit} 
+                  variant="outlined" 
+                  color="error"
+                  disabled={loading} 
+                  sx={{ fontSize: '12px' }}
+                >
+                  {loading ? 'Sıfırlanıyor...' : 'Sıfırla'}
+                </Button>
+              )}
+              <Button 
+                size="small" 
+                onClick={handleCreditSubmit} 
+                variant="contained" 
+                disabled={loading || creditAmount <= 0} 
+                sx={{ fontSize: '12px' }}
+              >
+                {loading ? 'Yükleniyor...' : 'Kredi Ekle'}
               </Button>
             </DialogActions>
           </Dialog>
