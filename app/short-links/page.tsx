@@ -2,6 +2,7 @@
 
 import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Alert, CircularProgress, alpha, TextField, Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +38,7 @@ interface ShortLinkClick {
 }
 
 export default function ShortLinksPage() {
+  const router = useRouter();
   const { api, user } = useAuth();
   const { mode } = useTheme();
   const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'moderator' || user?.role?.toLowerCase() === 'administrator';
@@ -53,9 +55,10 @@ export default function ShortLinksPage() {
   const [newLinkTitle, setNewLinkTitle] = useState('');
   const [creating, setCreating] = useState(false);
 
+  // Sayfa deaktif - dashboard'a yönlendir
   useEffect(() => {
-    loadShortLinks();
-  }, []);
+    router.replace('/dashboard');
+  }, [router]);
 
   const loadShortLinks = async () => {
     try {

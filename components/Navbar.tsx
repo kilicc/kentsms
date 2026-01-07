@@ -39,7 +39,7 @@ const menuItems: MenuItem[] = [
   { label: 'Ödeme', icon: <AccountBalanceWallet />, path: '/payment', description: 'Kredi Yükle' },
   { label: 'Raporlar', icon: <Assessment />, path: '/reports', description: 'SMS Raporları' },
   { label: 'İadeler', icon: <MoneyOff />, path: '/refunds', description: 'İade Yönetimi' },
-  { label: 'Kısa Linkler', icon: <Link />, path: '/short-links', description: 'Kısa Link İstatistikleri' },
+  // { label: 'Kısa Linkler', icon: <Link />, path: '/short-links', description: 'Kısa Link İstatistikleri' }, // Deaktif
   { label: 'Ayarlar', icon: <Settings />, path: '/profile', description: 'Profil' },
 ];
 

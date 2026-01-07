@@ -34,7 +34,7 @@ export function middleware(request: NextRequest) {
     }
     
     // Deaktif edilmiş sayfaları engelle
-    if (url.pathname.startsWith('/advanced-sms') || url.pathname.startsWith('/contacts')) {
+    if (url.pathname.startsWith('/advanced-sms') || url.pathname.startsWith('/contacts') || url.pathname.startsWith('/short-links')) {
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
@@ -78,7 +78,7 @@ export function middleware(request: NextRequest) {
     }
     
     // Deaktif edilmiş sayfaları engelle
-    if (url.pathname.startsWith('/advanced-sms') || url.pathname.startsWith('/contacts')) {
+    if (url.pathname.startsWith('/advanced-sms') || url.pathname.startsWith('/contacts') || url.pathname.startsWith('/short-links')) {
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
