@@ -130,10 +130,14 @@ export async function POST(request: NextRequest) {
     // Send SMS to each contact
     // Her bir numara için 1 SMS = 1 kredi
     // Gruptaki numaralar kadar kredi düşülür
+    console.log(`[Bulk SMS] Toplam ${contacts.length} kişiye SMS gönderiliyor...`);
+    
     for (const contact of contacts) {
       try {
+        console.log(`[Bulk SMS] SMS gönderiliyor: ${contact.phone}`);
         // Her numara için SMS gönder
         const smsResult = await sendSMS(contact.phone, message);
+        console.log(`[Bulk SMS] SMS sonucu:`, smsResult);
 
         if (smsResult.success && smsResult.messageId) {
           // Create SMS message record using Supabase
@@ -209,6 +213,9 @@ export async function POST(request: NextRequest) {
             }
           }
         } else {
+          console.error(`[Bulk SMS] SMS gönderim hatası (${contact.phone}):`, smsResult.error);
+          results.failed++;
+          results.errors.push(`${contact.phone}: ${smsResult.error || 'SMS gönderim hatası'}`);
           // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur (48 saat sonra iade edilecek)
           const { data: failedSmsData, error: failedError } = await supabaseServer
             .from('sms_messages')
@@ -238,9 +245,6 @@ export async function POST(request: NextRequest) {
                 status: 'pending',
               });
           }
-
-          results.failed++;
-          results.errors.push(`${contact.phone}: ${smsResult.error || 'Bilinmeyen hata'}`);
         }
       } catch (error: any) {
         results.failed++;
