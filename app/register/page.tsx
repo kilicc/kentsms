@@ -50,14 +50,13 @@ export default function RegisterPage() {
           }}
         >
           <Image
-            src="/logo3.png"
-            alt="Logo"
-            width={120}
-            height={120}
+            src="/kentsms-logo.svg"
+            alt="Kent SMS Logo"
+            width={200}
+            height={60}
             style={{
               objectFit: 'contain',
               borderRadius: 8,
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
             }}
           />
         </Box>

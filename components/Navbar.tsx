@@ -89,14 +89,13 @@ export default function Navbar() {
           }}
         >
           <Image
-            src="/logo3.png"
-            alt="Logo"
-            width={120}
-            height={40}
+            src="/kentsms-logo.svg"
+            alt="Kent SMS Logo"
+            width={150}
+            height={45}
             style={{
               objectFit: 'contain',
               borderRadius: 6,
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
             }}
           />
         </Box>
