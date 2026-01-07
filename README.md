@@ -1,6 +1,6 @@
-# Advanced SMS Verification System - Next.js 16
+# KENTSMS - Advanced SMS Verification System - Next.js 16
 
-Gelişmiş SMS Doğrulama Sistemi - Next.js 16, React 19, TypeScript, Prisma, Supabase
+KENTSMS - Gelişmiş SMS Doğrulama Sistemi - Next.js 16, React 19, TypeScript, Prisma, Supabase
 
 ## 🚀 Özellikler
 
@@ -26,8 +26,8 @@ Gelişmiş SMS Doğrulama Sistemi - Next.js 16, React 19, TypeScript, Prisma, Su
 ### 1. Projeyi klonlayın
 
 ```bash
-git clone <repository-url>
-cd finsms
+git clone https://github.com/kilicc/kentsms.git
+cd kentsms
 ```
 
 ### 2. Bağımlılıkları yükleyin
@@ -95,7 +95,7 @@ Uygulama [http://localhost:3000](http://localhost:3000) adresinde çalışacakt�
 ## 📁 Proje Yapısı
 
 ```
-finsms/
+kentsms/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API Routes
 │   │   ├── auth/          # Authentication endpoints
@@ -208,7 +208,7 @@ Proje Vercel'e deploy edilmeye hazırdır. Detaylı bilgi için `VERCEL_DEPLOY.m
 ### Hızlı Deploy
 
 1. [Vercel Dashboard](https://vercel.com/dashboard) açın
-2. GitHub repository'yi import edin: `https://github.com/kilicc/finsms2.git`
+2. GitHub repository'yi import edin: `https://github.com/kilicc/kentsms.git`
 3. Environment variables'ları ekleyin (`.env.example` dosyasına bakın)
 4. Deploy butonuna tıklayın
 

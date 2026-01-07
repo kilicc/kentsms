@@ -1,7 +1,7 @@
 {
-  "name": "finsms",
+  "name": "kentsms",
   "version": "1.0.0",
-  "description": "Advanced SMS Verification System - Next.js 16",
+  "description": "KENTSMS - Advanced SMS Verification System - Next.js 16",
   "private": true,
   "scripts": {
     "dev": "next dev",

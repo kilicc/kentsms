@@ -878,14 +878,14 @@ export default function SMSReportsPage() {
                   <FormControl fullWidth size="small">
                     <InputLabel sx={{ fontSize: '12px' }}>Durum</InputLabel>
                     <Select
-                      value={filters.status}
-                      onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                       label="Durum"
-                      sx={{
+                    sx={{
                         fontSize: '12px',
                         borderRadius: 1.5,
-                      }}
-                    >
+                    }}
+                  >
                       <MenuItem value="">Tümü</MenuItem>
                       <MenuItem value="sent">Gönderildi</MenuItem>
                       <MenuItem value="delivered">İletildi</MenuItem>
@@ -1020,57 +1020,57 @@ export default function SMSReportsPage() {
                 </Box>
               ) : (
                 <>
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        {isAdmin && (
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
+                        )}
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kişi</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Maliyet</TableCell>
+                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {messages.map((message) => (
+                        <TableRow key={message.id}>
                           {isAdmin && (
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı</TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {message.user?.username || '-'}
+                              <br />
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
+                                {message.user?.email || '-'}
+                              </Typography>
+                            </TableCell>
                           )}
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kişi</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Maliyet</TableCell>
-                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.contact?.name || '-'}</TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.phoneNumber}</TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.message.substring(0, 50)}...</TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                            <Chip
+                              label={message.status}
+                              color={getStatusColor(message.status)}
+                              size="small"
+                              sx={{
+                                fontSize: '0.65rem',
+                                fontWeight: 500,
+                                height: 20,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{Number(message.cost)} kredi</TableCell>
+                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                            <ClientDate date={message.sentAt} />
+                          </TableCell>
                         </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {messages.map((message) => (
-                          <TableRow key={message.id}>
-                            {isAdmin && (
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                {message.user?.username || '-'}
-                                <br />
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                                  {message.user?.email || '-'}
-                                </Typography>
-                              </TableCell>
-                            )}
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.contact?.name || '-'}</TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.phoneNumber}</TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{message.message.substring(0, 50)}...</TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              <Chip
-                                label={message.status}
-                                color={getStatusColor(message.status)}
-                                size="small"
-                                sx={{
-                                  fontSize: '0.65rem',
-                                  fontWeight: 500,
-                                  height: 20,
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{Number(message.cost)} kredi</TableCell>
-                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                              <ClientDate date={message.sentAt} />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
                   
                   {/* Pagination */}
                   {smsTotal > smsPageSize && (
@@ -1200,14 +1200,14 @@ export default function SMSReportsPage() {
                         <FormControl fullWidth size="small">
                           <InputLabel sx={{ fontSize: '12px' }}>Durum</InputLabel>
                           <Select
-                            value={bulkFilters.status}
-                            onChange={(e) => setBulkFilters({ ...bulkFilters, status: e.target.value })}
+                          value={bulkFilters.status}
+                          onChange={(e) => setBulkFilters({ ...bulkFilters, status: e.target.value })}
                             label="Durum"
-                            sx={{
+                          sx={{
                               fontSize: '12px',
                               borderRadius: 1.5,
-                            }}
-                          >
+                          }}
+                        >
                             <MenuItem value="">Tümü</MenuItem>
                             <MenuItem value="sent">Başarılı</MenuItem>
                             <MenuItem value="failed">Başarısız</MenuItem>
@@ -1247,20 +1247,20 @@ export default function SMSReportsPage() {
                   </Paper>
                 ) : (
                   <>
-                    <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj Şablonu</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Alıcılar</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarılı</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarısız</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                  <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Mesaj Şablonu</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Alıcılar</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarılı</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Başarısız</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
                             <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }} align="center">İşlemler</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
                           {bulkSmsReports
                             .slice((bulkPage - 1) * bulkPageSize, bulkPage * bulkPageSize)
                             .map((report, index) => {
@@ -1370,10 +1370,10 @@ export default function SMSReportsPage() {
                               </TableCell>
                             </TableRow>
                           );
-                            })}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                     
                     {/* Pagination */}
                     {bulkTotal > bulkPageSize && (
@@ -1508,57 +1508,57 @@ export default function SMSReportsPage() {
                   </Typography>
                 ) : (
                   <>
-                    <TableContainer>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Operatör</TableCell>
-                            <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Operatör</TableCell>
+                          <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Tarih</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
                           {bulkReportDetails
                             .slice((bulkDetailsPage - 1) * bulkDetailsPageSize, bulkDetailsPage * bulkDetailsPageSize)
                             .map((detail: any) => (
-                            <TableRow key={detail.id}>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                {detail.phoneNumber || detail.phone_number}
-                              </TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                <Chip
-                                  label={detail.status === 'iletildi' ? 'İletildi' : 
-                                         detail.status === 'iletilmedi' ? 'İletilmedi' : 
-                                         detail.status === 'zaman_aşımı' ? 'Zaman Aşımı' : 
-                                         detail.status === 'rapor_bekliyor' ? 'Rapor Bekliyor' : 
-                                         detail.status === 'gönderildi' ? 'Gönderildi' : 
-                                         detail.status || '-'}
-                                  color={
-                                    detail.status === 'iletildi' ? 'success' : 
-                                    detail.status === 'iletilmedi' || detail.status === 'zaman_aşımı' ? 'error' : 
-                                    detail.status === 'rapor_bekliyor' ? 'warning' : 
-                                    'default'
-                                  }
-                                  size="small"
-                                  sx={{
-                                    fontSize: '0.65rem',
-                                    fontWeight: 500,
-                                    height: 20,
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                {detail.network || '-'}
-                              </TableCell>
-                              <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
-                                <ClientDate date={detail.sentAt || detail.sent_at} />
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                          <TableRow key={detail.id}>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {detail.phoneNumber || detail.phone_number}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <Chip
+                                label={detail.status === 'iletildi' ? 'İletildi' : 
+                                       detail.status === 'iletilmedi' ? 'İletilmedi' : 
+                                       detail.status === 'zaman_aşımı' ? 'Zaman Aşımı' : 
+                                       detail.status === 'rapor_bekliyor' ? 'Rapor Bekliyor' : 
+                                       detail.status === 'gönderildi' ? 'Gönderildi' : 
+                                       detail.status || '-'}
+                                color={
+                                  detail.status === 'iletildi' ? 'success' : 
+                                  detail.status === 'iletilmedi' || detail.status === 'zaman_aşımı' ? 'error' : 
+                                  detail.status === 'rapor_bekliyor' ? 'warning' : 
+                                  'default'
+                                }
+                                size="small"
+                                sx={{
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  height: 20,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              {detail.network || '-'}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                              <ClientDate date={detail.sentAt || detail.sent_at} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                     
                     {/* Pagination */}
                     {bulkReportDetails.length > bulkDetailsPageSize && (
@@ -2573,7 +2573,7 @@ export default function SMSReportsPage() {
                         onChange={(e) => setPaymentFilters({ ...paymentFilters, status: e.target.value })}
                         label="Durum"
                         sx={{
-                          fontSize: '12px',
+                            fontSize: '12px',
                           borderRadius: 1.5,
                         }}
                       >

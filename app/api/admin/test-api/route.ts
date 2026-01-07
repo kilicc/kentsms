@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Demo kullanıcı oluştur
     const demoUsername = 'demo_api_user';
-    const demoEmail = 'demo_api@finsms.io';
+    const demoEmail = 'demo_api@kentsms.com';
     const demoPassword = 'Demo123!@#';
 
     // Önce kullanıcıyı kontrol et
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
         `${baseUrl}/api/v1/sms/send-advanced`,
         'POST',
         {
-          From: 'FinSMS',
+          From: 'KENTSMS',
           User: finalApiKey,
           Pass: finalApiSecret,
           Message: 'Test mesajı - API Test 2 (Advanced)',
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
         `${baseUrl}/api/v1/sms/send-multi`,
         'POST',
         {
-          From: 'FinSMS',
+          From: 'KENTSMS',
           User: finalApiKey,
           Pass: finalApiSecret,
           Coding: 'default',

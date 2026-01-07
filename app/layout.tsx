@@ -7,8 +7,8 @@ import { AuthProvider } from '@/hooks/useAuth';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Finsms - Gelişmiş SMS Doğrulama Sistemi',
-  description: 'Gelişmiş SMS Doğrulama Sistemi',
+  title: 'KENTSMS - Gelişmiş SMS Doğrulama Sistemi',
+  description: 'KENTSMS - Gelişmiş SMS Doğrulama Sistemi',
 };
 
 export default function RootLayout({
