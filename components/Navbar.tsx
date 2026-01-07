@@ -89,7 +89,7 @@ export default function Navbar() {
           }}
         >
           <Image
-            src="/kentsms-logo.svg"
+            src="/kentsms-logo-white.svg?v=1"
             alt="Kent SMS Logo"
             width={150}
             height={45}

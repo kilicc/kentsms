@@ -50,7 +50,7 @@ export default function RegisterPage() {
           }}
         >
           <Image
-            src="/kentsms-logo.svg"
+            src="/kentsms-logo-white.svg?v=1"
             alt="Kent SMS Logo"
             width={200}
             height={60}
