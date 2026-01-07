@@ -2081,7 +2081,7 @@ export default function SMSReportsPage() {
                             shortLinksStats.shortLinks
                               .slice((shortLinksPage - 1) * shortLinksPageSize, shortLinksPage * shortLinksPageSize)
                               .map((link: any) => {
-                              const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                              const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                               const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
                               const isExpanded = expandedShortLinkId === link.id;
                               return (

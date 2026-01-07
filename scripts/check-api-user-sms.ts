@@ -67,12 +67,12 @@ async function checkApiUserSMS() {
     console.log(`   Credit: ${apiUser.credit || 0}`);
     console.log('');
     
-    // 2. telco@finsms.io kullanıcısını bul
-    console.log('🔍 telco@finsms.io kullanıcısı aranıyor...');
+    // 2. telco@kentsms.com kullanıcısını bul
+    console.log('🔍 telco@kentsms.com kullanıcısı aranıyor...');
     const { data: telcoUsers, error: telcoError } = await supabaseServer
       .from('users')
       .select('id, username, email, credit')
-      .eq('email', 'telco@finsms.io');
+      .eq('email', 'telco@kentsms.com');
     
     if (telcoError) {
       console.error('❌ Kullanıcı bulunurken hata:', telcoError.message);
@@ -80,12 +80,12 @@ async function checkApiUserSMS() {
     }
     
     if (!telcoUsers || telcoUsers.length === 0) {
-      console.error('❌ telco@finsms.io kullanıcısı bulunamadı');
+      console.error('❌ telco@kentsms.com kullanıcısı bulunamadı');
       process.exit(1);
     }
     
     const telcoUser = telcoUsers[0];
-    console.log('✅ telco@finsms.io Kullanıcısı:');
+    console.log('✅ telco@kentsms.com Kullanıcısı:');
     console.log(`   User ID: ${telcoUser.id}`);
     console.log(`   Username: ${telcoUser.username}`);
     console.log(`   Email: ${telcoUser.email}`);
@@ -94,9 +94,9 @@ async function checkApiUserSMS() {
     
     // 3. Kullanıcılar aynı mı kontrol et
     if (apiUser.id === telcoUser.id) {
-      console.log('✅ API Key ve telco@finsms.io kullanıcısı AYNI kullanıcıya ait!');
+      console.log('✅ API Key ve telco@kentsms.com kullanıcısı AYNI kullanıcıya ait!');
     } else {
-      console.log('⚠️  UYARI: API Key ve telco@finsms.io kullanıcısı FARKLI kullanıcılara ait!');
+      console.log('⚠️  UYARI: API Key ve telco@kentsms.com kullanıcısı FARKLI kullanıcılara ait!');
       console.log(`   API Key User ID: ${apiUser.id}`);
       console.log(`   telco User ID: ${telcoUser.id}`);
       console.log('');
@@ -150,7 +150,7 @@ async function checkApiUserSMS() {
     }
     
     // 6. telco kullanıcısının SMS kayıtlarını kontrol et
-    console.log('📊 telco@finsms.io Kullanıcısının SMS Kayıtları:');
+    console.log('📊 telco@kentsms.com Kullanıcısının SMS Kayıtları:');
     const { data: telcoSMS, error: telcoSMSError } = await supabaseServer
       .from('sms_messages')
       .select('id, phone_number, message, status, cost, sent_at, user_id')
@@ -187,7 +187,7 @@ async function checkApiUserSMS() {
     
     if (!telcoCountError && telcoSMSCount !== null) {
       const totalCost = telcoAllSMS?.reduce((sum, sms) => sum + (sms.cost || 0), 0) || 0;
-      console.log('📈 telco@finsms.io Kullanıcısının Toplam İstatistikleri:');
+      console.log('📈 telco@kentsms.com Kullanıcısının Toplam İstatistikleri:');
       console.log(`   Toplam SMS Sayısı: ${telcoSMSCount}`);
       console.log(`   Toplam Kullanılan Kredi: ${totalCost} kredi`);
       console.log(`   Mevcut Kredi: ${telcoUser.credit || 0} kredi`);

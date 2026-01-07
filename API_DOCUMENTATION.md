@@ -1,10 +1,10 @@
-# FinSMS API Dokümantasyonu v1.0
+# KENTSMS API Dokümantasyonu v1.0
 
 ## Genel Bilgiler
 
-FinSMS API, müşterilerinize SMS gönderme ve raporlama hizmeti sunan RESTful bir API'dir. CepSMS API formatına benzer yapıda tasarlanmıştır.
+KENTSMS API, müşterilerinize SMS gönderme ve raporlama hizmeti sunan RESTful bir API'dir. CepSMS API formatına benzer yapıda tasarlanmıştır.
 
-**Base URL:** `https://platform.finsms.io/api/v1/sms`
+**Base URL:** `https://platform.kentsms.com/api/v1/sms`
 
 **Authentication:** API Key ve API Secret kullanılır (User ve Pass parametreleri)
 
@@ -15,7 +15,7 @@ FinSMS API, müşterilerinize SMS gönderme ve raporlama hizmeti sunan RESTful b
 Tüm API isteklerinde `User` (API Key) ve `Pass` (API Secret) parametreleri gönderilmelidir.
 
 **API Key ve Secret Nasıl Alınır:**
-1. FinSMS platformuna giriş yapın
+1. KENTSMS platformuna giriş yapın
 2. Profil sayfasından API Key oluşturun
 3. API Key ve Secret'ı güvenli bir yerde saklayın
 
@@ -56,7 +56,7 @@ Tüm API isteklerinde `User` (API Key) ve `Pass` (API Secret) parametreleri gön
 
 **Örnek cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/send \
+curl -X POST https://platform.kentsms.com/api/v1/sms/send \
   -H "Content-Type: application/json" \
   -d '{
     "User": "your_api_key",
@@ -102,10 +102,10 @@ curl -X POST https://platform.finsms.io/api/v1/sms/send \
 
 **Örnek cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/send-advanced \
+curl -X POST https://platform.kentsms.com/api/v1/sms/send-advanced \
   -H "Content-Type: application/json" \
   -d '{
-    "From": "FinSMS",
+    "From": "KENTSMS",
     "User": "your_api_key",
     "Pass": "your_api_secret",
     "Message": "Test mesajı",
@@ -154,7 +154,7 @@ curl -X POST https://platform.finsms.io/api/v1/sms/send-advanced \
 
 **Örnek cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/send-multi \
+curl -X POST https://platform.kentsms.com/api/v1/sms/send-multi \
   -H "Content-Type: application/json" \
   -d '{
     "User": "your_api_key",
@@ -217,7 +217,7 @@ curl -X POST https://platform.finsms.io/api/v1/sms/send-multi \
 
 **Örnek cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/report \
+curl -X POST https://platform.kentsms.com/api/v1/sms/report \
   -H "Content-Type: application/json" \
   -d '{
     "User": "your_api_key",
@@ -262,7 +262,7 @@ Kabul edilen formatlar:
 
 ### Senaryo 1: Basit SMS Gönderimi
 ```javascript
-const response = await fetch('https://platform.finsms.io/api/v1/sms/send', {
+const response = await fetch('https://platform.kentsms.com/api/v1/sms/send', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -285,7 +285,7 @@ if (result.Status === 'OK') {
 
 ### Senaryo 2: SMS Durumu Kontrolü
 ```javascript
-const response = await fetch('https://platform.finsms.io/api/v1/sms/report', {
+const response = await fetch('https://platform.kentsms.com/api/v1/sms/report', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -325,8 +325,8 @@ if (result.Status === 'OK') {
 ## Destek
 
 Sorularınız için:
-- Email: support@finsms.io
-- Dokümantasyon: https://docs.finsms.io
+- Email: support@kentsms.com
+- Dokümantasyon: https://docs.kentsms.com
 
 ---
 

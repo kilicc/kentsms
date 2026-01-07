@@ -1,8 +1,8 @@
-# FinSMS API Documentation v1.0
+# KENTSMS API Documentation v1.0
 
 **Last Updated:** January 2025  
 **API Version:** v1.0  
-**Base URL:** `https://platform.finsms.io/api/v1/sms`
+**Base URL:** `https://platform.kentsms.com/api/v1/sms`
 
 ---
 
@@ -28,9 +28,9 @@
 
 ## Overview
 
-FinSMS API provides SMS sending and reporting services via RESTful endpoints. The API follows a similar structure to CepSMS API for easy integration.
+KENTSMS API provides SMS sending and reporting services via RESTful endpoints. The API follows a similar structure to CepSMS API for easy integration.
 
-**Base URL:** `https://platform.finsms.io/api/v1/sms`
+**Base URL:** `https://platform.kentsms.com/api/v1/sms`
 
 **Content-Type:** `application/json`
 
@@ -44,7 +44,7 @@ All API requests require `User` (API Key) and `Pass` (API Secret) parameters in 
 
 ### How to Get API Credentials
 
-Contact your FinSMS administrator to obtain your API Key and API Secret. These credentials are provided by the administrator through the admin panel.
+Contact your KENTSMS administrator to obtain your API Key and API Secret. These credentials are provided by the administrator through the admin panel.
 
 ### Authentication Format
 
@@ -102,7 +102,7 @@ Include `User` and `Pass` in every request body:
 
 **Example cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/send \
+curl -X POST https://platform.kentsms.com/api/v1/sms/send \
   -H "Content-Type: application/json" \
   -d '{
     "User": "your_api_key",
@@ -114,7 +114,7 @@ curl -X POST https://platform.finsms.io/api/v1/sms/send \
 
 **Example JavaScript:**
 ```javascript
-const response = await fetch('https://platform.finsms.io/api/v1/sms/send', {
+const response = await fetch('https://platform.kentsms.com/api/v1/sms/send', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -177,10 +177,10 @@ if (result.Status === 'OK') {
 
 **Example cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/send-advanced \
+curl -X POST https://platform.kentsms.com/api/v1/sms/send-advanced \
   -H "Content-Type: application/json" \
   -d '{
-    "From": "FinSMS",
+    "From": "KENTSMS",
     "User": "your_api_key",
     "Pass": "your_api_secret",
     "Message": "Test message",
@@ -250,7 +250,7 @@ curl -X POST https://platform.finsms.io/api/v1/sms/send-advanced \
 
 **Example cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/send-multi \
+curl -X POST https://platform.kentsms.com/api/v1/sms/send-multi \
   -H "Content-Type: application/json" \
   -d '{
     "User": "your_api_key",
@@ -320,7 +320,7 @@ curl -X POST https://platform.finsms.io/api/v1/sms/send-multi \
 
 **Example cURL:**
 ```bash
-curl -X POST https://platform.finsms.io/api/v1/sms/report \
+curl -X POST https://platform.kentsms.com/api/v1/sms/report \
   -H "Content-Type: application/json" \
   -d '{
     "User": "your_api_key",
@@ -331,7 +331,7 @@ curl -X POST https://platform.finsms.io/api/v1/sms/report \
 
 **Example JavaScript:**
 ```javascript
-const response = await fetch('https://platform.finsms.io/api/v1/sms/report', {
+const response = await fetch('https://platform.kentsms.com/api/v1/sms/report', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -439,7 +439,7 @@ The following network operators are supported:
 
 ```javascript
 // Step 1: Send SMS
-const sendResponse = await fetch('https://platform.finsms.io/api/v1/sms/send', {
+const sendResponse = await fetch('https://platform.kentsms.com/api/v1/sms/send', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -461,7 +461,7 @@ if (sendResult.Status === 'OK') {
   await new Promise(resolve => setTimeout(resolve, 5000));
   
   // Step 3: Check SMS status
-  const reportResponse = await fetch('https://platform.finsms.io/api/v1/sms/report', {
+  const reportResponse = await fetch('https://platform.kentsms.com/api/v1/sms/report', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -493,7 +493,7 @@ if (sendResult.Status === 'OK') {
 import requests
 import time
 
-API_BASE_URL = "https://platform.finsms.io/api/v1/sms"
+API_BASE_URL = "https://platform.kentsms.com/api/v1/sms"
 API_KEY = "your_api_key"
 API_SECRET = "your_api_secret"
 
@@ -567,9 +567,9 @@ else:
 
 For questions, issues, or support:
 
-- **Email:** support@finsms.io
-- **Documentation:** https://docs.finsms.io
-- **Status Page:** https://status.finsms.io
+- **Email:** support@kentsms.com
+- **Documentation:** https://docs.kentsms.com
+- **Status Page:** https://status.kentsms.com
 
 ---
 
@@ -586,4 +586,4 @@ For questions, issues, or support:
 
 ---
 
-**© 2025 FinSMS. All rights reserved.**
+**© 2025 KENTSMS. All rights reserved.**

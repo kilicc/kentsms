@@ -47,7 +47,7 @@ async function resetUserPassword() {
       process.exit(1);
     }
 
-    const email = 'telco@finsms.io';
+    const email = 'telco@kentsms.com';
     const newPassword = '123456';
 
     // Supabase client'ı al
@@ -103,7 +103,7 @@ async function resetUserPassword() {
     console.log(`   Yeni Şifre: ${newPassword}`);
     console.log('');
     console.log('🔗 Giriş yapmak için:');
-    console.log('   https://panel.finsms.io/login');
+    console.log('   https://panel.kentsms.com/login');
   } catch (error: any) {
     console.error('❌ Hata:', error.message);
     process.exit(1);

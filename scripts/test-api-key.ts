@@ -122,7 +122,7 @@ async function testApiKey() {
     console.log('   - POST /api/sms/send');
     console.log('   - POST /api/bulk-sms/send-bulk');
     console.log('   → Bu endpoint\'ler JWT token ile çalışır');
-    console.log('   → Kullanıcı login olur (telco@finsms.io / 123456)');
+    console.log('   → Kullanıcı login olur (telco@kentsms.com / 123456)');
     console.log('   → SMS kayıtları aynı kullanıcıya (user_id) kaydedilir');
     console.log('   → Kredi aynı kullanıcıdan düşer');
     console.log('');
@@ -158,12 +158,12 @@ async function testApiKey() {
     console.log('💡 Test Önerisi:');
     console.log('');
     console.log('API ile test SMS göndermek için:');
-    console.log('   curl -X POST https://panel.finsms.io/api/v1/sms/send \\');
+    console.log('   curl -X POST https://panel.kentsms.com/api/v1/sms/send \\');
     console.log('     -H "Content-Type: application/json" \\');
     console.log(`     -d \'{"User": "${apiKey}", "Pass": "${apiSecret}", "Message": "Test mesaj", "Numbers": ["905551234567"]}\'`);
     console.log('');
     console.log('Web panelden kontrol için:');
-    console.log('   1. https://panel.finsms.io/login adresine gidin');
+    console.log('   1. https://panel.kentsms.com/login adresine gidin');
     console.log(`   2. Email: ${apiUser.email}`);
     console.log('   3. Password: 123456');
     console.log('   4. SMS geçmişini görüntüleyin');

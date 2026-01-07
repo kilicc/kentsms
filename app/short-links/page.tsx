@@ -97,7 +97,7 @@ export default function ShortLinksPage() {
   };
 
   const copyShortLink = (shortCode: string) => {
-    const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+    const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
     const shortLink = `https://${shortLinkDomain}/${shortCode}`;
     navigator.clipboard.writeText(shortLink);
     setSuccess('Kısa link kopyalandı!');
@@ -297,7 +297,7 @@ export default function ShortLinksPage() {
                         <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography variant="body2" sx={{ fontSize: '12px', fontFamily: 'monospace', color: 'primary.main' }}>
-                              {process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io'}/{link.short_code}
+                              {process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com'}/{link.short_code}
                             </Typography>
                             <IconButton
                               size="small"
@@ -397,7 +397,7 @@ export default function ShortLinksPage() {
                       <strong>Kısa Link:</strong>
                     </Typography>
                     <Typography variant="body2" sx={{ fontSize: '13px', fontFamily: 'monospace', color: 'primary.main', mb: 1.5 }}>
-                      {process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io'}/{selectedLink.short_code}
+                      {process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com'}/{selectedLink.short_code}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px', mb: 1 }}>
                       <strong>Orijinal URL:</strong>
@@ -547,7 +547,7 @@ export default function ShortLinksPage() {
                   sx={{ mb: 2 }}
                 />
                 <Alert severity="info" sx={{ fontSize: '12px', mb: 1 }}>
-                  Kısa linkiniz <strong>go.finsms.io</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
+                  Kısa linkiniz <strong>go.kentsms.com</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
                 </Alert>
               </Box>
             </DialogContent>

@@ -235,12 +235,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
         const subdomain = hostname.split('.')[0];
         
-        // Admin subdomain (panel.finsms.io) -> /admin
+        // Admin subdomain (panel.kentsms.com) -> /admin
         if (subdomain === 'panel') {
           console.log('Admin sayfasına yönlendiriliyor...');
           router.push('/admin');
         } 
-        // Platform subdomain (platform.finsms.io) veya localhost -> /dashboard
+        // Platform subdomain (platform.kentsms.com) veya localhost -> /dashboard
         else {
           console.log('Dashboard\'a yönlendiriliyor...');
           router.push('/dashboard');

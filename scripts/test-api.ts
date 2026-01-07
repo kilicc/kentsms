@@ -66,7 +66,7 @@ async function createDemoUser() {
   const supabaseServer = getSupabaseServer();
 
   const demoUsername = 'demo_api_user';
-  const demoEmail = 'demo_api@finsms.io';
+  const demoEmail = 'demo_api@kentsms.com';
   const demoPassword = 'Demo123!@#';
 
   // Önce kullanıcıyı kontrol et

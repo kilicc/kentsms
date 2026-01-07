@@ -21,11 +21,11 @@ export default function Home() {
     
     // Eğer kullanıcı giriş yapmışsa
     if (user) {
-      // panel.finsms.io -> /admin
+      // panel.kentsms.com -> /admin
       if (subdomain === 'panel') {
         router.push('/admin');
       } 
-      // platform.finsms.io veya localhost -> /dashboard
+      // platform.kentsms.com veya localhost -> /dashboard
       else {
         router.push('/dashboard');
       }

@@ -739,7 +739,7 @@ export default function AdvancedSMSPage() {
                                       if (linkId) {
                                         const link = shortLinks.find(l => l.id === linkId);
                                         if (link) {
-                                          const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                                          const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                                           const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
                                           const newMessage = message + ' ' + shortLink;
                                           // 180 karakter limiti kontrolü
@@ -765,7 +765,7 @@ export default function AdvancedSMSPage() {
                                       <em>Kısa link seçin</em>
                                     </MenuItem>
                                     {shortLinks.map((link) => {
-                                      const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                                      const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                                       const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
                                       return (
                                         <MenuItem key={link.id} value={link.id}>
@@ -1297,7 +1297,7 @@ export default function AdvancedSMSPage() {
               }}
             />
             <Alert severity="info" sx={{ fontSize: '12px', mb: 2 }}>
-              Kısa linkiniz <strong>go.finsms.io</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
+              Kısa linkiniz <strong>go.kentsms.com</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
             </Alert>
           </Box>
         </DialogContent>
@@ -1326,7 +1326,7 @@ export default function AdvancedSMSPage() {
                 });
                 if (response.data.success) {
                   const shortCode = response.data.data.shortLink.short_code;
-                  const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                  const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                   const shortLink = `https://${shortLinkDomain}/${shortCode}`;
                   const newMessage = message + ' ' + shortLink;
                   // 180 karakter limiti kontrolü

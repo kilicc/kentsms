@@ -292,7 +292,7 @@ export default function SMSInterfacePage() {
                                   if (linkId) {
                                     const link = shortLinks.find(l => l.id === linkId);
                                     if (link) {
-                                      const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                                      const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                                       const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
                                       const newMessage = formData.message + ' ' + shortLink;
                                       // 180 karakter limiti kontrolü
@@ -318,7 +318,7 @@ export default function SMSInterfacePage() {
                                   <em>Kısa link seçin</em>
                                 </MenuItem>
                                 {shortLinks.map((link) => {
-                                  const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                                  const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                                   const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
                                   return (
                                     <MenuItem key={link.id} value={link.id}>
@@ -567,7 +567,7 @@ export default function SMSInterfacePage() {
                 </Box>
 
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', fontSize: '11px', fontStyle: 'italic', textAlign: 'center' }}>
-                  Your links will be shortened via <strong>go.finsms.io</strong> address.
+                  Your links will be shortened via <strong>go.kentsms.com</strong> address.
                 </Typography>
               </Box>
             )}
@@ -629,7 +629,7 @@ export default function SMSInterfacePage() {
                 }}
               />
               <Alert severity="info" sx={{ fontSize: '12px', mb: 2 }}>
-                Kısa linkiniz <strong>go.finsms.io</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
+                Kısa linkiniz <strong>go.kentsms.com</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
               </Alert>
             </Box>
           </DialogContent>
@@ -658,7 +658,7 @@ export default function SMSInterfacePage() {
                   });
                   if (response.data.success) {
                     const shortCode = response.data.data.shortLink.short_code;
-                    const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.finsms.io';
+                    const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
                     const normalizedDomain = shortLinkDomain.startsWith('http')
                       ? shortLinkDomain
                       : `https://${shortLinkDomain}`;

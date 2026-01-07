@@ -6,10 +6,10 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     const hostname = request.headers.get('host') || '';
     
-    // Subdomain'i al (panel.finsms.io -> panel, platform.finsms.io -> platform)
+    // Subdomain'i al (panel.kentsms.com -> panel, platform.kentsms.com -> platform)
     const subdomain = hostname.split('.')[0];
   
-  // Admin subdomain (panel.finsms.io)
+  // Admin subdomain (panel.kentsms.com)
   if (subdomain === 'panel') {
     // API route'ları ve Next.js internal route'ları hariç tut
     if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Platform subdomain (platform.finsms.io)
+  // Platform subdomain (platform.kentsms.com)
   if (subdomain === 'platform') {
     // API route'ları ve Next.js internal route'ları hariç tut
     if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) {
@@ -78,7 +78,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Kısa link subdomain (go.finsms.io)
+  // Kısa link subdomain (go.kentsms.com)
   if (subdomain === 'go') {
     try {
       // API route'ları ve Next.js internal route'ları hariç tut

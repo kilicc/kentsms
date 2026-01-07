@@ -31,7 +31,7 @@ loadEnvFile();
 async function sendTestSMS() {
   const apiKey = 'c7d6a924407dd6627c6b08363a9673ef0bc6827c3b6e3aa4b84365323a91ab96';
   const apiSecret = '3117601f4fb43dbf1e7fbf3a7ee382b228a6454f9785bba83facc108985e4698';
-  const baseUrl = 'https://panel.finsms.io';
+  const baseUrl = 'https://panel.kentsms.com';
   
   console.log('📱 Test SMS Gönderimi');
   console.log('='.repeat(80));
