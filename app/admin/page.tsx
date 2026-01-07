@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
-import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy, AccountBalance } from '@mui/icons-material';
+import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy, AccountBalance, Edit } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import ClientDate from '@/components/ClientDate';
@@ -649,24 +649,49 @@ export default function AdminDashboardPage() {
                       background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(69, 160, 73, 0.1) 100%)',
                       border: '1px solid rgba(76, 175, 80, 0.2)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      position: 'relative',
                     }}
                   >
                     <CardContent>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        sx={{
-                          fontSize: '14px',
-                        }}
-                      >
-                        Ana Sistem Kredisi
-                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{
+                            fontSize: '14px',
+                          }}
+                        >
+                          Ana Sistem Kredisi
+                        </Typography>
+                        {/* Sadece admin kullanıcıları için düzenleme butonu */}
+                        {(user?.role === 'admin' || user?.role === 'moderator') && (
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setSystemCreditDialogOpen(true);
+                              setSystemCreditAction('add');
+                              setSystemCreditAmount(0);
+                            }}
+                            sx={{
+                              color: '#4caf50',
+                              padding: '4px',
+                              '&:hover': {
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                              },
+                            }}
+                            title="Sistem kredisini düzenle"
+                          >
+                            <Edit sx={{ fontSize: '16px' }} />
+                          </IconButton>
+                        )}
+                      </Box>
                       <Typography 
                         variant="h4" 
                         sx={{ 
                           fontWeight: 600,
                           fontSize: '18px',
                           color: '#4caf50',
+                          mb: 0.5,
                         }}
                       >
                         {systemCredit.toLocaleString('tr-TR')}
@@ -677,7 +702,6 @@ export default function AdminDashboardPage() {
                         sx={{
                           fontSize: '11px',
                           display: 'block',
-                          mt: 0.5,
                         }}
                       >
                         Tüm kullanıcılar bu krediden kullanır
