@@ -107,6 +107,10 @@ export default function AdminDashboardPage() {
   const [newApiKey, setNewApiKey] = useState({ userId: '', name: '', description: '', credit: 0 });
   const [apiKeyDetailDialogOpen, setApiKeyDetailDialogOpen] = useState(false);
   const [selectedApiKeyDetail, setSelectedApiKeyDetail] = useState<any | null>(null);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
   
   // System Credit states
   const [systemCredit, setSystemCredit] = useState<number>(0);
@@ -559,6 +563,52 @@ export default function AdminDashboardPage() {
       setError(err.response?.data?.message || 'Kullanıcı detayları yüklenirken hata oluştu');
     } finally {
       setLoadingUserDetails(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      setError('Şifre alanları boş bırakılamaz');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Şifre en az 6 karakter olmalıdır');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Şifreler eşleşmiyor');
+      return;
+    }
+
+    if (!selectedUser) {
+      setError('Kullanıcı seçilmedi');
+      return;
+    }
+
+    setChangingPassword(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await api.patch(`/admin/users/${selectedUser.id}`, {
+        password: newPassword,
+      });
+
+      if (response.data.success) {
+        setSuccess(`${selectedUser.username} kullanıcısının şifresi başarıyla değiştirildi`);
+        setPasswordDialogOpen(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        setSelectedUser(null);
+      } else {
+        setError(response.data.message || 'Şifre değiştirilirken hata oluştu');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Şifre değiştirilirken hata oluştu');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -1061,6 +1111,28 @@ export default function AdminDashboardPage() {
                                       }}
                                     >
                                       Kredi
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      startIcon={<VpnKey />}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedUser(u);
+                                        setNewPassword('');
+                                        setConfirmPassword('');
+                                        setPasswordDialogOpen(true);
+                                      }}
+                                      sx={{
+                                        borderRadius: 1.5,
+                                        textTransform: 'none',
+                                        fontSize: '12px',
+                                        fontWeight: 500,
+                                        py: 0.5,
+                                        px: 1,
+                                      }}
+                                    >
+                                      Şifre
                                     </Button>
                                     {u.username !== 'admin' && (
                                       <Button
@@ -2008,6 +2080,74 @@ export default function AdminDashboardPage() {
               <Button size="small" onClick={() => setCreateUserDialogOpen(false)} sx={{ fontSize: '12px' }}>İptal</Button>
               <Button size="small" onClick={handleCreateUser} variant="contained" disabled={loading} sx={{ fontSize: '12px' }}>
                 {loading ? 'Oluşturuluyor...' : 'Oluştur'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Change Password Dialog */}
+          <Dialog open={passwordDialogOpen} onClose={() => {
+            setPasswordDialogOpen(false);
+            setNewPassword('');
+            setConfirmPassword('');
+            setSelectedUser(null);
+          }} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>
+              Şifre Değiştir - {selectedUser?.username}
+            </DialogTitle>
+            <DialogContent sx={{ pt: 1.5 }}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Yeni Şifre *"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                margin="dense"
+                required
+                helperText="En az 6 karakter olmalıdır"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '12px',
+                  },
+                }}
+              />
+              <TextField
+                fullWidth
+                size="small"
+                label="Yeni Şifre (Tekrar) *"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                margin="dense"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '12px',
+                  },
+                }}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+              <Button 
+                size="small" 
+                onClick={() => {
+                  setPasswordDialogOpen(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  setSelectedUser(null);
+                }} 
+                sx={{ fontSize: '12px' }}
+              >
+                İptal
+              </Button>
+              <Button 
+                size="small" 
+                onClick={handleChangePassword} 
+                variant="contained" 
+                disabled={changingPassword || !newPassword || !confirmPassword} 
+                sx={{ fontSize: '12px' }}
+              >
+                {changingPassword ? 'Değiştiriliyor...' : 'Değiştir'}
               </Button>
             </DialogActions>
           </Dialog>
