@@ -1,12 +1,12 @@
 'use client';
 
-import { Box, Container, Typography, Paper, TextField, Button, Grid, Alert, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { Box, Container, Typography, Paper, TextField, Button, Grid, Alert, FormControl, InputLabel, Select, MenuItem, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress, CircularProgress } from '@mui/material';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Send, Description, Close, Link, ContentCopy, BarChart, OpenInNew, Add, CheckCircle } from '@mui/icons-material';
+import { Send, Description, Close, Link, ContentCopy, BarChart, OpenInNew, Add, CheckCircle, Cancel } from '@mui/icons-material';
 
 interface SMSTemplate {
   id: string;
@@ -28,6 +28,15 @@ export default function SMSInterfacePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [sendResults, setSendResults] = useState<Array<{
+    phone: string;
+    original: string;
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  }>>([]);
+  const [progress, setProgress] = useState({ current: 0, total: 0, percentage: 0 });
+  const isProcessingRef = useRef(false);
   const [shortLinkEnabled, setShortLinkEnabled] = useState(false);
   const [shortLinkUrl, setShortLinkUrl] = useState('');
   const [shortLinkDialogOpen, setShortLinkDialogOpen] = useState(false);
@@ -41,6 +50,22 @@ export default function SMSInterfacePage() {
   useEffect(() => {
     loadTemplates();
     loadShortLinks();
+  }, []);
+
+  // Sayfa ayrılmayı engelle (işlem devam ederken)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isProcessingRef.current) {
+        e.preventDefault();
+        e.returnValue = 'SMS gönderimi devam ediyor. Sayfadan ayrılmak istediğinize emin misiniz?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   const loadTemplates = async () => {
@@ -84,7 +109,14 @@ export default function SMSInterfacePage() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setSendResults([]);
     setLoading(true);
+    isProcessingRef.current = true;
+
+    // Telefon numaralarını say
+    const phoneNumbers = formData.phone.split(/[,\n]/).map((p: string) => p.trim()).filter((p: string) => p);
+    const totalPhones = phoneNumbers.length;
+    setProgress({ current: 0, total: totalPhones, percentage: 0 });
 
     try {
       const response = await api.post('/sms/send', {
@@ -93,18 +125,49 @@ export default function SMSInterfacePage() {
         serviceName: 'CepSMS',
       });
 
-      if (response.data.success) {
+      if (response.data.data?.results) {
+        // Sonuçları göster
+        setSendResults(response.data.data.results);
+        setProgress({ current: totalPhones, total: totalPhones, percentage: 100 });
+        
+        const totalSent = response.data.data.totalSent || 0;
+        const totalFailed = response.data.data.totalFailed || 0;
+        
+        if (totalSent > 0) {
+          setSuccess(`${totalSent} SMS başarıyla gönderildi${totalFailed > 0 ? `, ${totalFailed} SMS gönderilemedi` : ''}`);
+        } else {
+          setError(`${totalFailed} SMS gönderilemedi`);
+        }
+        
+        // Mesajları 5 saniye sonra otomatik kapat
+        setTimeout(() => {
+          setSuccess('');
+          setError('');
+        }, 5000);
+      } else if (response.data.success) {
+        setProgress({ current: totalPhones, total: totalPhones, percentage: 100 });
         setSuccess('SMS başarıyla gönderildi');
         setFormData({ phone: '', message: '' });
-        // Success mesajını 3 saniye sonra otomatik kapat
         setTimeout(() => {
           setSuccess('');
         }, 3000);
+      } else {
+        setError(response.data.message || 'SMS gönderim hatası');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'SMS gönderim hatası');
+      if (err.response?.data?.data?.results) {
+        setSendResults(err.response.data.data.results);
+        const results = err.response.data.data.results;
+        setProgress({ current: results.length, total: totalPhones, percentage: (results.length / totalPhones) * 100 });
+      }
     } finally {
       setLoading(false);
+      isProcessingRef.current = false;
+      // Progress'i biraz sonra sıfırla
+      setTimeout(() => {
+        setProgress({ current: 0, total: 0, percentage: 0 });
+      }, 3000);
     }
   };
 
@@ -217,6 +280,33 @@ export default function SMSInterfacePage() {
               </Alert>
             )}
 
+            {/* Progress Indicator */}
+            {loading && progress.total > 0 && (
+              <Paper sx={{ p: 2, mb: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <CircularProgress size={24} />
+                  <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 600 }}>
+                    SMS gönderiliyor... Lütfen sayfadan ayrılmayın!
+                  </Typography>
+                </Box>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={progress.percentage} 
+                  sx={{ 
+                    height: 8, 
+                    borderRadius: 4,
+                    bgcolor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                    },
+                  }} 
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', fontSize: '12px' }}>
+                  {progress.current} / {progress.total} numara işlendi ({Math.round(progress.percentage)}%)
+                </Typography>
+              </Paper>
+            )}
+
             <Paper sx={{ p: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               <Box component="form" onSubmit={handleSubmit}>
                 <Grid container spacing={1.5}>
@@ -231,16 +321,17 @@ export default function SMSInterfacePage() {
                         const value = e.target.value;
                         // Birden fazla numara girişi için (virgül veya yeni satır ile ayrılmış)
                         // 905**, 05**, 5**, +905** formatlarını kabul et
+                        // Maksimum 1,000,000 numara (yaklaşık 20,000,000 karakter)
                         const phoneRegex = /^[\d\s,\n+]*$/;
-                        if (phoneRegex.test(value) || value === '') {
+                        if ((phoneRegex.test(value) || value === '') && value.length <= 20000000) {
                           setFormData({ ...formData, phone: value });
                         }
                       }}
                       placeholder="905xxxxxxxxx, 05xxxxxxxxx, 5xxxxxxxxx veya +905xxxxxxxxx"
                       required
                       multiline
-                      rows={3}
-                      helperText="Format: 905**, 05**, 5**, +905** (Birden fazla numara için virgül veya yeni satır kullanın)"
+                      rows={8}
+                      helperText={`Format: 905**, 05**, 5**, +905** (Birden fazla numara için virgül veya yeni satır kullanın. Maksimum 1,000,000 numara)`}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 1.5,
@@ -381,6 +472,67 @@ export default function SMSInterfacePage() {
                 </Grid>
               </Box>
             </Paper>
+
+            {/* SMS Gönderim Sonuçları */}
+            {sendResults.length > 0 && (
+              <Paper sx={{ p: 2, mt: 2, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <Typography variant="h6" sx={{ mb: 2, fontSize: '16px', fontWeight: 600 }}>
+                  Gönderim Sonuçları
+                </Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontSize: '13px', fontWeight: 600 }}>Durum</TableCell>
+                        <TableCell sx={{ fontSize: '13px', fontWeight: 600 }}>Telefon Numarası</TableCell>
+                        <TableCell sx={{ fontSize: '13px', fontWeight: 600 }}>Mesaj</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {sendResults.map((result, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            {result.success ? (
+                              <CheckCircle sx={{ color: '#4caf50', fontSize: 24 }} />
+                            ) : (
+                              <Cancel sx={{ color: '#f44336', fontSize: 24 }} />
+                            )}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '13px', fontFamily: 'monospace' }}>
+                            {result.original}
+                          </TableCell>
+                          <TableCell sx={{ fontSize: '13px' }}>
+                            {result.success ? (
+                              <Chip 
+                                label="Başarılı" 
+                                size="small" 
+                                sx={{ 
+                                  bgcolor: '#4caf50', 
+                                  color: '#ffffff',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                }} 
+                              />
+                            ) : (
+                              <Chip 
+                                label={result.error || 'Hata'} 
+                                size="small" 
+                                sx={{ 
+                                  bgcolor: '#f44336', 
+                                  color: '#ffffff',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                }} 
+                              />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            )}
         </Box>
 
         {/* Kısa Link Oluşturuldu Dialog */}

@@ -29,166 +29,314 @@ export async function POST(request: NextRequest) {
     // Telefon numarası normalizasyonu: 905**, 05**, 5**, +905** formatlarını kabul et ve CepSMS formatına dönüştür
     const phoneNumbers = phone.split(/[,\n]/).map((p: string) => p.trim()).filter((p: string) => p);
     
-    // Her numarayı formatPhoneNumber ile normalize et
-    const formattedPhones: string[] = [];
-    const invalidPhones: string[] = [];
+    if (phoneNumbers.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Telefon numarası gerekli' },
+        { status: 400 }
+      );
+    }
+
+    // Her numarayı formatPhoneNumber ile normalize et ve geçerliliğini kontrol et
+    interface PhoneResult {
+      original: string;
+      formatted?: string;
+      error?: string;
+    }
+    
+    const phoneResults: PhoneResult[] = [];
     
     for (const phoneNum of phoneNumbers) {
       try {
         const formatted = formatPhoneNumber(phoneNum);
-        formattedPhones.push(formatted);
+        phoneResults.push({ original: phoneNum, formatted });
       } catch (error: any) {
-        invalidPhones.push(phoneNum);
+        phoneResults.push({ original: phoneNum, error: error.message || 'Geçersiz format' });
       }
     }
     
-    if (invalidPhones.length > 0) {
-      return NextResponse.json(
-        { success: false, message: `Geçersiz telefon numarası formatı: ${invalidPhones.join(', ')}. Desteklenen formatlar: 905**, 05**, 5**, +905**` },
-        { status: 400 }
-      );
-    }
-
-    if (formattedPhones.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Geçerli telefon numarası bulunamadı' },
-        { status: 400 }
-      );
-    }
-
-    // Birden fazla numara varsa, her numaraya ayrı SMS gönder
-    // Şimdilik sadece ilk numaraya gönder (toplu SMS için bulk-sms endpoint'i kullanılmalı)
-    const firstPhone = formattedPhones[0];
-
-    // Sistem kredisi kontrolü - Her SMS = 1 kredi
-    const requiredCredit = 1; // Her SMS 1 kredi
-    const systemCreditCheck = await deductSystemCredit(requiredCredit);
+    const validPhones = phoneResults.filter(p => p.formatted);
     
-    if (!systemCreditCheck.success) {
+    if (validPhones.length === 0) {
+      const invalidNumbers = phoneResults.map(p => p.original).join(', ');
       return NextResponse.json(
-        {
-          success: false,
-          message: systemCreditCheck.error || 'Yetersiz sistem kredisi',
+        { 
+          success: false, 
+          message: `Tüm telefon numaraları geçersiz: ${invalidNumbers}. Desteklenen formatlar: 905**, 05**, 5**, +905**`,
+          data: { results: phoneResults }
         },
         { status: 400 }
       );
     }
 
-    // Kullanıcı kredisini de düş (görüntüleme ve takip için)
-    const { data: currentUser, error: userError } = await supabaseServer
+    // Sistem kredisi kontrolü - Her SMS = 1 kredi
+    const requiredCredit = 1; // Her SMS 1 kredi
+    
+    // Admin/moderator kontrolü
+    const userRole = (auth.user.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator';
+
+    // Kullanıcı bilgilerini al (kredi kontrolü ve düşürme için)
+    let currentUser: { credit: number; role?: string } | null = null;
+    let userError: any = null;
+
+    if (!isAdmin) {
+      const userResult = await supabaseServer
+        .from('users')
+        .select('credit, role')
+        .eq('id', auth.user.userId)
+        .single();
+      
+      currentUser = userResult.data;
+      userError = userResult.error;
+
+      if (userError || !currentUser) {
+        return NextResponse.json(
+          { success: false, message: 'Kullanıcı bilgileri alınamadı' },
+          { status: 500 }
+        );
+      }
+
+      const userCredit = currentUser.credit || 0;
+      const totalRequiredCredit = validPhones.length * requiredCredit;
+      
+      if (userCredit < totalRequiredCredit) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Yetersiz kredi! Mevcut krediniz: ${userCredit}. ${validPhones.length} SMS göndermek için en az ${totalRequiredCredit} kredi gereklidir.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Her numara için SMS gönder ve sonuçları topla
+    interface SendResult {
+      phone: string;
+      original: string;
+      success: boolean;
+      messageId?: string;
+      error?: string;
+      smsRecordId?: string;
+    }
+
+    const sendResults: SendResult[] = [];
+    let totalSent = 0;
+    let totalFailed = 0;
+
+    // Geçersiz numaralar için sonuç ekle
+    for (const phoneResult of phoneResults) {
+      if (!phoneResult.formatted) {
+        sendResults.push({
+          phone: phoneResult.original,
+          original: phoneResult.original,
+          success: false,
+          error: phoneResult.error || 'Geçersiz telefon numarası formatı',
+        });
+        totalFailed++;
+      }
+    }
+
+    // Tek bir SMS gönderme fonksiyonu
+    const sendSingleSMS = async (phoneResult: { formatted?: string; original: string }): Promise<SendResult> => {
+      if (!phoneResult.formatted) {
+        return {
+          phone: phoneResult.original,
+          original: phoneResult.original,
+          success: false,
+          error: 'Geçersiz telefon numarası formatı',
+        };
+      }
+
+      const phoneNumber = phoneResult.formatted;
+      const originalPhone = phoneResult.original;
+
+      if (!auth.user) {
+        return {
+          phone: phoneNumber,
+          original: originalPhone,
+          success: false,
+          error: 'Kullanıcı bilgisi bulunamadı',
+        };
+      }
+
+      // Sistem kredisi kontrolü
+      const systemCreditCheck = await deductSystemCredit(requiredCredit);
+      
+      if (!systemCreditCheck.success) {
+        return {
+          phone: phoneNumber,
+          original: originalPhone,
+          success: false,
+          error: systemCreditCheck.error || 'Yetersiz sistem kredisi',
+        };
+      }
+
+      // SMS gönder
+      const smsResult = await sendSMS(phoneNumber, message);
+
+      if (smsResult.success && smsResult.messageId) {
+        // SMS kaydı oluştur
+        const { data: smsMessageData, error: createError } = await supabaseServer
+          .from('sms_messages')
+          .insert({
+            user_id: auth.user.userId,
+            phone_number: phoneNumber,
+            message,
+            sender: serviceName || null,
+            status: 'gönderildi',
+            cost: requiredCredit,
+            cep_sms_message_id: smsResult.messageId,
+            sent_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (createError || !smsMessageData) {
+          // SMS kaydı oluşturulamadı, kredi geri ver
+          await addSystemCredit(requiredCredit);
+          return {
+            phone: phoneNumber,
+            original: originalPhone,
+            success: false,
+            error: createError?.message || 'SMS kaydı oluşturulamadı',
+          };
+        } else {
+          return {
+            phone: phoneNumber,
+            original: originalPhone,
+            success: true,
+            messageId: smsResult.messageId,
+            smsRecordId: smsMessageData.id,
+          };
+        }
+      } else {
+        // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur
+        const { data: failedSmsData, error: failedError } = await supabaseServer
+          .from('sms_messages')
+          .insert({
+            user_id: auth.user.userId,
+            phone_number: phoneNumber,
+            message,
+            sender: serviceName || null,
+            status: 'failed',
+            cost: requiredCredit,
+            failed_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (!failedError && failedSmsData) {
+          // Otomatik iade oluştur
+          await supabaseServer
+            .from('refunds')
+            .insert({
+              user_id: auth.user.userId,
+              sms_id: failedSmsData.id,
+              original_cost: requiredCredit,
+              refund_amount: requiredCredit,
+              reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
+              status: 'pending',
+            });
+        }
+
+        return {
+          phone: phoneNumber,
+          original: originalPhone,
+          success: false,
+          error: smsResult.error || 'SMS gönderim hatası',
+        };
+      }
+    };
+
+    // CepSMS servisi aynı anda ortalama 500 SMS gönderebiliyor
+    // 1000+ numara için 500'lük paketler halinde işle
+    const BATCH_SIZE = validPhones.length >= 1000 ? 500 : Math.max(1, validPhones.length);
+    const batches: Array<Array<{ formatted?: string; original: string }>> = [];
+    
+    for (let i = 0; i < validPhones.length; i += BATCH_SIZE) {
+      batches.push(validPhones.slice(i, i + BATCH_SIZE));
+    }
+
+    console.log(`[SMS Send] ${validPhones.length} numara, ${batches.length} paket halinde işlenecek (paket boyutu: ${BATCH_SIZE})`);
+
+    // Her paketi işle
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`[SMS Send] Paket ${batchIndex + 1}/${batches.length} işleniyor (${batch.length} numara)...`);
+
+      // CepSMS servisi aynı anda 500 SMS gönderebiliyor, bu yüzden CONCURRENT_LIMIT = 500
+      const CONCURRENT_LIMIT = 500; // CepSMS servisinin kapasitesi
+      
+      for (let i = 0; i < batch.length; i += CONCURRENT_LIMIT) {
+        const concurrentBatch = batch.slice(i, i + CONCURRENT_LIMIT);
+        
+        // Paralel gönderim (500'lük gruplar halinde)
+        const batchResults = await Promise.all(
+          concurrentBatch.map(phoneResult => sendSingleSMS(phoneResult))
+        );
+
+        // Sonuçları topla
+        for (const result of batchResults) {
+          sendResults.push(result);
+          if (result.success) {
+            totalSent++;
+          } else {
+            totalFailed++;
+          }
+        }
+
+        // Kullanıcı kredisini toplu güncelle (her concurrent batch sonrası)
+        if (!isAdmin && currentUser && auth.user) {
+          const sentInBatch = batchResults.filter(r => r.success).length;
+          if (sentInBatch > 0) {
+            const userCredit = currentUser.credit || 0;
+            const newUserCredit = Math.max(0, userCredit - (sentInBatch * requiredCredit));
+            await supabaseServer
+              .from('users')
+              .update({ credit: newUserCredit })
+              .eq('id', auth.user.userId);
+            currentUser.credit = newUserCredit;
+          }
+        }
+
+        // Rate limiting için kısa bir bekleme (500 SMS gönderildikten sonra)
+        // CepSMS servisinin yeni batch'i işlemesi için kısa bir süre bekle
+        if (i + CONCURRENT_LIMIT < batch.length) {
+          await new Promise(resolve => setTimeout(resolve, 50)); // 50ms bekleme
+        }
+      }
+
+      // Paketler arası kısa bekleme (500'lük paket tamamlandıktan sonra)
+      if (batchIndex < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms bekleme
+      }
+    }
+
+    // Sistem kredisini ve kullanıcı kredisini al (güncel değer için)
+    const remainingSystemCredit = await getSystemCredit();
+    const { data: updatedUser } = await supabaseServer
       .from('users')
       .select('credit')
       .eq('id', auth.user.userId)
       .single();
 
-    if (!userError && currentUser) {
-      const userCredit = currentUser.credit || 0;
-      const newUserCredit = Math.max(0, userCredit - requiredCredit);
-      await supabaseServer
-        .from('users')
-        .update({ credit: newUserCredit })
-        .eq('id', auth.user.userId);
-    }
+    // Sonuç mesajı oluştur
+    const successMessage = totalSent > 0 
+      ? `${totalSent} SMS başarıyla gönderildi${totalFailed > 0 ? `, ${totalFailed} SMS gönderilemedi` : ''}`
+      : `${totalFailed} SMS gönderilemedi`;
 
-    // Send SMS (birden fazla numara varsa sadece ilk numaraya gönder)
-    const smsResult = await sendSMS(firstPhone, message);
-
-    if (smsResult.success && smsResult.messageId) {
-      // Create SMS message record using Supabase
-      // Her SMS kaydı = 1 kredi (cost: 1)
-      const { data: smsMessageData, error: createError } = await supabaseServer
-        .from('sms_messages')
-        .insert({
-          user_id: auth.user.userId,
-          phone_number: firstPhone,
-          message,
-          sender: serviceName || null,
-          status: 'gönderildi',
-          cost: requiredCredit, // Her SMS = 1 kredi
-          cep_sms_message_id: smsResult.messageId,
-          sent_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (createError || !smsMessageData) {
-        // SMS kaydı oluşturulamadı, sistem kredisini ve kullanıcı kredisini geri ver
-        await addSystemCredit(requiredCredit);
-        if (!userError && currentUser) {
-          const userCredit = currentUser.credit || 0;
-          await supabaseServer
-            .from('users')
-            .update({ credit: userCredit + requiredCredit })
-            .eq('id', auth.user.userId);
-        }
-        return NextResponse.json(
-          { success: false, message: createError?.message || 'SMS kaydı oluşturulamadı' },
-          { status: 500 }
-        );
-      }
-
-      // Sistem kredisini ve kullanıcı kredisini al (güncel değer için)
-      const remainingSystemCredit = await getSystemCredit();
-      const { data: updatedUser } = await supabaseServer
-        .from('users')
-        .select('credit')
-        .eq('id', auth.user.userId)
-        .single();
-      
-      return NextResponse.json({
-        success: true,
-        message: 'SMS başarıyla gönderildi',
-        data: {
-          messageId: smsMessageData.id,
-          cepSmsMessageId: smsResult.messageId,
-          remainingSystemCredit: remainingSystemCredit,
-          remainingUserCredit: updatedUser?.credit || 0,
-        },
-      });
-    } else {
-      // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur (48 saat sonra iade edilecek)
-      const { data: failedSmsData, error: failedError } = await supabaseServer
-        .from('sms_messages')
-        .insert({
-          user_id: auth.user.userId,
-          phone_number: firstPhone,
-          message,
-          sender: serviceName || null,
-          status: 'failed',
-          cost: requiredCredit, // Her SMS = 1 kredi
-          failed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (!failedError && failedSmsData) {
-        // Otomatik iade oluştur (48 saat sonra işlenecek) - Sistem kredisini geri verecek
-        await supabaseServer
-          .from('refunds')
-          .insert({
-            user_id: auth.user.userId,
-            sms_id: failedSmsData.id,
-            original_cost: requiredCredit,
-            refund_amount: requiredCredit,
-            reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
-            status: 'pending',
-          });
-      }
-
-      // Sistem kredisini al (güncel değer için)
-      const remainingSystemCredit = await getSystemCredit();
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: smsResult.error || 'SMS gönderim hatası. Sistem kredisi düşüldü, 48 saat içinde otomatik iade edilecektir.',
-          data: {
-            remainingSystemCredit: remainingSystemCredit,
-          },
-        },
-        { status: 400 }
-      );
-    }
+    return NextResponse.json({
+      success: totalSent > 0,
+      message: successMessage,
+      data: {
+        results: sendResults,
+        totalSent,
+        totalFailed,
+        remainingSystemCredit: remainingSystemCredit,
+        remainingUserCredit: updatedUser?.credit || 0,
+      },
+    });
   } catch (error: any) {
     console.error('SMS send error:', error);
     return NextResponse.json(
