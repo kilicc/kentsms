@@ -158,7 +158,7 @@ export default function SMSInterfacePage() {
                 fontSize: '12px',
               }}
             >
-              CepSMS servisini kullanarak tek bir telefon numarasına SMS gönderin.
+              KentSMS servisini kullanarak tek bir telefon numarasına SMS gönderin.
             </Typography>
 
             {error && (
