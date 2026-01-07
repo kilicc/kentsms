@@ -33,8 +33,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get package
-    const packageData = PAYMENT_PACKAGES.find((p) => p.id === packageId);
+    // Get package - önce veritabanından dene
+    let packageData: { id: string; name: string; credits: number; price: number; currency: string; bonus: number } | null = null;
+    
+    // Veritabanından paketi ara (UUID veya package_id ile)
+    const { data: dbPackage, error: dbError } = await supabaseServer
+      .from('payment_packages')
+      .select('*')
+      .or(`id.eq.${packageId},package_id.eq.${packageId}`)
+      .eq('is_active', true)
+      .single();
+
+    if (dbPackage && !dbError) {
+      packageData = {
+        id: dbPackage.id,
+        name: dbPackage.name,
+        credits: dbPackage.credits,
+        price: Number(dbPackage.price),
+        currency: dbPackage.currency || 'TRY',
+        bonus: dbPackage.bonus || 0,
+      };
+    } else {
+      // Veritabanında bulunamazsa statik paketlere bak
+      const staticPackage = PAYMENT_PACKAGES.find((p) => p.id === packageId);
+      if (staticPackage) {
+        packageData = staticPackage;
+      }
+    }
+
     if (!packageData) {
       return NextResponse.json(
         { success: false, message: 'Geçersiz paket' },
@@ -42,8 +68,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get crypto currency info
-    const crypto = CRYPTO_CURRENCIES[cryptoCurrency.toUpperCase()];
+    // Get crypto currency info - önce veritabanından dene
+    let crypto: { symbol: string; name: string; decimals: number; minAmount: number; networkFee: number; confirmations: number; walletAddress?: string } | null = null;
+    
+    const { data: dbCrypto, error: cryptoError } = await supabaseServer
+      .from('crypto_currencies')
+      .select('*')
+      .eq('symbol', cryptoCurrency.toUpperCase())
+      .eq('is_active', true)
+      .single();
+
+    if (dbCrypto && !cryptoError) {
+      crypto = {
+        symbol: dbCrypto.symbol,
+        name: dbCrypto.name,
+        decimals: dbCrypto.decimals,
+        minAmount: Number(dbCrypto.min_amount),
+        networkFee: Number(dbCrypto.network_fee),
+        confirmations: dbCrypto.confirmations,
+        walletAddress: dbCrypto.wallet_address,
+      };
+    } else {
+      // Veritabanında bulunamazsa statik verilere bak
+      const staticCrypto = CRYPTO_CURRENCIES[cryptoCurrency.toUpperCase()];
+      if (staticCrypto) {
+        crypto = staticCrypto;
+      }
+    }
+
     if (!crypto) {
       return NextResponse.json(
         { success: false, message: 'Desteklenmeyen kripto para' },
@@ -78,8 +130,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get wallet address
-    const walletAddress = getWalletAddress(cryptoCurrency);
+    // Get wallet address - önce veritabanındaki adresi kullan
+    const walletAddress = crypto.walletAddress || getWalletAddress(cryptoCurrency);
 
     // Generate QR code
     const qrCodeData = await QRCode.toDataURL(walletAddress);
@@ -142,4 +194,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
