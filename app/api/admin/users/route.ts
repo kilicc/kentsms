@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, email, password, role, credit } = body;
+    const { username, password, role, credit } = body;
 
     // Validation
     if (!username || !password) {
@@ -117,18 +117,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists (email opsiyonel olduğu için sadece username kontrolü)
-    let query = supabaseServer
+    // Check if user exists (sadece username kontrolü - email kaldırıldı)
+    const { data: existingUsers, error: checkError } = await supabaseServer
       .from('users')
-      .select('id');
-    
-    if (email) {
-      query = query.or(`username.eq.${username},email.eq.${email}`);
-    } else {
-      query = query.eq('username', username);
-    }
-    
-    const { data: existingUsers, error: checkError } = await query.limit(1);
+      .select('id')
+      .eq('username', username)
+      .limit(1);
 
     if (checkError) {
       throw new Error(checkError.message);
@@ -136,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     if (existingUsers && existingUsers.length > 0) {
       return NextResponse.json(
-        { success: false, message: 'Kullanıcı adı veya email zaten kullanılıyor' },
+        { success: false, message: 'Kullanıcı adı zaten kullanılıyor' },
         { status: 400 }
       );
     }
@@ -144,12 +138,13 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create user (email opsiyonel, role varsayılan 'user')
+    // Create user (email kaldırıldı, role varsayılan 'user')
+    // Email kolonu NOT NULL olduğu için boş string gönderiyoruz
     const { data: user, error: createError } = await supabaseServer
       .from('users')
       .insert({
         username,
-        email: email || null,
+        email: '', // Email kaldırıldı, boş string gönderiyoruz
         password_hash: passwordHash,
         credit: credit || 0,
         role: role || 'user',

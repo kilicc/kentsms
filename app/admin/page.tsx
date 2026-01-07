@@ -191,12 +191,16 @@ export default function AdminDashboardPage() {
 
   const loadUsers = async () => {
     try {
+      setError('');
       const response = await api.get('/admin/users');
       if (response.data.success) {
-        setUsers(response.data.data.users);
+        setUsers(response.data.data?.users || []);
+      } else {
+        setError(response.data.message || 'Kullanıcı listesi yüklenemedi');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Users load error:', error);
+      setError(error.response?.data?.message || 'Kullanıcı listesi yüklenirken hata oluştu');
     }
   };
 
@@ -523,6 +527,11 @@ export default function AdminDashboardPage() {
       return;
     }
 
+    if (newUser.password.length < 6) {
+      setError('Şifre en az 6 karakter olmalıdır');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
@@ -541,9 +550,12 @@ export default function AdminDashboardPage() {
         setNewUser({ username: '', password: '', role: 'user', credit: 0 });
         loadUsers();
         loadStats();
+      } else {
+        setError(response.data.message || 'Kullanıcı oluşturulamadı');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Kullanıcı oluşturma hatası');
+      console.error('Create user error:', err);
+      setError(err.response?.data?.message || err.message || 'Kullanıcı oluşturma hatası');
     } finally {
       setLoading(false);
     }
