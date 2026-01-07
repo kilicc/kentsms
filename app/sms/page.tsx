@@ -162,13 +162,43 @@ export default function SMSInterfacePage() {
             </Typography>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? 'error.dark' : '#d32f2f',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  py: 1.5,
+                  boxShadow: '0 2px 8px rgba(211, 47, 47, 0.3)',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                  },
+                }}
+              >
                 {error}
               </Alert>
             )}
 
             {success && (
-              <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+              <Alert 
+                severity="success" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? 'success.dark' : '#2e7d32',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  py: 1.5,
+                  boxShadow: '0 2px 8px rgba(46, 125, 50, 0.3)',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                  },
+                }}
+              >
                 {success}
               </Alert>
             )}
