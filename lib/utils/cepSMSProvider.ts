@@ -1,5 +1,6 @@
 import axios from 'axios';
 import https from 'https';
+import FormData from 'form-data';
 
 interface CepSMSResponse {
   Status?: string;
@@ -108,20 +109,64 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
     }
 
   try {
+    // CepSMS API bazı versiyonlarda form-data bekliyor olabilir
+    // Önce JSON dene, hata alırsa form-data dene
+    let response: any;
+    let useFormData = false;
 
-    const response = await axios.post<CepSMSResponse>(
-      CEPSMS_API_URL,
-      requestData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        httpsAgent: httpsAgent,
-        timeout: 30000, // 30 saniye timeout
-        validateStatus: (status) => status < 500, // 5xx hataları dışında tüm status kodlarını kabul et
+    try {
+      // İlk deneme: JSON format
+      response = await axios.post<CepSMSResponse>(
+        CEPSMS_API_URL,
+        requestData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          httpsAgent: httpsAgent,
+          timeout: 30000,
+          validateStatus: (status) => status < 500,
+        }
+      );
+
+      // Eğer "User Error" alırsak form-data dene
+      const responseError = response.data?.Error || response.data?.error || '';
+      if (responseError.toLowerCase().includes('user error')) {
+        console.log('[CepSMS] JSON format User Error aldı, form-data formatı deneniyor...');
+        useFormData = true;
       }
-    );
+    } catch (jsonError: any) {
+      // JSON format hatası, form-data dene
+      console.log('[CepSMS] JSON format hatası, form-data formatı deneniyor...');
+      useFormData = true;
+    }
+
+    // Form-data format dene
+    if (useFormData) {
+      const formData = new FormData();
+      formData.append('User', CEPSMS_USERNAME);
+      formData.append('Pass', CEPSMS_PASSWORD);
+      formData.append('Message', message);
+      formData.append('Numbers', JSON.stringify([formattedPhone]));
+      if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '' && CEPSMS_FROM !== 'CepSMS') {
+        formData.append('From', CEPSMS_FROM);
+      }
+
+      response = await axios.post<CepSMSResponse>(
+        CEPSMS_API_URL,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            'Accept': 'application/json',
+          },
+          httpsAgent: httpsAgent,
+          timeout: 30000,
+          validateStatus: (status) => status < 500,
+        }
+      );
+    }
 
     console.log('[CepSMS] API Yanıtı:', JSON.stringify(response.data, null, 2));
 
