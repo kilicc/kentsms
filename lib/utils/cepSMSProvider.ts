@@ -106,89 +106,64 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       hasPassword: !!CEPSMS_PASSWORD,
     });
 
-    // CepSMS API isteği
-    // Test sonuçlarına göre çalışan format:
+    const fromCandidate = (CEPSMS_FROM || '').trim();
+
+    // CepSMS API isteği (test ile doğrulanan çalışan format)
     // - User/Pass (zorunlu)
     // - Message (zorunlu)
     // - Numbers (zorunlu, ARRAY formatında olmalı)
-    // - From (opsiyonel)
-    const requestData: any = {
+    // - From (opsiyonel, bazı hesaplarda geçersiz olabilir!)
+    const baseRequestData: any = {
       User: CEPSMS_USERNAME,
       Pass: CEPSMS_PASSWORD,
       Message: message,
-      Numbers: [formattedPhone], // ARRAY format (CepSMS API array bekliyor)
+      Numbers: [formattedPhone],
     };
 
-    // From parametresi sadece geçerli bir değer varsa ekle
-    // CepSMS hesabında kayıtlı gönderen adı yoksa bu parametre eklenmez
-    if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '') {
-      requestData.From = CEPSMS_FROM;
-    }
-    
-    console.log('[CepSMS] Request Data:', JSON.stringify(requestData, null, 2));
+    // Güvenlik: loglarda şifreyi göstermeyelim
+    const maskForLog = (payload: any) => {
+      const clone = { ...(payload || {}) };
+      if (typeof clone.Pass === 'string' && clone.Pass.length > 0) clone.Pass = '***';
+      return clone;
+    };
 
   try {
-    // CepSMS API bazı versiyonlarda form-data bekliyor olabilir
-    // Önce JSON dene, hata alırsa form-data dene
-    let response: any;
-    let useFormData = false;
+    // Strateji:
+    // 1) Önce From OLMADAN dene (en uyumlu)
+    // 2) "Geçersiz/Bad Request" alırsak ve CEPSMS_FROM özel bir değer ise From ile tekrar dene
+    const postJson = async (payload: any) => {
+      console.log('[CepSMS] Request Data:', JSON.stringify(maskForLog(payload), null, 2));
+      const resp = await axios.post<CepSMSResponse>(CEPSMS_API_URL, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        httpsAgent: httpsAgent,
+        timeout: 30000,
+        validateStatus: (status) => status < 500,
+      });
+      console.log('[CepSMS] API Yanıtı:', JSON.stringify(resp.data, null, 2));
+      return resp;
+    };
 
-    try {
-      // İlk deneme: JSON format
-      response = await axios.post<CepSMSResponse>(
-        CEPSMS_API_URL,
-        requestData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          httpsAgent: httpsAgent,
-          timeout: 30000,
-          validateStatus: (status) => status < 500,
-        }
-      );
+    // 1) From olmadan
+    let response = await postJson(baseRequestData);
 
-      // Eğer "User Error" veya "Invalid" hatası alırsak form-data dene
-      const responseError = response.data?.Error || response.data?.error || '';
-      const errorStr = responseError.toLowerCase();
-      if (errorStr.includes('user error') || errorStr.includes('invalid') || errorStr.includes('geçersiz')) {
-        console.log('[CepSMS] JSON format hatası aldı (' + responseError + '), form-data formatı deneniyor...');
-        useFormData = true;
-      }
-    } catch (jsonError: any) {
-      // JSON format hatası, form-data dene
-      console.log('[CepSMS] JSON format hatası, form-data formatı deneniyor...');
-      useFormData = true;
+    const status1 = response.data?.Status || response.data?.status || response.data?.statusCode;
+    const error1 = response.data?.Error || response.data?.error || response.data?.message || '';
+    const status1Str = String(status1 || '').toUpperCase();
+    const error1Str = String(error1 || '').toLowerCase();
+
+    // 2) Eğer geçersiz istek/bad request ise ve From adayımız varsa, From ile tekrar dene
+    const shouldRetryWithFrom =
+      !!fromCandidate &&
+      fromCandidate.toLowerCase() !== 'cepsms' &&
+      (status1Str.includes('BAD REQUEST') || status1Str === '400' || error1Str.includes('geçersiz') || error1Str.includes('invalid'));
+
+    if (shouldRetryWithFrom) {
+      console.warn('[CepSMS] İlk deneme geçersiz istek döndü; From ile tekrar deneniyor:', fromCandidate);
+      response = await postJson({ ...baseRequestData, From: fromCandidate });
     }
-
-    // Form-data format dene (test sonuçlarına göre çalışmıyor ama fallback olarak bırakıyoruz)
-    if (useFormData) {
-      const formData = new FormData();
-      formData.append('User', CEPSMS_USERNAME);
-      formData.append('Pass', CEPSMS_PASSWORD);
-      formData.append('Message', message);
-      formData.append('Numbers', JSON.stringify([formattedPhone])); // Array formatı JSON string olarak
-      if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '') {
-        formData.append('From', CEPSMS_FROM);
-      }
-
-      response = await axios.post<CepSMSResponse>(
-        CEPSMS_API_URL,
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-            'Accept': 'application/json',
-          },
-          httpsAgent: httpsAgent,
-          timeout: 30000,
-          validateStatus: (status) => status < 500,
-        }
-      );
-    }
-
-    console.log('[CepSMS] API Yanıtı:', JSON.stringify(response.data, null, 2));
 
     // API yanıtını kontrol et
     if (!response.data) {
@@ -309,7 +284,7 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
           
           const retryResponse = await axios.post<CepSMSResponse>(
             CEPSMS_API_URL,
-            requestData,
+            baseRequestData,
             {
               headers: {
                 'Content-Type': 'application/json',

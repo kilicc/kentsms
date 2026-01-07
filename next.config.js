@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Docker için standalone output
+  // Next.js bazen workspace root'u yanlış tahmin edip farklı bir package-lock.json seçebiliyor.
+  // Bu ayar build sırasında doğru kökü sabitler.
+  turbopack: {
+    root: __dirname,
+  },
   experimental: {
     // Next.js 16 özellikleri
   },
