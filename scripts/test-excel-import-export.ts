@@ -92,7 +92,7 @@ function readAndParseExcel(filePath: string) {
   // Debug: İlk satırın kolonlarını göster
   if (contacts.length > 0) {
     console.log('\n🔍 İlk satırın kolonları:');
-    console.log(Object.keys(contacts[0]));
+    console.log(Object.keys(contacts[0] as Record<string, any>));
     console.log('\n📄 İlk satır verisi:');
     console.log(JSON.stringify(contacts[0], null, 2));
   }
@@ -113,7 +113,8 @@ function testImportMapping(contacts: any[]) {
   for (const contactData of contacts) {
     try {
       // Debug: Tüm kolonları göster
-      const allKeys = Object.keys(contactData);
+      const contactDataTyped = contactData as Record<string, any>;
+      const allKeys = Object.keys(contactDataTyped);
       if (results.mappedContacts.length === 0) {
         console.log('\n🔍 Mevcut kolonlar:', allKeys);
       }
@@ -126,31 +127,31 @@ function testImportMapping(contacts: any[]) {
         .replace(/ı/g, 'i')
         .replace(/İ/g, 'i');
       
-      const nameField = Object.keys(contactData).find(
+      const nameField = Object.keys(contactDataTyped).find(
         (key) => {
           const normalized = normalizeKey(key);
           return normalized.includes('isim') || normalized.includes('name') || normalized.includes('ad');
         }
       );
-      const phoneField = Object.keys(contactData).find(
+      const phoneField = Object.keys(contactDataTyped).find(
         (key) => {
           const normalized = normalizeKey(key);
           return normalized.includes('telefon') || normalized.includes('phone') || normalized.includes('numara');
         }
       );
-      const emailField = Object.keys(contactData).find(
+      const emailField = Object.keys(contactDataTyped).find(
         (key) => {
           const normalized = normalizeKey(key);
           return normalized.includes('email') || normalized.includes('e-posta') || normalized.includes('eposta') || normalized.includes('e posta');
         }
       );
-      const groupField = Object.keys(contactData).find(
+      const groupField = Object.keys(contactDataTyped).find(
         (key) => {
           const normalized = normalizeKey(key);
           return normalized.includes('grup') || normalized.includes('group');
         }
       );
-      const notesField = Object.keys(contactData).find(
+      const notesField = Object.keys(contactDataTyped).find(
         (key) => {
           const normalized = normalizeKey(key);
           return normalized.includes('not') || normalized.includes('note');
@@ -167,11 +168,11 @@ function testImportMapping(contacts: any[]) {
         console.log(`  notesField: ${notesField || 'BULUNAMADI'}`);
       }
       
-      const name = nameField ? String(contactData[nameField] || '').trim() : '';
-      const phone = phoneField ? String(contactData[phoneField] || '').trim().replace(/\D/g, '') : '';
-      const email = emailField ? String(contactData[emailField] || '').trim() : '';
-      const notes = notesField ? String(contactData[notesField] || '').trim() : '';
-      const group = groupField ? String(contactData[groupField] || '').trim() : '';
+      const name = nameField ? String(contactDataTyped[nameField] || '').trim() : '';
+      const phone = phoneField ? String(contactDataTyped[phoneField] || '').trim().replace(/\D/g, '') : '';
+      const email = emailField ? String(contactDataTyped[emailField] || '').trim() : '';
+      const notes = notesField ? String(contactDataTyped[notesField] || '').trim() : '';
+      const group = groupField ? String(contactDataTyped[groupField] || '').trim() : '';
       
       // Debug: Parse edilen değerleri göster
       if (results.mappedContacts.length === 0) {
