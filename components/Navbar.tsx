@@ -96,6 +96,7 @@ export default function Navbar() {
             style={{
               objectFit: 'contain',
               borderRadius: 6,
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))',
             }}
           />
         </Box>

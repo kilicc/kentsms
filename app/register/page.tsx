@@ -57,6 +57,7 @@ export default function RegisterPage() {
             style={{
               objectFit: 'contain',
               borderRadius: 8,
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))',
             }}
           />
         </Box>
