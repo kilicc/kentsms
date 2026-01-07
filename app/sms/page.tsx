@@ -186,17 +186,17 @@ export default function SMSInterfacePage() {
                       onChange={(e) => {
                         const value = e.target.value;
                         // Birden fazla numara girişi için (virgül veya yeni satır ile ayrılmış)
-                        // Sadece 905**, 05**, 5** formatlarını kabul et
-                        const phoneRegex = /^[\d\s,\n]*$/;
+                        // 905**, 05**, 5**, +905** formatlarını kabul et
+                        const phoneRegex = /^[\d\s,\n+]*$/;
                         if (phoneRegex.test(value) || value === '') {
                           setFormData({ ...formData, phone: value });
                         }
                       }}
-                      placeholder="905xxxxxxxxx veya birden fazla numara (virgülle ayırın)"
+                      placeholder="905xxxxxxxxx, 05xxxxxxxxx, 5xxxxxxxxx veya +905xxxxxxxxx"
                       required
                       multiline
                       rows={3}
-                      helperText="Format: 905**, 05**, 5** (Birden fazla numara için virgül veya yeni satır kullanın)"
+                      helperText="Format: 905**, 05**, 5**, +905** (Birden fazla numara için virgül veya yeni satır kullanın)"
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 1.5,

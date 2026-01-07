@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
-import { sendSMS } from '@/lib/utils/cepSMSProvider';
+import { sendSMS, formatPhoneNumber } from '@/lib/utils/cepSMSProvider';
 import { deductSystemCredit, getSystemCredit, addSystemCredit } from '@/lib/utils/systemCredit';
 
 // POST /api/sms/send - Tekli SMS gönderimi
@@ -26,21 +26,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Telefon numarası validasyonu: Sadece 905**, 05**, 5** formatları kabul edilir
+    // Telefon numarası normalizasyonu: 905**, 05**, 5**, +905** formatlarını kabul et ve CepSMS formatına dönüştür
     const phoneNumbers = phone.split(/[,\n]/).map((p: string) => p.trim()).filter((p: string) => p);
-    const phoneRegex = /^(905|05|5)\d+$/;
-    const invalidPhones = phoneNumbers.filter((p: string) => !phoneRegex.test(p));
+    
+    // Her numarayı formatPhoneNumber ile normalize et
+    const formattedPhones: string[] = [];
+    const invalidPhones: string[] = [];
+    
+    for (const phoneNum of phoneNumbers) {
+      try {
+        const formatted = formatPhoneNumber(phoneNum);
+        formattedPhones.push(formatted);
+      } catch (error: any) {
+        invalidPhones.push(phoneNum);
+      }
+    }
     
     if (invalidPhones.length > 0) {
       return NextResponse.json(
-        { success: false, message: `Geçersiz telefon numarası formatı: ${invalidPhones.join(', ')}. Sadece 905**, 05**, 5** formatları kabul edilir.` },
+        { success: false, message: `Geçersiz telefon numarası formatı: ${invalidPhones.join(', ')}. Desteklenen formatlar: 905**, 05**, 5**, +905**` },
+        { status: 400 }
+      );
+    }
+
+    if (formattedPhones.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Geçerli telefon numarası bulunamadı' },
         { status: 400 }
       );
     }
 
     // Birden fazla numara varsa, her numaraya ayrı SMS gönder
     // Şimdilik sadece ilk numaraya gönder (toplu SMS için bulk-sms endpoint'i kullanılmalı)
-    const firstPhone = phoneNumbers[0];
+    const firstPhone = formattedPhones[0];
 
     // Sistem kredisi kontrolü - Her SMS = 1 kredi
     const requiredCredit = 1; // Her SMS 1 kredi
