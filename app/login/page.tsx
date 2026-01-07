@@ -3,7 +3,6 @@
 import { Box, Paper, TextField, Button, Typography, Alert, Card, CardContent } from '@mui/material';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { gradients } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -67,33 +66,28 @@ export default function LoginPage() {
             color: 'white',
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              mb: 1.5,
-            }}
-          >
-            <Image
-              src="/logo3.png"
-              alt="Logo"
-              width={120}
-              height={120}
-              style={{
-                objectFit: 'contain',
-                borderRadius: 8,
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-              }}
-            />
-          </Box>
           <Typography 
-            variant="h4" 
+            variant="h3" 
             component="h1" 
             sx={{ 
-              mb: 0.5, 
-              fontWeight: 600,
-              fontSize: '20px',
+              mb: 1.5, 
+              fontWeight: 700,
+              fontSize: '32px',
               color: 'white',
+              letterSpacing: '2px',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            KENT SMS
+          </Typography>
+          <Typography 
+            variant="h5" 
+            component="h2" 
+            sx={{ 
+              mb: 0.5, 
+              fontWeight: 500,
+              fontSize: '16px',
+              color: 'rgba(255,255,255,0.95)',
             }}
           >
             Giriş Yap
