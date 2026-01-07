@@ -1,9 +1,37 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { getSupabaseServer } from '../lib/supabase-server';
 import { hashPassword } from '../lib/utils/password';
-import * as dotenv from 'dotenv';
 
-// Load environment variables from .env file
-dotenv.config({ path: '.env' });
+// Load .env file manually
+function loadEnvFile() {
+  try {
+    const envPath = join(process.cwd(), '.env');
+    const envContent = readFileSync(envPath, 'utf-8');
+    const envLines = envContent.split('\n');
+    
+    for (const line of envLines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine && !trimmedLine.startsWith('#')) {
+        const [key, ...valueParts] = trimmedLine.split('=');
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join('=').trim();
+          // Remove quotes if present
+          const cleanValue = value.replace(/^["']|["']$/g, '');
+          if (!process.env[key.trim()]) {
+            process.env[key.trim()] = cleanValue;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // .env file not found or can't be read, continue with existing env vars
+    console.warn('⚠️  .env dosyası bulunamadı veya okunamadı, mevcut environment variables kullanılacak');
+  }
+}
+
+// Load environment variables
+loadEnvFile();
 
 async function createAdmin2User() {
   console.log('🚀 KENTSMS Admin2 Kullanıcısı Oluşturuluyor...\n');
