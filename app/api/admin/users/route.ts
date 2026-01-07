@@ -139,12 +139,13 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
 
     // Create user (email kaldırıldı, role varsayılan 'user')
-    // Email kolonu NOT NULL olduğu için boş string gönderiyoruz
+    // Email kolonu NOT NULL ve UNIQUE olduğu için unique bir değer gönderiyoruz
+    const uniqueEmail = `${username}@kentsms.local`;
     const { data: user, error: createError } = await supabaseServer
       .from('users')
       .insert({
         username,
-        email: '', // Email kaldırıldı, boş string gönderiyoruz
+        email: uniqueEmail, // Email kaldırıldı, unique bir değer gönderiyoruz
         password_hash: passwordHash,
         credit: credit || 0,
         role: role || 'user',
