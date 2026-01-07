@@ -1019,7 +1019,7 @@ export default function AdminDashboardPage() {
                 <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   <TextField
                     size="small"
-                    placeholder="Kullanıcı adı veya email ara..."
+                    placeholder="Kullanıcı adı ara..."
                     value={userSearchQuery}
                     onChange={(e) => {
                       setUserSearchQuery(e.target.value);
@@ -1056,8 +1056,7 @@ export default function AdminDashboardPage() {
                   // Filter users
                   let filteredUsers = users.filter((u) => {
                     const matchesSearch = userSearchQuery === '' || 
-                      u.username.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-                      u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+                      u.username.toLowerCase().includes(userSearchQuery.toLowerCase());
                     const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
                     return matchesSearch && matchesRole;
                   });
@@ -1094,7 +1093,6 @@ export default function AdminDashboardPage() {
                             <TableRow>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Seç</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı Adı</TableCell>
-                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>E-posta</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Rol</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
@@ -1125,7 +1123,6 @@ export default function AdminDashboardPage() {
                                   />
                                 </TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.username}</TableCell>
-                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.email}</TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.credit}</TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                   <Chip
@@ -1270,7 +1267,6 @@ export default function AdminDashboardPage() {
                     <TableHead>
                       <TableRow>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı Adı</TableCell>
-                        <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>E-posta</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Rol</TableCell>
                         <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
@@ -1287,7 +1283,6 @@ export default function AdminDashboardPage() {
                           onClick={() => handleViewUserDetails(u.id)}
                         >
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.username}</TableCell>
-                          <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.email}</TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.credit}</TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.role}</TableCell>
                           <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
@@ -1418,9 +1413,6 @@ export default function AdminDashboardPage() {
                             <Box>
                               <Typography variant="h6" sx={{ fontSize: '18px', fontWeight: 600 }}>
                                 {report.user.username}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-                                {report.user.email}
                               </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -1633,10 +1625,6 @@ export default function AdminDashboardPage() {
                               >
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                   {request.user?.username || '-'}
-                                  <br />
-                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                                    {request.user?.email || '-'}
-                                  </Typography>
                                 </TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{Number(request.amount)} {request.currency || 'TRY'}</TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{request.credits} SMS {request.bonus > 0 ? `+ ${request.bonus} bonus` : ''}</TableCell>
@@ -1780,9 +1768,6 @@ export default function AdminDashboardPage() {
                       <Box sx={{ mb: 2 }}>
                         <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
                           <strong>Kullanıcı Adı:</strong> {selectedPaymentRequestDetail.user?.username || '-'}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
-                          <strong>E-posta:</strong> {selectedPaymentRequestDetail.user?.email || '-'}
                         </Typography>
                         <Typography variant="body2" sx={{ fontSize: '12px', mb: 0.5 }}>
                           <strong>Kullanıcı ID:</strong> {selectedPaymentRequestDetail.user?.id || '-'}
@@ -2287,9 +2272,6 @@ export default function AdminDashboardPage() {
                         </Typography>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-                          E-posta: <strong>{selectedUserDetails.user.email}</strong>
-                        </Typography>
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
@@ -2513,14 +2495,9 @@ export default function AdminDashboardPage() {
                           </TableCell>
                           <TableCell sx={{ fontSize: '12px' }}>
                             {key.user ? (
-                              <Box>
-                                <Typography variant="body2" sx={{ fontSize: '12px', fontWeight: 500 }}>
-                                  {key.user.username}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                                  {key.user.email}
-                                </Typography>
-                              </Box>
+                              <Typography variant="body2" sx={{ fontSize: '12px', fontWeight: 500 }}>
+                                {key.user.username}
+                              </Typography>
                             ) : (
                               '-'
                             )}
@@ -2619,7 +2596,7 @@ export default function AdminDashboardPage() {
                 >
                   {users.map((u) => (
                     <MenuItem key={u.id} value={u.id} sx={{ fontSize: '12px' }}>
-                      {u.username} ({u.email})
+                      {u.username}
                     </MenuItem>
                   ))}
                 </Select>
@@ -2809,7 +2786,7 @@ export default function AdminDashboardPage() {
                     <strong>API Key:</strong> {selectedApiKeyDetail?.apiKey || '-'}
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
-                    <strong>Kullanıcı:</strong> {selectedApiKeyDetail?.user?.username || '-'} ({selectedApiKeyDetail?.user?.email || '-'})
+                    <strong>Kullanıcı:</strong> {selectedApiKeyDetail?.user?.username || '-'}
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: '12px', mb: 1 }}>
                     <strong>Kredi:</strong> {selectedApiKeyDetail?.user?.credit || 0}
