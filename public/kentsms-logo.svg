@@ -1,11 +1,11 @@
-<svg width="180" height="50" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Shadow Filter -->
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="1.5"/>
-      <feOffset dx="0" dy="1.5" result="offsetblur"/>
+    <!-- Subtle shadow for depth -->
+    <filter id="logoShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.8"/>
+      <feOffset dx="0" dy="0.8" result="offsetblur"/>
       <feComponentTransfer>
-        <feFuncA type="linear" slope="0.25"/>
+        <feFuncA type="linear" slope="0.15"/>
       </feComponentTransfer>
       <feMerge>
         <feMergeNode/>
@@ -14,38 +14,51 @@
     </filter>
   </defs>
   
-  <!-- K Letter Icon with rounded corners -->
-  <g filter="url(#shadow)">
-    <!-- Modern K Shape - Beyaz -->
-    <path d="M10 10 L10 40 L16 40 L16 26 L26 40 L34 40 L22 24 L34 10 L26 10 L16 24 L16 10 Z" 
-          fill="#ffffff" 
-          rx="2"/>
+  <!-- Logo Container -->
+  <g filter="url(#logoShadow)">
     
-    <!-- SMS Icon Circle - Beyaz -->
-    <circle cx="40" cy="25" r="11" fill="#ffffff" opacity="0.15"/>
-    <circle cx="40" cy="25" r="9" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.5"/>
-    <path d="M34 25 L37 28 L46 19" 
-          stroke="#ffffff" 
-          stroke-width="2.5" 
-          stroke-linecap="round" 
-          stroke-linejoin="round" 
-          fill="none"/>
+    <!-- Modern K Letter - Bold and geometric -->
+    <g transform="translate(8, 8)">
+      <!-- Main K shape with rounded edges -->
+      <path d="M4 0 L4 34 L10 34 L10 22 L18 22 L24 34 L32 34 L22 20 L32 0 L24 0 L18 12 L10 12 L10 0 Z" 
+            fill="#ffffff" 
+            fill-rule="evenodd"/>
+    </g>
+    
+    <!-- SMS Icon - Modern chat bubble with checkmark -->
+    <g transform="translate(46, 15)">
+      <!-- Chat bubble -->
+      <rect x="0" y="0" width="18" height="14" rx="3" fill="#ffffff" opacity="0.95"/>
+      <!-- Message tail -->
+      <path d="M3 14 L6 18 L9 14 Z" fill="#ffffff" opacity="0.95"/>
+      <!-- Checkmark -->
+      <path d="M4 7 L7 10 L13 4" 
+            stroke="#1e40af" 
+            stroke-width="1.8" 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            fill="none"/>
+    </g>
+    
   </g>
   
-  <!-- Kent SMS Text - Beyaz -->
-  <text x="57" y="32" 
-        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
-        font-size="20" 
-        font-weight="700" 
-        fill="#ffffff"
-        letter-spacing="0.5px">
-    Kent SMS
-  </text>
-  
-  <!-- Accent Line - Beyaz -->
-  <line x1="57" y1="36" x2="160" y2="36" 
-        stroke="#ffffff" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        opacity="0.6"/>
+  <!-- Kent SMS Text - Clean modern typography -->
+  <g>
+    <!-- Main text -->
+    <text x="72" y="32" 
+          font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+          font-size="24" 
+          font-weight="700" 
+          fill="#ffffff"
+          letter-spacing="1.2px">
+      Kent SMS
+    </text>
+    
+    <!-- Decorative accent line -->
+    <line x1="72" y1="37" x2="185" y2="37" 
+          stroke="#ffffff" 
+          stroke-width="1.5" 
+          stroke-linecap="round" 
+          opacity="0.3"/>
+  </g>
 </svg>
