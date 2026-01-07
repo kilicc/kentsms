@@ -85,11 +85,33 @@ export default function ShortLinkRedirectPage({ params }: { params: Promise<{ sh
           p: 3,
         }}
       >
-        <Alert severity="error" sx={{ maxWidth: 500, width: '100%' }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            maxWidth: 500, 
+            width: '100%',
+            bgcolor: '#b71c1c',
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: '15px',
+            py: 2,
+            px: 2,
+            boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+            border: '2px solid #ffffff',
+            '& .MuiAlert-icon': {
+              color: '#ffffff',
+              fontSize: '24px',
+            },
+            '& .MuiAlert-message': {
+              fontWeight: 700,
+              fontSize: '15px',
+            },
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 1, color: '#ffffff', fontWeight: 700 }}>
             404 - Link bulunamadı!
           </Typography>
-          <Typography variant="body2">
+          <Typography variant="body2" sx={{ color: '#ffffff' }}>
             {error}
           </Typography>
         </Alert>

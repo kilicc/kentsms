@@ -111,6 +111,22 @@ export default function LoginPage() {
               sx={{ 
                 mb: 2, 
                 borderRadius: 2,
+                bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '15px',
+                py: 2,
+                px: 2,
+                boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                border: '2px solid #ffffff',
+                '& .MuiAlert-icon': {
+                  color: '#ffffff',
+                  fontSize: '24px',
+                },
+                '& .MuiAlert-message': {
+                  fontWeight: 700,
+                  fontSize: '15px',
+                },
               }}
             >
               {error}

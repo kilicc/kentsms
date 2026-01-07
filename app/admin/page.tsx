@@ -705,13 +705,65 @@ export default function AdminDashboardPage() {
             </Typography>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError('')}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
+                  },
+                  '& .MuiAlert-action': {
+                    color: '#ffffff',
+                  },
+                }} 
+                onClose={() => setError('')}
+              >
                 {error}
               </Alert>
             )}
 
             {success && (
-              <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setSuccess('')}>
+              <Alert 
+                severity="success" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? '#1b5e20' : '#1b5e20',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(27, 94, 32, 0.5)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
+                  },
+                  '& .MuiAlert-action': {
+                    color: '#ffffff',
+                  },
+                }} 
+                onClose={() => setSuccess('')}
+              >
                 {success}
               </Alert>
             )}
@@ -1927,7 +1979,23 @@ export default function AdminDashboardPage() {
           <Dialog open={bulkCreditDialogOpen} onClose={() => setBulkCreditDialogOpen(false)} maxWidth="sm" fullWidth>
             <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>Toplu Kredi Yükle ({selectedUsers.length} kullanıcı)</DialogTitle>
             <DialogContent sx={{ pt: 1.5 }}>
-              <Alert severity="info" sx={{ mb: 2, fontSize: '12px' }}>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  mb: 2, 
+                  fontSize: '14px',
+                  bgcolor: mode === 'dark' ? '#1565c0' : '#0d47a1',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  py: 1.5,
+                  px: 2,
+                  boxShadow: '0 2px 8px rgba(13, 71, 161, 0.4)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                  },
+                }}
+              >
                 {selectedUsers.length} kullanıcıya aynı miktarda kredi yüklenecektir.
               </Alert>
               <TextField
@@ -1959,7 +2027,23 @@ export default function AdminDashboardPage() {
             <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, pb: 1 }}>Kredi Yönetimi - {selectedUser?.username}</DialogTitle>
             <DialogContent sx={{ pt: 1.5 }}>
               {selectedUser && (
-                <Alert severity="info" sx={{ mb: 2, fontSize: '12px' }}>
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    mb: 2, 
+                    fontSize: '14px',
+                    bgcolor: mode === 'dark' ? '#1565c0' : '#0d47a1',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2,
+                    boxShadow: '0 2px 8px rgba(13, 71, 161, 0.4)',
+                    border: '2px solid #ffffff',
+                    '& .MuiAlert-icon': {
+                      color: '#ffffff',
+                    },
+                  }}
+                >
                   Mevcut Kredi: <strong>{selectedUser.credit?.toLocaleString('tr-TR') || 0}</strong>
                   <br />
                   Ana Sistem Kredisi: <strong>{systemCredit.toLocaleString('tr-TR')}</strong>
@@ -1983,7 +2067,22 @@ export default function AdminDashboardPage() {
                 }}
               />
               {selectedUser && selectedUser.credit && selectedUser.credit > 0 && (
-                <Alert severity="warning" sx={{ fontSize: '12px' }}>
+                <Alert 
+                  severity="warning" 
+                  sx={{ 
+                    fontSize: '14px',
+                    bgcolor: mode === 'dark' ? '#e65100' : '#e65100',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    py: 1.5,
+                    px: 2,
+                    boxShadow: '0 2px 8px rgba(230, 81, 0, 0.4)',
+                    border: '2px solid #ffffff',
+                    '& .MuiAlert-icon': {
+                      color: '#ffffff',
+                    },
+                  }}
+                >
                   Bu kullanıcının {selectedUser.credit.toLocaleString('tr-TR')} kredisi var. 
                   Sıfırlamak için aşağıdaki "Sıfırla" butonunu kullanın.
                 </Alert>
@@ -2608,7 +2707,23 @@ export default function AdminDashboardPage() {
             <DialogContent sx={{ pt: 1.5 }}>
               {selectedApiKeyDetail?.apiKey && selectedApiKeyDetail?.apiSecret ? (
                 <Box>
-                  <Alert severity="warning" sx={{ mb: 2, fontSize: '12px' }}>
+                  <Alert 
+                    severity="warning" 
+                    sx={{ 
+                      mb: 2, 
+                      fontSize: '14px',
+                      bgcolor: mode === 'dark' ? '#e65100' : '#e65100',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      py: 1.5,
+                      px: 2,
+                      boxShadow: '0 2px 8px rgba(230, 81, 0, 0.4)',
+                      border: '2px solid #ffffff',
+                      '& .MuiAlert-icon': {
+                        color: '#ffffff',
+                      },
+                    }}
+                  >
                     Bu bilgileri güvenli bir yerde saklayın. API Secret bir daha gösterilmeyecektir!
                   </Alert>
                   <TextField

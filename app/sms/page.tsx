@@ -566,7 +566,23 @@ export default function SMSInterfacePage() {
                   },
                 }}
               />
-              <Alert severity="info" sx={{ fontSize: '12px', mb: 2 }}>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  fontSize: '14px', 
+                  mb: 2,
+                  bgcolor: mode === 'dark' ? '#1565c0' : '#0d47a1',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  py: 1.5,
+                  px: 2,
+                  boxShadow: '0 2px 8px rgba(13, 71, 161, 0.4)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                  },
+                }}
+              >
                 Kısa linkiniz <strong>go.kentsms.com</strong> adresi üzerinden oluşturulacak ve IP tabanlı istatistikler takip edilecektir.
               </Alert>
             </Box>

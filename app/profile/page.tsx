@@ -235,13 +235,65 @@ export default function ProfilePage() {
             </Box>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError('')}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
+                  },
+                  '& .MuiAlert-action': {
+                    color: '#ffffff',
+                  },
+                }} 
+                onClose={() => setError('')}
+              >
                 {error}
               </Alert>
             )}
 
             {success && (
-              <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setSuccess('')}>
+              <Alert 
+                severity="success" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? '#1b5e20' : '#1b5e20',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(27, 94, 32, 0.5)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
+                  },
+                  '& .MuiAlert-action': {
+                    color: '#ffffff',
+                  },
+                }} 
+                onClose={() => setSuccess('')}
+              >
                 {success}
               </Alert>
             )}

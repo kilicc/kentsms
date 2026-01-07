@@ -955,7 +955,29 @@ export default function SMSReportsPage() {
 
             {/* Error Message */}
             {error && (
-              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 2, 
+                  borderRadius: 2,
+                  bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                  border: '2px solid #ffffff',
+                  '& .MuiAlert-icon': {
+                    color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
+                  },
+                }}
+              >
                 {error}
               </Alert>
             )}
@@ -1699,7 +1721,33 @@ export default function SMSReportsPage() {
                 </Paper>
 
                 {statsError && (
-                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setStatsError('')}>
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      mb: 2, 
+                      borderRadius: 2,
+                      bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '15px',
+                      py: 2,
+                      px: 2,
+                      boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                      border: '2px solid #ffffff',
+                      '& .MuiAlert-icon': {
+                        color: '#ffffff',
+                        fontSize: '24px',
+                      },
+                      '& .MuiAlert-message': {
+                        fontWeight: 700,
+                        fontSize: '15px',
+                      },
+                      '& .MuiAlert-action': {
+                        color: '#ffffff',
+                      },
+                    }} 
+                    onClose={() => setStatsError('')}
+                  >
                     {statsError}
                   </Alert>
                 )}
@@ -1999,7 +2047,33 @@ export default function SMSReportsPage() {
                 </Typography>
 
                 {shortLinksStatsError && (
-                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setShortLinksStatsError('')}>
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      mb: 2, 
+                      borderRadius: 2,
+                      bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '15px',
+                      py: 2,
+                      px: 2,
+                      boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                      border: '2px solid #ffffff',
+                      '& .MuiAlert-icon': {
+                        color: '#ffffff',
+                        fontSize: '24px',
+                      },
+                      '& .MuiAlert-message': {
+                        fontWeight: 700,
+                        fontSize: '15px',
+                      },
+                      '& .MuiAlert-action': {
+                        color: '#ffffff',
+                      },
+                    }} 
+                    onClose={() => setShortLinksStatsError('')}
+                  >
                     {shortLinksStatsError}
                   </Alert>
                 )}
@@ -2679,7 +2753,33 @@ export default function SMSReportsPage() {
                 </Paper>
 
                 {paymentRequestsError && (
-                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setPaymentRequestsError('')}>
+                  <Alert 
+                    severity="error" 
+                    sx={{ 
+                      mb: 2, 
+                      borderRadius: 2,
+                      bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '15px',
+                      py: 2,
+                      px: 2,
+                      boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                      border: '2px solid #ffffff',
+                      '& .MuiAlert-icon': {
+                        color: '#ffffff',
+                        fontSize: '24px',
+                      },
+                      '& .MuiAlert-message': {
+                        fontWeight: 700,
+                        fontSize: '15px',
+                      },
+                      '& .MuiAlert-action': {
+                        color: '#ffffff',
+                      },
+                    }} 
+                    onClose={() => setPaymentRequestsError('')}
+                  >
                     {paymentRequestsError}
                   </Alert>
                 )}
