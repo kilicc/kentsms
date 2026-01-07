@@ -56,6 +56,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Kullanıcı kredisini de düş (görüntüleme ve takip için)
+    const { data: currentUser, error: userError } = await supabaseServer
+      .from('users')
+      .select('credit')
+      .eq('id', auth.user.userId)
+      .single();
+
+    if (!userError && currentUser) {
+      const userCredit = currentUser.credit || 0;
+      const newUserCredit = Math.max(0, userCredit - requiredCredit);
+      await supabaseServer
+        .from('users')
+        .update({ credit: newUserCredit })
+        .eq('id', auth.user.userId);
+    }
+
     // Send SMS (birden fazla numara varsa sadece ilk numaraya gönder)
     const smsResult = await sendSMS(firstPhone, message);
 
@@ -78,16 +94,28 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError || !smsMessageData) {
-        // SMS kaydı oluşturulamadı, sistem kredisini geri ver
+        // SMS kaydı oluşturulamadı, sistem kredisini ve kullanıcı kredisini geri ver
         await addSystemCredit(requiredCredit);
+        if (!userError && currentUser) {
+          const userCredit = currentUser.credit || 0;
+          await supabaseServer
+            .from('users')
+            .update({ credit: userCredit + requiredCredit })
+            .eq('id', auth.user.userId);
+        }
         return NextResponse.json(
           { success: false, message: createError?.message || 'SMS kaydı oluşturulamadı' },
           { status: 500 }
         );
       }
 
-      // Sistem kredisini al (güncel değer için)
+      // Sistem kredisini ve kullanıcı kredisini al (güncel değer için)
       const remainingSystemCredit = await getSystemCredit();
+      const { data: updatedUser } = await supabaseServer
+        .from('users')
+        .select('credit')
+        .eq('id', auth.user.userId)
+        .single();
       
       return NextResponse.json({
         success: true,
@@ -96,6 +124,7 @@ export async function POST(request: NextRequest) {
           messageId: smsMessageData.id,
           cepSmsMessageId: smsResult.messageId,
           remainingSystemCredit: remainingSystemCredit,
+          remainingUserCredit: updatedUser?.credit || 0,
         },
       });
     } else {

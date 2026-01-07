@@ -75,6 +75,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Kullanıcı kredisini de düş (görüntüleme ve takip için)
+    const { data: currentUser, error: userError } = await supabaseServer
+      .from('users')
+      .select('credit')
+      .eq('id', auth.user.userId)
+      .single();
+
+    if (!userError && currentUser) {
+      const userCredit = currentUser.credit || 0;
+      const newUserCredit = Math.max(0, userCredit - requiredCredit);
+      await supabaseServer
+        .from('users')
+        .update({ credit: newUserCredit })
+        .eq('id', auth.user.userId);
+    }
+
     const results = {
       sent: 0,
       failed: 0,
@@ -210,8 +226,13 @@ export async function POST(request: NextRequest) {
     // Sistem kredisi zaten düşüldü (başarılı ve başarısız tüm SMS'ler için)
     // Başarısız olanlar için otomatik iade oluşturuldu, 48 saat sonra sistem kredisini geri verecek
 
-    // Sistem kredisini al (güncel değer için)
+    // Sistem kredisini ve kullanıcı kredisini al (güncel değer için)
     const remainingSystemCredit = await getSystemCredit();
+    const { data: updatedUser } = await supabaseServer
+      .from('users')
+      .select('credit')
+      .eq('id', auth.user.userId)
+      .single();
 
     return NextResponse.json({
       success: true,
@@ -219,6 +240,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...results,
         remainingSystemCredit: remainingSystemCredit,
+        remainingUserCredit: updatedUser?.credit || 0,
       },
     });
   } catch (error: any) {
