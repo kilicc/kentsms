@@ -167,14 +167,21 @@ export default function SMSInterfacePage() {
                 sx={{ 
                   mb: 2, 
                   borderRadius: 2,
-                  bgcolor: mode === 'dark' ? 'error.dark' : '#d32f2f',
+                  bgcolor: mode === 'dark' ? '#c62828' : '#b71c1c',
                   color: '#ffffff',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  py: 1.5,
-                  boxShadow: '0 2px 8px rgba(211, 47, 47, 0.3)',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(183, 28, 28, 0.5)',
+                  border: '2px solid #ffffff',
                   '& .MuiAlert-icon': {
                     color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
                   },
                 }}
               >
@@ -188,14 +195,21 @@ export default function SMSInterfacePage() {
                 sx={{ 
                   mb: 2, 
                   borderRadius: 2,
-                  bgcolor: mode === 'dark' ? 'success.dark' : '#2e7d32',
+                  bgcolor: mode === 'dark' ? '#1b5e20' : '#1b5e20',
                   color: '#ffffff',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  py: 1.5,
-                  boxShadow: '0 2px 8px rgba(46, 125, 50, 0.3)',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  py: 2,
+                  px: 2,
+                  boxShadow: '0 4px 12px rgba(27, 94, 32, 0.5)',
+                  border: '2px solid #ffffff',
                   '& .MuiAlert-icon': {
                     color: '#ffffff',
+                    fontSize: '24px',
+                  },
+                  '& .MuiAlert-message': {
+                    fontWeight: 700,
+                    fontSize: '15px',
                   },
                 }}
               >
