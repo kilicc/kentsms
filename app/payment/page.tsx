@@ -14,11 +14,14 @@ import ClientDate from '@/components/ClientDate';
 
 interface PaymentPackage {
   id: string;
+  packageId?: string;
   name: string;
   credits: number;
   price: number;
   currency: string;
   bonus: number;
+  isActive?: boolean;
+  displayOrder?: number;
 }
 
 interface CryptoCurrency {
@@ -65,7 +68,7 @@ export default function CryptoPaymentPage() {
   const [cryptoDialogOpen, setCryptoDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<PaymentPackage | null>(null);
   const [editingCrypto, setEditingCrypto] = useState<CryptoCurrency | null>(null);
-  const [packageForm, setPackageForm] = useState({ name: '', credits: 0, price: 0, currency: 'TRY', bonus: 0, isActive: true });
+  const [packageForm, setPackageForm] = useState({ packageId: '', name: '', credits: 0, price: 0, currency: 'TRY', bonus: 0, isActive: true });
   const [cryptoForm, setCryptoForm] = useState({ symbol: '', name: '', decimals: 18, minAmount: 0, networkFee: 0, confirmations: 3, walletAddress: '', isActive: true });
   
   // Admin payment request states
@@ -86,23 +89,49 @@ export default function CryptoPaymentPage() {
 
   const loadPackages = async () => {
     try {
-      const response = await api.get('/payment/packages');
+      // Admin ise admin endpoint kullan (tüm paketleri görmek için)
+      const endpoint = user?.role === 'admin' || user?.role === 'moderator'
+        ? '/admin/payment-packages'
+        : '/payment/packages';
+      const response = await api.get(endpoint);
       if (response.data.success) {
         setPackages(response.data.data.packages);
       }
     } catch (error) {
       console.error('Packages load error:', error);
+      // Fallback: Public endpoint dene
+      try {
+        const response = await api.get('/payment/packages');
+        if (response.data.success) {
+          setPackages(response.data.data.packages);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback packages load error:', fallbackError);
+      }
     }
   };
 
   const loadCurrencies = async () => {
     try {
-      const response = await api.get('/payment/crypto-currencies');
+      // Admin ise admin endpoint kullan (tüm kripto paraları görmek için)
+      const endpoint = user?.role === 'admin' || user?.role === 'moderator'
+        ? '/admin/crypto-currencies'
+        : '/payment/crypto-currencies';
+      const response = await api.get(endpoint);
       if (response.data.success) {
         setCurrencies(response.data.data.currencies);
       }
     } catch (error) {
       console.error('Currencies load error:', error);
+      // Fallback: Public endpoint dene
+      try {
+        const response = await api.get('/payment/crypto-currencies');
+        if (response.data.success) {
+          setCurrencies(response.data.data.currencies);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback currencies load error:', fallbackError);
+      }
     }
   };
 
@@ -1670,7 +1699,7 @@ export default function CryptoPaymentPage() {
                         startIcon={<Add />}
                         onClick={() => {
                           setEditingPackage(null);
-                          setPackageForm({ name: '', credits: 0, price: 0, currency: 'TRY', bonus: 0, isActive: true });
+                          setPackageForm({ packageId: '', name: '', credits: 0, price: 0, currency: 'TRY', bonus: 0, isActive: true });
                           setPackageDialogOpen(true);
                         }}
                         sx={{
@@ -1718,7 +1747,7 @@ export default function CryptoPaymentPage() {
                                   size="small"
                                   onClick={() => {
                                     setEditingPackage(pkg);
-                                    setPackageForm({ name: pkg.name, credits: pkg.credits, price: pkg.price, currency: pkg.currency, bonus: pkg.bonus || 0, isActive: pkg.isActive !== false });
+                                    setPackageForm({ packageId: pkg.packageId || pkg.id, name: pkg.name, credits: pkg.credits, price: pkg.price, currency: pkg.currency, bonus: pkg.bonus || 0, isActive: pkg.isActive !== false });
                                     setPackageDialogOpen(true);
                                   }}
                                   sx={{ p: 0.5 }}
@@ -1864,6 +1893,16 @@ export default function CryptoPaymentPage() {
               <DialogTitle>{editingPackage ? 'Paket Düzenle' : 'Yeni Paket'}</DialogTitle>
               <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                  {!editingPackage && (
+                    <TextField
+                      label="Paket ID (benzersiz)"
+                      value={packageForm.packageId}
+                      onChange={(e) => setPackageForm({ ...packageForm, packageId: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') })}
+                      fullWidth
+                      size="small"
+                      helperText="Örnek: starter, pro, premium"
+                    />
+                  )}
                   <TextField
                     label="Paket Adı"
                     value={packageForm.name}
