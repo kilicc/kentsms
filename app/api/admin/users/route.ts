@@ -110,19 +110,25 @@ export async function POST(request: NextRequest) {
     const { username, email, password, role, credit } = body;
 
     // Validation
-    if (!username || !email || !password) {
+    if (!username || !password) {
       return NextResponse.json(
-        { success: false, message: 'Kullanıcı adı, email ve şifre gerekli' },
+        { success: false, message: 'Kullanıcı adı ve şifre gerekli' },
         { status: 400 }
       );
     }
 
-    // Check if user exists
-    const { data: existingUsers, error: checkError } = await supabaseServer
+    // Check if user exists (email opsiyonel olduğu için sadece username kontrolü)
+    let query = supabaseServer
       .from('users')
-      .select('id')
-      .or(`username.eq.${username},email.eq.${email}`)
-      .limit(1);
+      .select('id');
+    
+    if (email) {
+      query = query.or(`username.eq.${username},email.eq.${email}`);
+    } else {
+      query = query.eq('username', username);
+    }
+    
+    const { data: existingUsers, error: checkError } = await query.limit(1);
 
     if (checkError) {
       throw new Error(checkError.message);
@@ -138,12 +144,12 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // Create user (email opsiyonel, role varsayılan 'user')
     const { data: user, error: createError } = await supabaseServer
       .from('users')
       .insert({
         username,
-        email,
+        email: email || null,
         password_hash: passwordHash,
         credit: credit || 0,
         role: role || 'user',

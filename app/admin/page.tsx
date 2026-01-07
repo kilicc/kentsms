@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'user', credit: 0 });
+  const [newUser, setNewUser] = useState({ username: '', password: '', credit: 0 });
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
@@ -514,8 +514,8 @@ export default function AdminDashboardPage() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.username || !newUser.email || !newUser.password) {
-      setError('Kullanıcı adı, email ve şifre gerekli');
+    if (!newUser.username || !newUser.password) {
+      setError('Kullanıcı adı ve şifre gerekli');
       return;
     }
 
@@ -526,16 +526,14 @@ export default function AdminDashboardPage() {
     try {
       const response = await api.post('/admin/users', {
         username: newUser.username,
-        email: newUser.email,
         password: newUser.password,
-        role: newUser.role,
         credit: newUser.credit || 0,
       });
 
       if (response.data.success) {
         setSuccess('Kullanıcı başarıyla oluşturuldu');
         setCreateUserDialogOpen(false);
-        setNewUser({ username: '', email: '', password: '', role: 'user', credit: 0 });
+        setNewUser({ username: '', password: '', credit: 0 });
         loadUsers();
         loadStats();
       }
@@ -883,7 +881,7 @@ export default function AdminDashboardPage() {
                       variant="contained"
                       startIcon={<PersonAdd />}
                       onClick={() => {
-                        setNewUser({ username: '', email: '', password: '', role: 'user', credit: 0 });
+                        setNewUser({ username: '', password: '', credit: 0 });
                         setCreateUserDialogOpen(true);
                       }}
                       sx={{
@@ -1965,21 +1963,6 @@ export default function AdminDashboardPage() {
               <TextField
                 fullWidth
                 size="small"
-                label="E-posta *"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                margin="dense"
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    fontSize: '12px',
-                  },
-                }}
-              />
-              <TextField
-                fullWidth
-                size="small"
                 label="Şifre *"
                 type="password"
                 value={newUser.password}
@@ -1992,19 +1975,6 @@ export default function AdminDashboardPage() {
                   },
                 }}
               />
-              <FormControl fullWidth size="small" margin="dense" sx={{ mt: 1 }}>
-                <InputLabel sx={{ fontSize: '12px' }}>Rol</InputLabel>
-                <Select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                  label="Rol"
-                  sx={{ fontSize: '12px' }}
-                >
-                  <MenuItem value="user" sx={{ fontSize: '12px' }}>Kullanıcı</MenuItem>
-                  <MenuItem value="admin" sx={{ fontSize: '12px' }}>Admin</MenuItem>
-                  <MenuItem value="moderator" sx={{ fontSize: '12px' }}>Moderatör</MenuItem>
-                </Select>
-              </FormControl>
               <TextField
                 fullWidth
                 size="small"
