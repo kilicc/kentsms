@@ -256,109 +256,6 @@ export default function SMSInterfacePage() {
                     </Grid>
                   )}
 
-                  {/* Kısa Link Modülü */}
-                  <Grid size={{ xs: 12 }}>
-                    <Box sx={{ 
-                      p: 1.5, 
-                      borderRadius: 1.5,
-                      border: '1px solid rgba(30, 64, 175, 0.2)',
-                      bgcolor: 'rgba(30, 64, 175, 0.05)',
-                    }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Link sx={{ fontSize: 18, color: 'primary.main' }} />
-                          <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 600 }}>
-                            Kısa Link
-                          </Typography>
-                        </Box>
-                        <Chip
-                          label={shortLinkEnabled ? 'Aktif' : 'Pasif'}
-                          size="small"
-                          color={shortLinkEnabled ? 'success' : 'default'}
-                          onClick={() => setShortLinkEnabled(!shortLinkEnabled)}
-                          sx={{ cursor: 'pointer', fontSize: '11px', height: 22 }}
-                        />
-                      </Box>
-                      {shortLinkEnabled && (
-                        <Box sx={{ mt: 1.5 }}>
-                          <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
-                            <FormControl fullWidth size="small">
-                              <InputLabel>Mevcut Kısa Link Seç</InputLabel>
-                              <Select
-                                value={selectedShortLinkId}
-                                onChange={(e) => {
-                                  const linkId = e.target.value as string;
-                                  setSelectedShortLinkId(linkId);
-                                  if (linkId) {
-                                    const link = shortLinks.find(l => l.id === linkId);
-                                    if (link) {
-                                      const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
-                                      const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
-                                      const newMessage = formData.message + ' ' + shortLink;
-                                      // 180 karakter limiti kontrolü
-                                      if (newMessage.length <= MAX_CHARACTERS) {
-                                        setFormData({ ...formData, message: newMessage });
-                                        setSelectedShortLinkId('');
-                                        setSuccess('Kısa link mesaja eklendi!');
-                                        setTimeout(() => setSuccess(''), 3000);
-                                      } else {
-                                        setError('Kısa link eklendiğinde mesaj 180 karakteri aşıyor!');
-                                        setSelectedShortLinkId('');
-                                      }
-                                    }
-                                  }
-                                }}
-                                label="Mevcut Kısa Link Seç"
-                                sx={{
-                                  borderRadius: 1.5,
-                                  fontSize: '14px',
-                                }}
-                              >
-                                <MenuItem value="">
-                                  <em>Kısa link seçin</em>
-                                </MenuItem>
-                                {shortLinks.map((link) => {
-                                  const shortLinkDomain = process.env.NEXT_PUBLIC_SHORT_LINK_DOMAIN || 'go.kentsms.com';
-                                  const shortLink = `https://${shortLinkDomain}/${link.short_code}`;
-                                  return (
-                                    <MenuItem key={link.id} value={link.id}>
-                                      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                                        <Typography variant="body2" sx={{ fontSize: '12px', fontWeight: 600 }}>
-                                          {shortLink}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '10px' }}>
-                                          {link.original_url.length > 50 ? link.original_url.substring(0, 50) + '...' : link.original_url}
-                                        </Typography>
-                                      </Box>
-                                    </MenuItem>
-                                  );
-                                })}
-                              </Select>
-                            </FormControl>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              startIcon={<Add />}
-                              onClick={() => setShortLinkSelectDialogOpen(true)}
-                              sx={{
-                                borderRadius: 1.5,
-                                textTransform: 'none',
-                                fontSize: '13px',
-                                whiteSpace: 'nowrap',
-                                minWidth: 'auto',
-                              }}
-                            >
-                              Yeni Oluştur
-                            </Button>
-                          </Box>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '11px', display: 'block' }}>
-                            Mevcut kısa linklerinizden seçin veya yeni bir kısa link oluşturun
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  </Grid>
-
                   <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth
@@ -399,9 +296,6 @@ export default function SMSInterfacePage() {
                       borderRadius: 1.5,
                       mb: 1.5,
                     }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px', mb: 0.5 }}>
-                        <strong>Servis:</strong> CepSMS
-                      </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
                         <strong>Maliyet:</strong> 180 karakter = 1 Kredi
                       </Typography>
