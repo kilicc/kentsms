@@ -95,11 +95,13 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
     });
 
     // CepSMS API isteği - From parametresi opsiyonel ve bazı hesaplarda geçersiz olabilir
+    // CepSMS API bazı versiyonlarında Numbers string olarak bekliyor (virgülle ayrılmış)
+    // İlk array formatını dene, hata alırsa string formatı dene
     const requestData: any = {
       User: CEPSMS_USERNAME,
       Pass: CEPSMS_PASSWORD,
       Message: message,
-      Numbers: [formattedPhone],
+      Numbers: [formattedPhone], // Array format (JSON için)
     };
 
     // From parametresi sadece geçerli bir değer varsa ekle
@@ -130,10 +132,11 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
         }
       );
 
-      // Eğer "User Error" alırsak form-data dene
+      // Eğer "User Error" veya "Invalid" hatası alırsak form-data dene
       const responseError = response.data?.Error || response.data?.error || '';
-      if (responseError.toLowerCase().includes('user error')) {
-        console.log('[CepSMS] JSON format User Error aldı, form-data formatı deneniyor...');
+      const errorStr = responseError.toLowerCase();
+      if (errorStr.includes('user error') || errorStr.includes('invalid') || errorStr.includes('geçersiz')) {
+        console.log('[CepSMS] JSON format hatası aldı (' + responseError + '), form-data formatı deneniyor...');
         useFormData = true;
       }
     } catch (jsonError: any) {
@@ -148,7 +151,9 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
       formData.append('User', CEPSMS_USERNAME);
       formData.append('Pass', CEPSMS_PASSWORD);
       formData.append('Message', message);
-      formData.append('Numbers', JSON.stringify([formattedPhone]));
+      // CepSMS API bazı versiyonlarında Numbers string olarak bekliyor (virgülle ayrılmış)
+      // İlk string formatını dene, sonra JSON array'i dene
+      formData.append('Numbers', formattedPhone); // String format
       if (CEPSMS_FROM && CEPSMS_FROM.trim() !== '' && CEPSMS_FROM !== 'CepSMS') {
         formData.append('From', CEPSMS_FROM);
       }
