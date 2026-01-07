@@ -59,7 +59,8 @@
     "puppeteer": "^24.30.0",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.20.6",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "yaml": "^2.8.2"
   },
   "engines": {
     "node": ">=20.0.0",

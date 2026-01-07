@@ -1,0 +1,15 @@
+# Nixpacks configuration for KENTSMS
+# This file tells Nixpacks how to build the application
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm-9_x", "openssl", "libnss3", "libatk1.0-0", "libatk-bridge2.0-0", "libcups2", "libgbm1", "libasound2t64", "libpangocairo-1.0-0", "libxss1", "libgtk-3-0", "libxshmfence1", "libglu1", "chromium"]
+
+[phases.install]
+cmds = ["npm install --legacy-peer-deps"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[phases.start]
+cmds = ["npm run start"]
+
