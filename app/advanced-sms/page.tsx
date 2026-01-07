@@ -2,6 +2,7 @@
 
 import { Box, Container, Typography, Paper, TextField, Button, Grid, Alert, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Chip, Divider, alpha, InputAdornment } from '@mui/material';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,9 +34,15 @@ interface SMSTemplate {
 }
 
 export default function AdvancedSMSPage() {
+  const router = useRouter();
   const { api } = useAuth();
   const { mode } = useTheme();
   const [contacts, setContacts] = useState<Contact[]>([]);
+  
+  // Sayfa deaktif - dashboard'a yönlendir
+  useEffect(() => {
+    router.replace('/dashboard');
+  }, [router]);
   const [groups, setGroups] = useState<ContactGroup[]>([]);
   const [templates, setTemplates] = useState<SMSTemplate[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);

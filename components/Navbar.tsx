@@ -34,8 +34,8 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: 'Ana Sayfa', icon: <Dashboard />, path: '/dashboard', description: 'Dashboard' },
   { label: 'SMS Gönder', icon: <Sms />, path: '/sms', description: 'Basit SMS' },
-  { label: 'Gelişmiş SMS', icon: <RocketLaunch />, path: '/advanced-sms', description: 'Toplu SMS' },
-  { label: 'Rehberim', icon: <Person />, path: '/contacts', description: 'Kişiler' },
+  // { label: 'Gelişmiş SMS', icon: <RocketLaunch />, path: '/advanced-sms', description: 'Toplu SMS' }, // Deaktif
+  // { label: 'Rehberim', icon: <Person />, path: '/contacts', description: 'Kişiler' }, // Deaktif
   { label: 'Ödeme', icon: <AccountBalanceWallet />, path: '/payment', description: 'Kredi Yükle' },
   { label: 'Raporlar', icon: <Assessment />, path: '/reports', description: 'SMS Raporları' },
   { label: 'İadeler', icon: <MoneyOff />, path: '/refunds', description: 'İade Yönetimi' },

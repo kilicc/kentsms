@@ -33,10 +33,16 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     
+    // Deaktif edilmiş sayfaları engelle
+    if (url.pathname.startsWith('/advanced-sms') || url.pathname.startsWith('/contacts')) {
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+    
     // Admin subdomain için tüm protected path'lere izin ver
     // Client-side'da ProtectedRoute kontrolü yapılacak
     // Middleware sadece public path'leri kontrol eder
-    // Protected path'ler: /admin, /sms, /dashboard, /contacts, /reports, /payment, /profile, vb.
+    // Protected path'ler: /admin, /sms, /dashboard, /reports, /payment, /profile, vb.
     // Bu path'ler client-side'da ProtectedRoute ile korunuyor
     return NextResponse.next();
   }
@@ -71,9 +77,15 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     
+    // Deaktif edilmiş sayfaları engelle
+    if (url.pathname.startsWith('/advanced-sms') || url.pathname.startsWith('/contacts')) {
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+    
     // Platform subdomain için tüm protected path'lere izin ver
     // Client-side'da ProtectedRoute kontrolü yapılacak
-    // Protected path'ler: /dashboard, /sms, /contacts, /reports, /payment, /profile, vb.
+    // Protected path'ler: /dashboard, /sms, /reports, /payment, /profile, vb.
     // Bu path'ler client-side'da ProtectedRoute ile korunuyor
     return NextResponse.next();
   }

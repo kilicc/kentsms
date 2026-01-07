@@ -2,6 +2,7 @@
 
 import { Box, Container, Typography, Paper, Button, Grid, Tabs, Tab, Card, CardContent, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, Chip, FormControl, InputLabel, Select, MenuItem, CircularProgress, Checkbox, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, InputAdornment, Pagination } from '@mui/material';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,9 +34,15 @@ interface ContactGroup {
 }
 
 export default function ContactsPage() {
+  const router = useRouter();
   const { api } = useAuth();
   const { mode } = useTheme();
   const [tabValue, setTabValue] = useState(0);
+  
+  // Sayfa deaktif - dashboard'a yönlendir
+  useEffect(() => {
+    router.replace('/dashboard');
+  }, [router]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [groups, setGroups] = useState<ContactGroup[]>([]);
   const [loading, setLoading] = useState(false);
