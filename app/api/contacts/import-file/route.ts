@@ -93,21 +93,44 @@ export async function POST(request: NextRequest) {
     for (const contactData of contacts) {
       let phoneValue = 'Unknown';
       try {
-        // Map column names (case-insensitive)
+        // Map column names (case-insensitive, Turkish character aware)
+        // Normalize Turkish characters for better matching
+        const normalizeKey = (key: string) => key
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+          .replace(/ı/g, 'i')
+          .replace(/İ/g, 'i');
+        
         const nameField = Object.keys(contactData).find(
-          (key) => key.toLowerCase().includes('isim') || key.toLowerCase().includes('name') || key.toLowerCase().includes('ad')
+          (key) => {
+            const normalized = normalizeKey(key);
+            return normalized.includes('isim') || normalized.includes('name') || normalized.includes('ad');
+          }
         );
         const phoneField = Object.keys(contactData).find(
-          (key) => key.toLowerCase().includes('telefon') || key.toLowerCase().includes('phone') || key.toLowerCase().includes('numara')
+          (key) => {
+            const normalized = normalizeKey(key);
+            return normalized.includes('telefon') || normalized.includes('phone') || normalized.includes('numara');
+          }
         );
         const emailField = Object.keys(contactData).find(
-          (key) => key.toLowerCase().includes('email') || key.toLowerCase().includes('e-posta') || key.toLowerCase().includes('eposta')
+          (key) => {
+            const normalized = normalizeKey(key);
+            return normalized.includes('email') || normalized.includes('e-posta') || normalized.includes('eposta') || normalized.includes('e posta');
+          }
         );
         const groupField = Object.keys(contactData).find(
-          (key) => key.toLowerCase().includes('grup') || key.toLowerCase().includes('group')
+          (key) => {
+            const normalized = normalizeKey(key);
+            return normalized.includes('grup') || normalized.includes('group');
+          }
         );
         const notesField = Object.keys(contactData).find(
-          (key) => key.toLowerCase().includes('not') || key.toLowerCase().includes('note')
+          (key) => {
+            const normalized = normalizeKey(key);
+            return normalized.includes('not') || normalized.includes('note');
+          }
         );
 
         const name = nameField ? String(contactData[nameField] || '').trim() : '';

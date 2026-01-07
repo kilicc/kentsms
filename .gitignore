@@ -43,3 +43,4 @@ prisma/migrations/
 .DS_Store
 Thumbs.db
 
+scripts/test-export-import.xlsx
