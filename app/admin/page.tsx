@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
-import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy } from '@mui/icons-material';
+import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy, AccountBalance } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import ClientDate from '@/components/ClientDate';
@@ -108,6 +108,13 @@ export default function AdminDashboardPage() {
   const [apiKeyDetailDialogOpen, setApiKeyDetailDialogOpen] = useState(false);
   const [selectedApiKeyDetail, setSelectedApiKeyDetail] = useState<any | null>(null);
   
+  // System Credit states
+  const [systemCredit, setSystemCredit] = useState<number>(0);
+  const [loadingSystemCredit, setLoadingSystemCredit] = useState(false);
+  const [systemCreditDialogOpen, setSystemCreditDialogOpen] = useState(false);
+  const [systemCreditAction, setSystemCreditAction] = useState<'set' | 'add'>('add');
+  const [systemCreditAmount, setSystemCreditAmount] = useState<number>(0);
+  
   // User management search and filter
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
@@ -121,9 +128,9 @@ export default function AdminDashboardPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (tab) {
+        if (tab) {
         const tabNum = parseInt(tab, 10);
-        if (!isNaN(tabNum) && tabNum >= 0 && tabNum <= 4) {
+        if (!isNaN(tabNum) && tabNum >= 0 && tabNum <= 5) {
           setTabValue(tabNum);
         }
       }
@@ -153,14 +160,25 @@ export default function AdminDashboardPage() {
         loadApiKeys();
         loadUsers(); // Kullanıcı listesi API key oluşturma için gerekli
       }
+      if (tabValue === 5) {
+        loadSystemCredit();
+      }
     }
   }, [user, tabValue, selectedDate]);
 
   const loadStats = async () => {
     try {
-      const response = await api.get('/admin/stats');
-      if (response.data.success) {
-        setStats(response.data.data);
+      const [statsResponse, systemCreditResponse] = await Promise.all([
+        api.get('/admin/stats'),
+        api.get('/admin/system-credit'),
+      ]);
+      
+      if (statsResponse.data.success) {
+        setStats(statsResponse.data.data);
+      }
+      
+      if (systemCreditResponse.data.success) {
+        setSystemCredit(systemCreditResponse.data.data.systemCredit || 0);
       }
     } catch (error) {
       console.error('Stats load error:', error);
@@ -194,6 +212,56 @@ export default function AdminDashboardPage() {
       setApiKeys([]);
     } finally {
       setLoadingApiKeys(false);
+    }
+  };
+
+  const loadSystemCredit = async () => {
+    try {
+      setLoadingSystemCredit(true);
+      setError('');
+      const response = await api.get('/admin/system-credit');
+      if (response.data.success) {
+        setSystemCredit(response.data.data.systemCredit || 0);
+      } else {
+        setError(response.data.message || 'Sistem kredisi yüklenirken bir hata oluştu');
+      }
+    } catch (error: any) {
+      console.error('System credit load error:', error);
+      setError(error.response?.data?.message || 'Sistem kredisi yüklenirken bir hata oluştu');
+    } finally {
+      setLoadingSystemCredit(false);
+    }
+  };
+
+  const handleUpdateSystemCredit = async () => {
+    if (!systemCreditAmount || systemCreditAmount <= 0) {
+      setError('Geçerli bir miktar girin');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await api.put('/admin/system-credit', {
+        action: systemCreditAction,
+        amount: systemCreditAmount,
+      });
+
+      if (response.data.success) {
+        setSuccess(`Sistem kredisi ${systemCreditAction === 'set' ? 'güncellendi' : 'artırıldı'}`);
+        setSystemCredit(response.data.data.systemCredit);
+        setSystemCreditDialogOpen(false);
+        setSystemCreditAmount(0);
+        setSystemCreditAction('add');
+      } else {
+        setError(response.data.message || 'Sistem kredisi güncellenemedi');
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Sistem kredisi güncellenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -389,12 +457,12 @@ export default function AdminDashboardPage() {
       }
 
       if (successCount > 0) {
-        setSuccess(`${successCount} kullanıcıya ${creditAmount} kredi başarıyla eklendi${failCount > 0 ? ` (${failCount} başarısız)` : ''}`);
+        setSuccess(`${successCount} kullanıcıya ${creditAmount.toLocaleString()} kredi başarıyla eklendi (ana krediden paylaştırıldı)${failCount > 0 ? ` (${failCount} başarısız)` : ''}`);
         setBulkCreditDialogOpen(false);
         setSelectedUsers([]);
         setCreditAmount(0);
         loadUsers();
-        loadStats();
+        loadStats(); // Sistem kredisi de yenilenecek
       } else {
         setError('Kredi eklenemedi');
       }
@@ -567,13 +635,57 @@ export default function AdminDashboardPage() {
                 <Tab icon={<Assessment />} label="İade Raporu" />
                 <Tab icon={<AccountBalanceWallet />} label="Ödeme Talepleri" />
                 <Tab icon={<VpnKey />} label="API Kullanıcıları" />
+                <Tab icon={<AccountBalance />} label="Sistem Kredisi" />
               </Tabs>
             </Paper>
 
             {/* Stats Cards */}
             {stats && (
               <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Card 
+                    sx={{ 
+                      borderRadius: 2, 
+                      background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(69, 160, 73, 0.1) 100%)',
+                      border: '1px solid rgba(76, 175, 80, 0.2)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    <CardContent>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{
+                          fontSize: '14px',
+                        }}
+                      >
+                        Ana Sistem Kredisi
+                      </Typography>
+                      <Typography 
+                        variant="h4" 
+                        sx={{ 
+                          fontWeight: 600,
+                          fontSize: '18px',
+                          color: '#4caf50',
+                        }}
+                      >
+                        {systemCredit.toLocaleString('tr-TR')}
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{
+                          fontSize: '11px',
+                          display: 'block',
+                          mt: 0.5,
+                        }}
+                      >
+                        Tüm kullanıcılar bu krediden kullanır
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card 
                     sx={{ 
                       borderRadius: 2, 
@@ -2372,6 +2484,166 @@ export default function AdminDashboardPage() {
             <DialogActions sx={{ px: 2, pb: 1.5 }}>
               <Button size="small" onClick={() => setApiKeyDetailDialogOpen(false)} sx={{ fontSize: '12px' }}>
                 Kapat
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* System Credit Tab */}
+          {tabValue === 5 && (
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>
+                  Sistem Kredisi Yönetimi
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    setSystemCreditDialogOpen(true);
+                    setSystemCreditAction('add');
+                    setSystemCreditAmount(0);
+                  }}
+                  sx={{
+                    borderRadius: 1.5,
+                    padding: '6px 16px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    textTransform: 'none',
+                    background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                    '&:hover': {
+                      boxShadow: '0 4px 16px rgba(25, 118, 210, 0.4)',
+                      transform: 'translateY(-1px)',
+                    },
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  Kredi Ekle/Güncelle
+                </Button>
+              </Box>
+
+              {loadingSystemCredit ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <Card
+                  sx={{
+                    borderRadius: 2,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    p: 3,
+                    background: mode === 'dark'
+                      ? 'linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%)'
+                      : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  }}
+                >
+                  <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        fontSize: '48px',
+                        fontWeight: 700,
+                        color: 'primary.main',
+                        mb: 1,
+                      }}
+                    >
+                      {systemCredit.toLocaleString()}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontSize: '14px',
+                        color: 'text.secondary',
+                        mb: 2,
+                      }}
+                    >
+                      Sistem Kredisi (SMS)
+                    </Typography>
+                    <Chip
+                      label="Tüm kullanıcılar bu krediden SMS gönderir"
+                      color="info"
+                      size="small"
+                      sx={{
+                        fontSize: '11px',
+                        fontWeight: 500,
+                      }}
+                    />
+                  </Box>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontSize: '13px', fontWeight: 600, mb: 1 }}>
+                      Sistem Kredisi Hakkında
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary', mb: 1 }}>
+                      • Tüm kullanıcılar sistem kredisinden SMS gönderir
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary', mb: 1 }}>
+                      • Her SMS = 1 kredi (mesaj uzunluğu önemli değil)
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary', mb: 1 }}>
+                      • Başarısız SMS'ler 48 saat sonra otomatik olarak sisteme iade edilir
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '12px', color: 'text.secondary' }}>
+                      • Sistem kredisi tükendiğinde hiçbir kullanıcı SMS gönderemez
+                    </Typography>
+                  </Box>
+                </Card>
+              )}
+            </Box>
+          )}
+
+          {/* System Credit Update Dialog */}
+          <Dialog open={systemCreditDialogOpen} onClose={() => setSystemCreditDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle sx={{ fontSize: '16px', fontWeight: 600 }}>
+              Sistem Kredisi {systemCreditAction === 'set' ? 'Güncelle' : 'Ekle'}
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 1 }}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>İşlem Tipi</InputLabel>
+                  <Select
+                    value={systemCreditAction}
+                    label="İşlem Tipi"
+                    onChange={(e) => setSystemCreditAction(e.target.value as 'set' | 'add')}
+                  >
+                    <MenuItem value="add">Kredi Ekle</MenuItem>
+                    <MenuItem value="set">Kredi Belirle</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <TextField
+                  fullWidth
+                  label={systemCreditAction === 'set' ? 'Yeni Sistem Kredisi' : 'Eklenecek Kredi'}
+                  type="number"
+                  value={systemCreditAmount}
+                  onChange={(e) => setSystemCreditAmount(parseInt(e.target.value) || 0)}
+                  inputProps={{ min: 0 }}
+                  helperText={
+                    systemCreditAction === 'set'
+                      ? `Mevcut kredi: ${systemCredit.toLocaleString()} → Yeni kredi: ${systemCreditAmount.toLocaleString()}`
+                      : `Mevcut kredi: ${systemCredit.toLocaleString()} → Yeni kredi: ${(systemCredit + systemCreditAmount).toLocaleString()}`
+                  }
+                />
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: 2, pb: 1.5 }}>
+              <Button size="small" onClick={() => setSystemCreditDialogOpen(false)} sx={{ fontSize: '12px' }}>
+                İptal
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handleUpdateSystemCredit}
+                disabled={loading || systemCreditAmount <= 0}
+                sx={{
+                  fontSize: '12px',
+                  background: 'linear-gradient(135deg, #1976d2 0%, #dc004e 100%)',
+                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                }}
+              >
+                {loading ? <CircularProgress size={16} /> : systemCreditAction === 'set' ? 'Güncelle' : 'Ekle'}
               </Button>
             </DialogActions>
           </Dialog>

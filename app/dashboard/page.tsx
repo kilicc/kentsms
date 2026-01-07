@@ -12,7 +12,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
 
 interface DashboardStats {
-  credit: number;
+  systemCredit: number; // Sistem kredisi (tüm kullanıcılar için ortak)
   sentThisMonth: number;
   totalContacts: number;
   failedSMS: number;
@@ -54,7 +54,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
-    credit: 0,
+    systemCredit: 0,
     sentThisMonth: 0,
     totalContacts: 0,
     failedSMS: 0,
@@ -92,8 +92,12 @@ export default function DashboardPage() {
 
         if (adminStats.data.success) {
           const statsData = adminStats.data.data;
+          // Sistem kredisini al
+          const systemCreditRes = await api.get('/system-credit');
+          const systemCredit = systemCreditRes.data.success ? systemCreditRes.data.data.systemCredit : 0;
+          
           setStats({
-            credit: 0,
+            systemCredit,
             sentThisMonth: statsData.smsThisMonth || 0,
             totalContacts: 0,
             failedSMS: 0,
@@ -117,10 +121,14 @@ export default function DashboardPage() {
         }
       } else {
         // User dashboard - load user stats
-        const [contactsStats, smsHistory] = await Promise.all([
+        const [contactsStats, smsHistory, systemCreditRes] = await Promise.all([
           api.get('/contacts/stats'),
           api.get('/bulk-sms/history?limit=100'),
+          api.get('/system-credit'),
         ]);
+
+        // Sistem kredisini al
+        const systemCredit = systemCreditRes.data.success ? systemCreditRes.data.data.systemCredit : 0;
 
         if (contactsStats.data.success) {
           const statsData = contactsStats.data.data;
@@ -152,7 +160,7 @@ export default function DashboardPage() {
 
           setStats((prev) => ({
             ...prev,
-            credit: user?.credit || 0,
+            systemCredit,
             sentThisMonth,
             sentToday,
           }));
@@ -305,8 +313,8 @@ export default function DashboardPage() {
       ]
     : [
         {
-          title: 'Mevcut Kredi',
-          value: stats.credit.toString(),
+          title: 'Sistem Kredisi',
+          value: stats.systemCredit.toString(),
           subtitle: 'SMS',
           icon: <AttachMoney />,
           color: '#4caf50',
@@ -388,7 +396,7 @@ export default function DashboardPage() {
           {/* Stat Cards Grid - Modern Design */}
           <Grid container spacing={0} sx={{ mb: 2, width: '100%', margin: 0, display: 'flex' }}>
             {statCards.map((card, index) => {
-              const isCreditCard = card.title === 'Mevcut Kredi';
+              const isCreditCard = card.title === 'Sistem Kredisi';
               const isFirst = index === 0;
               const isLast = index === statCards.length - 1;
               return (

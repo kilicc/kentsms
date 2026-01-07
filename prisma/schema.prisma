@@ -233,3 +233,13 @@ model CryptoCurrency {
   @@index([displayOrder], map: "idx_crypto_currencies_display_order")
   @@map("crypto_currencies")
 }
+
+model SystemSettings {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String    @unique @db.VarChar(100)
+  value     String
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("system_settings")
+}

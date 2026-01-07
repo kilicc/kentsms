@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest, requireAdmin } from '@/lib/middleware/auth';
+import { deductSystemCredit, getSystemCredit } from '@/lib/utils/systemCredit';
 
 // POST /api/admin/users/:userId/credit - Kredi yükleme
 export async function POST(
@@ -49,29 +50,51 @@ export async function POST(
       );
     }
 
-    // Update user credit using Supabase
+    // Sistem kredisinden düş (ana kredi havuzundan)
+    const creditToAdd = Math.round(amount);
+    const systemCreditCheck = await deductSystemCredit(creditToAdd);
+
+    if (!systemCreditCheck.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: systemCreditCheck.error || 'Yetersiz sistem kredisi. Ana krediden yeterli kredi yok.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Update user credit using Supabase (sistem kredisinden düşülmüş kredi kullanıcıya ekleniyor)
     const currentCredit = user.credit || 0;
     const { data: updatedUser, error: updateError } = await supabaseServer
       .from('users')
-      .update({ credit: currentCredit + Math.round(amount) })
+      .update({ credit: currentCredit + creditToAdd })
       .eq('id', userId)
       .select('id, username, email, credit')
       .single();
 
     if (updateError || !updatedUser) {
+      // Kullanıcı kredisi güncellenemedi, sistem kredisini geri ver
+      const { addSystemCredit } = await import('@/lib/utils/systemCredit');
+      await addSystemCredit(creditToAdd);
+
       return NextResponse.json(
         { success: false, message: updateError?.message || 'Kredi yüklenemedi' },
         { status: 500 }
       );
     }
 
+    // Sistem kredisini al (güncel değer için)
+    const remainingSystemCredit = await getSystemCredit();
+
     return NextResponse.json({
       success: true,
-      message: 'Kredi yüklendi',
+      message: 'Kredi yüklendi (ana krediden düşüldü)',
       data: {
         user: updatedUser,
-        creditAdded: Math.round(amount),
-        reason: reason || 'Admin kredi yükleme',
+        creditAdded: creditToAdd,
+        remainingSystemCredit: remainingSystemCredit,
+        reason: reason || 'Admin kredi yükleme - Ana krediden paylaştırıldı',
       },
     });
   } catch (error: any) {
