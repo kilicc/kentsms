@@ -130,10 +130,24 @@ export async function POST(request: NextRequest) {
     if (smsResult.success && smsResult.messageId) {
       // SMS başarılı - kullanıcı kredisinden düş (admin değilse)
       if (!isAdmin && userCredit !== undefined) {
-        await supabaseServer
+        const newCredit = Math.max(0, userCredit - requiredCredit);
+        const { error: updateError } = await supabaseServer
           .from('users')
-          .update({ credit: Math.max(0, userCredit - requiredCredit) })
+          .update({ credit: newCredit })
           .eq('id', auth.user.id);
+        
+        if (updateError) {
+          console.error('[SMS Send Advanced] Kredi düşürme hatası:', {
+            userId: auth.user.id,
+            phone: firstPhone,
+            requiredCredit,
+            userCredit,
+            newCredit,
+            error: updateError,
+          });
+          // SMS gönderildi ama kredi düşürülemedi - kritik hata
+          // SMS kaydını oluşturmaya devam ediyoruz ama kredi geri verme işlemini yapmamalıyız
+        }
       }
 
       // SMS kaydı oluştur
@@ -155,10 +169,20 @@ export async function POST(request: NextRequest) {
       if (createError || !smsMessageData) {
         // SMS kaydı oluşturulamadı, kredi geri ver (admin değilse)
         if (!isAdmin && userCredit !== undefined) {
-          await supabaseServer
+          const { error: refundError } = await supabaseServer
             .from('users')
             .update({ credit: userCredit })
             .eq('id', auth.user.id);
+          
+          if (refundError) {
+            console.error('[SMS Send Advanced] Kredi geri verme hatası:', {
+              userId: auth.user.id,
+              phone: firstPhone,
+              originalCredit: userCredit,
+              error: refundError,
+            });
+            // Kritik hata: SMS gönderildi, kredi düşürüldü ama kayıt oluşturulamadı ve kredi geri verilemedi
+          }
         }
         return NextResponse.json(
           {

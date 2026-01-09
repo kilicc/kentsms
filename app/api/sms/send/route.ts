@@ -274,14 +274,38 @@ export async function POST(request: NextRequest) {
               .eq('id', auth.user.userId)
               .single();
             
-            if (!userUpdateError && updatedUser) {
+            if (userUpdateError || !updatedUser) {
+              console.error('[SMS Send] Kullanıcı kredisi alınamadı:', {
+                userId: auth.user.userId,
+                batchIndex: batchIndex + 1,
+                concurrentBatchIndex: Math.floor(i / CONCURRENT_LIMIT) + 1,
+                sentInBatch,
+                error: userUpdateError,
+              });
+              // SMS'ler gönderildi ama kredi düşürülemedi - kritik hata
+            } else {
               const userCredit = updatedUser.credit || 0;
               const newUserCredit = Math.max(0, userCredit - (sentInBatch * requiredCredit));
-              await supabaseServer
+              const { error: updateError } = await supabaseServer
                 .from('users')
                 .update({ credit: newUserCredit })
                 .eq('id', auth.user.userId);
-              currentUser.credit = newUserCredit;
+              
+              if (updateError) {
+                console.error('[SMS Send] Kredi düşürme hatası:', {
+                  userId: auth.user.userId,
+                  batchIndex: batchIndex + 1,
+                  concurrentBatchIndex: Math.floor(i / CONCURRENT_LIMIT) + 1,
+                  currentCredit: userCredit,
+                  requiredCredit: sentInBatch * requiredCredit,
+                  newCredit: newUserCredit,
+                  sentInBatch,
+                  error: updateError,
+                });
+                // SMS'ler gönderildi ama kredi düşürülemedi - kritik hata
+              } else {
+                currentUser.credit = newUserCredit;
+              }
             }
           }
         }

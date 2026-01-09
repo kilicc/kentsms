@@ -156,20 +156,38 @@ export async function POST(request: NextRequest) {
           // SMS başarılı - kullanıcı kredisinden düş (admin değilse)
           if (!isAdmin && userCredit !== undefined) {
             // Güncel krediyi al ve düş
-            const { data: currentUser } = await supabaseServer
+            const { data: currentUser, error: getUserError } = await supabaseServer
               .from('users')
               .select('credit')
               .eq('id', auth.user.id)
               .single();
             
-            if (currentUser) {
+            if (getUserError || !currentUser) {
+              console.error('[SMS Send Multi] Kullanıcı kredisi alınamadı:', getUserError);
+              // SMS gönderildi ama kredi düşürülemedi - kritik hata
+              // SMS kaydını oluşturmaya devam ediyoruz ama loglayalım
+            } else {
               const currentCredit = currentUser.credit || 0;
               const newCredit = Math.max(0, currentCredit - requiredCredit);
-              await supabaseServer
+              const { error: updateError } = await supabaseServer
                 .from('users')
                 .update({ credit: newCredit })
                 .eq('id', auth.user.id);
-              userCredit = newCredit; // Güncel krediyi güncelle
+              
+              if (updateError) {
+                console.error('[SMS Send Multi] Kredi düşürme hatası:', {
+                  userId: auth.user.id,
+                  phone: phone,
+                  requiredCredit,
+                  currentCredit,
+                  newCredit,
+                  error: updateError,
+                });
+                // SMS gönderildi ama kredi düşürülemedi - kritik hata
+                // SMS kaydını oluşturmaya devam ediyoruz ama loglayalım
+              } else {
+                userCredit = newCredit; // Güncel krediyi güncelle
+              }
             }
           }
 
@@ -196,10 +214,37 @@ export async function POST(request: NextRequest) {
           } else {
             // SMS kaydı oluşturulamadı, kredi geri ver (admin değilse)
             if (!isAdmin && userCredit !== undefined) {
-              await supabaseServer
+              // Güncel krediyi al ve geri ver
+              const { data: currentUser, error: getUserError } = await supabaseServer
                 .from('users')
-                .update({ credit: (userCredit || 0) + requiredCredit })
-                .eq('id', auth.user.id);
+                .select('credit')
+                .eq('id', auth.user.id)
+                .single();
+              
+              if (getUserError || !currentUser) {
+                console.error('[SMS Send Multi] Kredi geri verme için kullanıcı kredisi alınamadı:', getUserError);
+              } else {
+                const currentCredit = currentUser.credit || 0;
+                const refundCredit = currentCredit + requiredCredit;
+                const { error: refundError } = await supabaseServer
+                  .from('users')
+                  .update({ credit: refundCredit })
+                  .eq('id', auth.user.id);
+                
+                if (refundError) {
+                  console.error('[SMS Send Multi] Kredi geri verme hatası:', {
+                    userId: auth.user.id,
+                    phone: phone,
+                    currentCredit,
+                    requiredCredit,
+                    refundCredit,
+                    error: refundError,
+                  });
+                  // Kritik hata: SMS gönderildi, kredi düşürüldü ama kayıt oluşturulamadı ve kredi geri verilemedi
+                } else {
+                  userCredit = refundCredit; // Güncel krediyi güncelle
+                }
+              }
             }
             failedCount++;
           }
