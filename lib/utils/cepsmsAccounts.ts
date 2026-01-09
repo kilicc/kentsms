@@ -82,10 +82,14 @@ export const CEPSMS_ACCOUNTS: CepSMSAccount[] = [
 ];
 
 /**
- * Kullanıcı adına göre hesap bul
+ * Kullanıcı adına göre hesap bul (case-insensitive)
  */
 export function getAccountByUsername(username: string): CepSMSAccount | undefined {
-  return CEPSMS_ACCOUNTS.find(account => account.username === username);
+  if (!username || username.trim() === '') {
+    return undefined;
+  }
+  const normalizedUsername = username.trim().toLowerCase();
+  return CEPSMS_ACCOUNTS.find(account => account.username.toLowerCase() === normalizedUsername);
 }
 
 /**

@@ -98,6 +98,21 @@ export async function POST(request: NextRequest) {
     // Kullanıcının CepSMS hesabı
     const userCepsmsUsername = currentUser.cepsms_username;
 
+    // Kullanıcıya CepSMS hesabı atanmamışsa hata ver (admin değilse)
+    if (!isAdmin && (!userCepsmsUsername || userCepsmsUsername.trim() === '')) {
+      console.error('[SMS Send] Kullanıcıya CepSMS hesabı atanmamış:', {
+        userId: auth.user.userId,
+        username: currentUser.role || 'unknown',
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'CepSMS hesabı atanmamış! Lütfen admin panelinden kullanıcınıza bir CepSMS hesabı atayın.',
+        },
+        { status: 400 }
+      );
+    }
+
     if (!isAdmin) {
       const userCredit = currentUser.credit || 0;
       const totalRequiredCredit = validPhones.length * requiredCredit;
@@ -112,6 +127,14 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+
+    // Log: Kullanıcının CepSMS hesabı bilgisini logla
+    console.log('[SMS Send] Kullanıcı bilgileri:', {
+      userId: auth.user.userId,
+      cepsmsUsername: userCepsmsUsername || '(atanmamış)',
+      isAdmin,
+      credit: currentUser.credit || 0,
+    });
 
     // Her numara için SMS gönder ve sonuçları topla
     interface SendResult {
@@ -165,6 +188,14 @@ export async function POST(request: NextRequest) {
 
       // Kullanıcının CepSMS hesabını kullan
       const cepsmsUsername = currentUser?.cepsms_username || undefined;
+      
+      // Log: SMS gönderim öncesi bilgi
+      console.log('[SMS Send] SMS gönderim öncesi:', {
+        phone: phoneNumber,
+        originalPhone: originalPhone,
+        cepsmsUsername: cepsmsUsername || '(atanmamış)',
+        userId: auth.user.userId,
+      });
       
       // SMS gönder (kullanıcıya özel hesap ile) - Kredi düşürme batch işlemede yapılacak
       const smsResult = await sendSMS(phoneNumber, message, cepsmsUsername);

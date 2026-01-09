@@ -100,6 +100,21 @@ export async function POST(request: NextRequest) {
       requiredCredit = Math.ceil(messageLength / 180) || 1;
       const totalRequiredCredit = phoneNumbers.length * requiredCredit;
 
+      // Kullanıcıya CepSMS hesabı atanmamışsa hata ver
+      if (!userCepsmsUsername || userCepsmsUsername.trim() === '') {
+        console.error('[SMS Send Advanced] Kullanıcıya CepSMS hesabı atanmamış:', {
+          userId: auth.user.id,
+        });
+        return NextResponse.json(
+          {
+            MessageId: 0,
+            Status: 'Error',
+            Error: 'CepSMS hesabı atanmamış! Lütfen admin panelinden kullanıcınıza bir CepSMS hesabı atayın.',
+          },
+          { status: 400 }
+        );
+      }
+
       if (userCredit < totalRequiredCredit) {
         return NextResponse.json(
           {
@@ -122,6 +137,14 @@ export async function POST(request: NextRequest) {
       const messageLength = Message.length;
       requiredCredit = Math.ceil(messageLength / 180) || 1;
     }
+
+    // Log: SMS gönderim öncesi bilgi
+    console.log('[SMS Send Advanced] SMS gönderim öncesi:', {
+      userId: auth.user.id,
+      cepsmsUsername: userCepsmsUsername || '(atanmamış)',
+      isAdmin,
+      firstPhone: phoneNumbers[0],
+    });
 
     // İlk numaraya SMS gönder (kullanıcıya özel hesap ile)
     const firstPhone = phoneNumbers[0];

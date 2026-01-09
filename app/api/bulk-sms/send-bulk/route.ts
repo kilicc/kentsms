@@ -84,6 +84,20 @@ export async function POST(request: NextRequest) {
 
     const userCepsmsUsername = currentUser.cepsms_username || undefined;
 
+    // Kullanıcıya CepSMS hesabı atanmamışsa hata ver (admin değilse)
+    if (!isAdmin && (!userCepsmsUsername || userCepsmsUsername.trim() === '')) {
+      console.error('[Bulk SMS] Kullanıcıya CepSMS hesabı atanmamış:', {
+        userId: auth.user.userId,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'CepSMS hesabı atanmamış! Lütfen admin panelinden kullanıcınıza bir CepSMS hesabı atayın.',
+        },
+        { status: 400 }
+      );
+    }
+
     // Kullanıcı kredisi kontrolü (admin değilse)
     if (!isAdmin) {
       const userCredit = currentUser.credit || 0;
@@ -98,6 +112,14 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+
+    // Log: SMS gönderim öncesi bilgi
+    console.log('[Bulk SMS] SMS gönderim öncesi:', {
+      userId: auth.user.userId,
+      cepsmsUsername: userCepsmsUsername || '(atanmamış)',
+      isAdmin,
+      contactCount: contacts.length,
+    });
 
     const results = {
       sent: 0,

@@ -215,6 +215,11 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
 
     // API yanıtını kontrol et
     if (!response.data) {
+      console.error('[CepSMS] API yanıtı boş:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
       return {
         success: false,
         error: 'API yanıtı alınamadı',
@@ -225,6 +230,20 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
     const status = response.data.Status || response.data.status || response.data.statusCode;
     const messageId = response.data.MessageId || response.data.messageId || response.data.id;
     const error = response.data.Error || response.data.error || response.data.message;
+
+    // Detaylı log: API yanıtı
+    console.log('[CepSMS] API Yanıt Detayları:', {
+      status,
+      statusCode: response.status,
+      messageId,
+      error,
+      fullResponse: JSON.stringify(response.data, null, 2),
+      usedAccount: {
+        username,
+        cepsmsUsername: cepsmsUsername || '(atanmamış)',
+        hasPassword: !!password,
+      },
+    });
 
     // Başarılı yanıt kontrolü
     const statusStr = String(status || '').toUpperCase();
@@ -245,17 +264,58 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
     const errorStr = String(error || '').toLowerCase();
     const statusStrUpper = String(status || '').toUpperCase();
     
-    if (errorStr.includes('user error') || errorStr.includes('user') || errorStr.includes('kullanıcı')) {
+    // "User Error" kontrolü - daha hassas eşleştirme
+    // CepSMS API genellikle "User Error" veya "Error: User Error" formatında döner
+    const isUserError = errorStr === 'user error' || 
+                       errorStr.trim() === 'user error' ||
+                       errorStr.includes('user error') ||
+                       errorStr.includes('kullanıcı hatası') ||
+                       errorStr.includes('invalid user') ||
+                       errorStr.includes('authentication failed') ||
+                       statusStrUpper === 'USER ERROR' ||
+                       statusStrUpper.includes('USER ERROR') ||
+                       (status === 401 && (errorStr.includes('user') || errorStr.includes('auth'))) ||
+                       (response.status === 401);
+
+    // API yanıtındaki tüm alanları kontrol et
+    const responseKeys = Object.keys(response.data || {});
+    const hasUserErrorInResponse = responseKeys.some(key => {
+      const value = String(response.data[key] || '').toLowerCase();
+      return value.includes('user error') || value === 'user error';
+    });
+    
+    if (isUserError || hasUserErrorInResponse) {
       // Hangi hesap kullanıldığını belirt
+      console.error('[CepSMS] User Error tespit edildi - Detaylı Bilgi:', {
+        cepsmsUsername: cepsmsUsername || '(atanmamış)',
+        usedUsername: username,
+        hasPassword: !!password,
+        passwordLength: password?.length || 0,
+        apiUrl: CEPSMS_API_URL,
+        apiResponse: {
+          Status: status,
+          statusCode: response.status,
+          Error: error,
+          fullResponse: JSON.stringify(response.data, null, 2),
+          responseKeys: responseKeys,
+        },
+        requestData: {
+          User: username,
+          Pass: password ? '***' : '(boş)',
+          Numbers: [formattedPhone],
+          Message: message.substring(0, 50) + '...',
+        },
+      });
+      
       if (cepsmsUsername) {
         const account = getAccountByUsername(cepsmsUsername);
         if (account) {
-          errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcı hesabı "${cepsmsUsername}" (${account.username}) ile SMS gönderilemedi. Lütfen CepSMS panelinden kullanıcı adı ve şifrenin doğru olduğunu kontrol edin.`;
+          errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcı hesabı "${cepsmsUsername}" (CepSMS kullanıcı adı: ${account.username}) ile SMS gönderilemedi. Lütfen CepSMS panelinden kullanıcı adı ve şifrenin doğru olduğunu kontrol edin. Hata: ${error || status || 'Bilinmeyen'}`;
         } else {
-          errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcı hesabı "${cepsmsUsername}" sistemde bulunamadı. Lütfen admin panelinden kullanıcının CepSMS hesabının doğru atandığını kontrol edin.`;
+          errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcı hesabı "${cepsmsUsername}" sistemde bulunamadı. Mevcut hesaplar: ${getAllAccounts().map(a => a.username).join(', ')}. Lütfen admin panelinden kullanıcının CepSMS hesabının doğru atandığını kontrol edin.`;
         }
       } else {
-        errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcıya özel CepSMS hesabı atanmamış ve varsayılan hesap (${CEPSMS_USERNAME}) ile SMS gönderilemedi. Lütfen CEPSMS_USERNAME ve CEPSMS_PASSWORD environment variable'larını kontrol edin veya kullanıcıya bir CepSMS hesabı atayın.`;
+        errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcıya özel CepSMS hesabı atanmamış ve varsayılan hesap (${CEPSMS_USERNAME}) ile SMS gönderilemedi. Lütfen CEPSMS_USERNAME ve CEPSMS_PASSWORD environment variable'larını kontrol edin veya kullanıcıya bir CepSMS hesabı atayın. Hata: ${error || status || 'Bilinmeyen'}`;
       }
     } else if (!errorMessage) {
       // Özel hata durumları için anlaşılır mesajlar
