@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Build Supabase query
     let query = supabaseServer
       .from('users')
-      .select('id, username, email, credit, role, is_verified, created_at, last_login', { count: 'exact' });
+      .select('id, username, email, credit, role, is_verified, created_at, last_login, cepsms_username', { count: 'exact' });
 
     if (search) {
       query = query.or(`username.ilike.%${search}%,email.ilike.%${search}%`);
@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
       isVerified: user.is_verified || false,
       createdAt: user.created_at,
       lastLogin: user.last_login,
+      cepsmsUsername: user.cepsms_username || null,
     }));
 
     const total = count || 0;

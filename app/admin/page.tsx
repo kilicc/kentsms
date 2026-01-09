@@ -6,10 +6,11 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
-import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy, AccountBalance, Edit } from '@mui/icons-material';
+import { AdminPanelSettings, People, Sms, AccountBalanceWallet, Add, Assessment, ExpandMore, PersonAdd, Visibility, Search, FilterList, Delete, VpnKey, ContentCopy, AccountBalance, Edit, CheckCircle, Cancel, Phone } from '@mui/icons-material';
 import { gradients } from '@/lib/theme';
 import { useRouter } from 'next/navigation';
 import ClientDate from '@/components/ClientDate';
+import { getAccountByUsername } from '@/lib/utils/cepsmsAccounts';
 
 interface User {
   id: string;
@@ -18,6 +19,7 @@ interface User {
   credit: number;
   role: string;
   createdAt: string;
+  cepsmsUsername?: string | null;
 }
 
 interface Stats {
@@ -1097,11 +1099,16 @@ export default function AdminDashboardPage() {
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kullanıcı Adı</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Kredi</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Rol</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>CepSMS Hesabı</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Telefon</TableCell>
+                              <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>Durum</TableCell>
                               <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>İşlemler</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {paginatedUsers.map((u) => (
+                            {paginatedUsers.map((u) => {
+                              const cepsmsAccount = u.cepsmsUsername ? getAccountByUsername(u.cepsmsUsername) : null;
+                              return (
                               <TableRow 
                                 key={u.id}
                                 sx={{ 
@@ -1125,7 +1132,7 @@ export default function AdminDashboardPage() {
                                   />
                                 </TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.username}</TableCell>
-                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.credit}</TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>{u.credit?.toLocaleString('tr-TR') || 0}</TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                   <Chip
                                     label={u.role}
@@ -1133,6 +1140,62 @@ export default function AdminDashboardPage() {
                                     color={u.role === 'admin' ? 'error' : u.role === 'moderator' ? 'warning' : 'default'}
                                     sx={{ fontSize: '0.65rem', height: 20 }}
                                   />
+                                </TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                  {u.cepsmsUsername ? (
+                                    <Chip
+                                      label={u.cepsmsUsername}
+                                      size="small"
+                                      color="primary"
+                                      sx={{ fontSize: '0.65rem', height: 20 }}
+                                    />
+                                  ) : (
+                                    <Typography variant="body2" sx={{ fontSize: '11px', color: 'text.secondary', fontStyle: 'italic' }}>
+                                      Atanmamış
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                  {cepsmsAccount ? (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      <Phone sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                      <Typography variant="body2" sx={{ fontSize: '11px' }}>
+                                        {cepsmsAccount.phone}
+                                      </Typography>
+                                    </Box>
+                                  ) : (
+                                    <Typography variant="body2" sx={{ fontSize: '11px', color: 'text.secondary', fontStyle: 'italic' }}>
+                                      {u.cepsmsUsername ? 'Bilinmiyor' : '-'}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                  {u.cepsmsUsername ? (
+                                    cepsmsAccount ? (
+                                      <Chip
+                                        icon={<CheckCircle sx={{ fontSize: 14 }} />}
+                                        label="Aktif"
+                                        size="small"
+                                        color="success"
+                                        sx={{ fontSize: '0.65rem', height: 20 }}
+                                      />
+                                    ) : (
+                                      <Chip
+                                        icon={<Cancel sx={{ fontSize: 14 }} />}
+                                        label="Hesap Bulunamadı"
+                                        size="small"
+                                        color="error"
+                                        sx={{ fontSize: '0.65rem', height: 20 }}
+                                      />
+                                    )
+                                  ) : (
+                                    <Chip
+                                      label="Atanmamış"
+                                      size="small"
+                                      color="default"
+                                      sx={{ fontSize: '0.65rem', height: 20 }}
+                                    />
+                                  )}
                                 </TableCell>
                                 <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
                                   <Box sx={{ display: 'flex', gap: 0.75 }}>
@@ -1222,7 +1285,8 @@ export default function AdminDashboardPage() {
                                   </Box>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       </TableContainer>

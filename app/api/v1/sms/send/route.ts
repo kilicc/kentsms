@@ -104,12 +104,6 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      // Kredi düş
-      await supabaseServer
-        .from('users')
-        .update({ credit: Math.max(0, userCredit - totalRequiredCredit) })
-        .eq('id', auth.user.id);
     } else {
       // Admin için de CepSMS hesabı al
       const { data: user } = await supabaseServer
@@ -128,6 +122,14 @@ export async function POST(request: NextRequest) {
     const smsResult = await sendSMS(firstPhone, Message, userCepsmsUsername);
 
     if (smsResult.success && smsResult.messageId) {
+      // SMS başarılı - kullanıcı kredisinden düş (admin değilse)
+      if (!isAdmin && userCredit !== undefined) {
+        await supabaseServer
+          .from('users')
+          .update({ credit: Math.max(0, userCredit - requiredCredit) })
+          .eq('id', auth.user.id);
+      }
+
       // SMS kaydı oluştur
       const { data: smsMessageData, error: createError } = await supabaseServer
         .from('sms_messages')
@@ -144,8 +146,8 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (createError || !smsMessageData) {
-        // Kredi geri ver (admin değilse)
-        if (!isAdmin) {
+        // SMS kaydı oluşturulamadı, kredi geri ver (admin değilse)
+        if (!isAdmin && userCredit !== undefined) {
           await supabaseServer
             .from('users')
             .update({ credit: userCredit })
@@ -167,32 +169,18 @@ export async function POST(request: NextRequest) {
         Status: 'OK',
       });
     } else {
-      // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur
-      const { data: failedSmsData } = await supabaseServer
+      // SMS gönderim başarısız - kredi düşürülmedi (sadece başarılı SMS'ler için düşürülüyor)
+      // Başarısız SMS kaydı oluştur (log için)
+      await supabaseServer
         .from('sms_messages')
         .insert({
           user_id: auth.user.id,
           phone_number: firstPhone,
           message: Message,
           status: 'failed',
-          cost: isAdmin ? 0 : requiredCredit,
+          cost: 0, // Başarısız SMS için kredi düşürülmedi
           failed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (failedSmsData && !isAdmin) {
-        await supabaseServer
-          .from('refunds')
-          .insert({
-            user_id: auth.user.id,
-            sms_id: failedSmsData.id,
-            original_cost: requiredCredit,
-            refund_amount: requiredCredit,
-            reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
-            status: 'pending',
-          });
-      }
+        });
 
       return NextResponse.json(
         {

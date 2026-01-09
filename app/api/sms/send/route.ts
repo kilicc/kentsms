@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { authenticateRequest } from '@/lib/middleware/auth';
 import { sendSMS, formatPhoneNumber } from '@/lib/utils/cepSMSProvider';
-import { deductSystemCredit, getSystemCredit, addSystemCredit } from '@/lib/utils/systemCredit';
 
 // POST /api/sms/send - Tekli SMS gönderimi
 export async function POST(request: NextRequest) {
@@ -164,22 +163,10 @@ export async function POST(request: NextRequest) {
         };
       }
 
-      // Sistem kredisi kontrolü
-      const systemCreditCheck = await deductSystemCredit(requiredCredit);
-      
-      if (!systemCreditCheck.success) {
-        return {
-          phone: phoneNumber,
-          original: originalPhone,
-          success: false,
-          error: systemCreditCheck.error || 'Yetersiz sistem kredisi',
-        };
-      }
-
       // Kullanıcının CepSMS hesabını kullan
       const cepsmsUsername = currentUser?.cepsms_username || undefined;
       
-      // SMS gönder (kullanıcıya özel hesap ile)
+      // SMS gönder (kullanıcıya özel hesap ile) - Kredi düşürme batch işlemede yapılacak
       const smsResult = await sendSMS(phoneNumber, message, cepsmsUsername);
 
       if (smsResult.success && smsResult.messageId) {
@@ -200,8 +187,6 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (createError || !smsMessageData) {
-          // SMS kaydı oluşturulamadı, kredi geri ver
-          await addSystemCredit(requiredCredit);
           return {
             phone: phoneNumber,
             original: originalPhone,
@@ -218,8 +203,9 @@ export async function POST(request: NextRequest) {
           };
         }
       } else {
-        // SMS gönderim başarısız - kredi düşüldü, otomatik iade oluştur
-        const { data: failedSmsData, error: failedError } = await supabaseServer
+        // SMS gönderim başarısız - kredi düşürülmedi (sadece başarılı olanlar için düşürülüyor)
+        // Başarısız SMS kaydı oluştur (log için)
+        await supabaseServer
           .from('sms_messages')
           .insert({
             user_id: auth.user.userId,
@@ -227,25 +213,9 @@ export async function POST(request: NextRequest) {
             message,
             sender: serviceName || null,
             status: 'failed',
-            cost: requiredCredit,
+            cost: 0, // Başarısız SMS için kredi düşürülmedi
             failed_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (!failedError && failedSmsData) {
-          // Otomatik iade oluştur
-          await supabaseServer
-            .from('refunds')
-            .insert({
-              user_id: auth.user.userId,
-              sms_id: failedSmsData.id,
-              original_cost: requiredCredit,
-              refund_amount: requiredCredit,
-              reason: 'SMS gönderim başarısız - Otomatik iade (48 saat)',
-              status: 'pending',
-            });
-        }
+          });
 
         return {
           phone: phoneNumber,
@@ -293,17 +263,26 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Kullanıcı kredisini toplu güncelle (her concurrent batch sonrası)
+        // Kullanıcı kredisini toplu güncelle (her concurrent batch sonrası - sadece başarılı SMS'ler için)
         if (!isAdmin && currentUser && auth.user) {
           const sentInBatch = batchResults.filter(r => r.success).length;
           if (sentInBatch > 0) {
-            const userCredit = currentUser.credit || 0;
-            const newUserCredit = Math.max(0, userCredit - (sentInBatch * requiredCredit));
-            await supabaseServer
+            // Güncel krediyi al (diğer batch'lerden sonra güncel olsun)
+            const { data: updatedUser, error: userUpdateError } = await supabaseServer
               .from('users')
-              .update({ credit: newUserCredit })
-              .eq('id', auth.user.userId);
-            currentUser.credit = newUserCredit;
+              .select('credit')
+              .eq('id', auth.user.userId)
+              .single();
+            
+            if (!userUpdateError && updatedUser) {
+              const userCredit = updatedUser.credit || 0;
+              const newUserCredit = Math.max(0, userCredit - (sentInBatch * requiredCredit));
+              await supabaseServer
+                .from('users')
+                .update({ credit: newUserCredit })
+                .eq('id', auth.user.userId);
+              currentUser.credit = newUserCredit;
+            }
           }
         }
 
@@ -320,8 +299,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Sistem kredisini ve kullanıcı kredisini al (güncel değer için)
-    const remainingSystemCredit = await getSystemCredit();
+    // Kullanıcı kredisini al (güncel değer için)
     const { data: updatedUser } = await supabaseServer
       .from('users')
       .select('credit')
@@ -340,7 +318,6 @@ export async function POST(request: NextRequest) {
         results: sendResults,
         totalSent,
         totalFailed,
-        remainingSystemCredit: remainingSystemCredit,
         remainingUserCredit: updatedUser?.credit || 0,
       },
     });
