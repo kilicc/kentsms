@@ -1,7 +1,7 @@
 import axios from 'axios';
 import https from 'https';
 import FormData from 'form-data';
-import { getAccountByUsername, CepSMSAccount } from './cepsmsAccounts';
+import { getAccountByUsername, CepSMSAccount, getAllAccounts } from './cepsmsAccounts';
 
 interface CepSMSResponse {
   Status?: string;
@@ -112,19 +112,46 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
         username = account.username;
         password = account.password;
         from = account.from || CEPSMS_FROM;
-        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor: ${username}`);
+        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor: ${username} (${cepsmsUsername})`);
       } else {
-        console.warn(`[CepSMS] Kullanıcı hesabı bulunamadı: ${cepsmsUsername}, varsayılan hesap kullanılıyor`);
+        console.error(`[CepSMS] Kullanıcı hesabı bulunamadı: ${cepsmsUsername}`);
+        const allAccounts = getAllAccounts();
+        console.error(`[CepSMS] Mevcut hesaplar: ${allAccounts.map(a => a.username).join(', ')}`);
+        console.warn(`[CepSMS] Varsayılan environment variable hesabı kullanılıyor: ${CEPSMS_USERNAME}`);
+        // Hesap bulunamadığı için varsayılan environment variable'lar kullanılacak
+        // Ancak bu durumda kullanıcıya daha açıklayıcı bir hata mesajı vermek için
+        // bir işaret koyacağız
       }
+    } else {
+      console.log(`[CepSMS] Kullanıcıya özel hesap atanmamış, varsayılan hesap kullanılıyor: ${CEPSMS_USERNAME}`);
+    }
+    
+    // Şifre ve kullanıcı adı kontrolü
+    if (!username || username.trim() === '') {
+      console.error('[CepSMS] Kullanıcı adı boş!');
+      return {
+        success: false,
+        error: 'CepSMS kullanıcı adı tanımlı değil. Lütfen kullanıcıya bir CepSMS hesabı atayın veya CEPSMS_USERNAME environment variable\'ını ayarlayın.',
+      };
+    }
+    
+    if (!password || password.trim() === '') {
+      console.error('[CepSMS] Şifre boş!');
+      return {
+        success: false,
+        error: 'CepSMS şifresi tanımlı değil. Lütfen kullanıcıya bir CepSMS hesabı atayın veya CEPSMS_PASSWORD environment variable\'ını ayarlayın.',
+      };
     }
     
     console.log('[CepSMS] SMS gönderiliyor:', {
       phone: formattedPhone,
       messageLength: message.length,
-      from: from,
+      from: from || '(boş)',
       username: username,
+      cepsmsUsername: cepsmsUsername || '(atanmamış)',
       apiUrl: CEPSMS_API_URL,
       hasPassword: !!password,
+      passwordLength: password.length,
     });
 
     const fromCandidate = (from || '').trim();
@@ -219,7 +246,17 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
     const statusStrUpper = String(status || '').toUpperCase();
     
     if (errorStr.includes('user error') || errorStr.includes('user') || errorStr.includes('kullanıcı')) {
-      errorMessage = 'CepSMS API kimlik doğrulama hatası. Kullanıcı adı veya şifre hatalı. Lütfen CEPSMS_USERNAME ve CEPSMS_PASSWORD environment variable\'larını kontrol edin.';
+      // Hangi hesap kullanıldığını belirt
+      if (cepsmsUsername) {
+        const account = getAccountByUsername(cepsmsUsername);
+        if (account) {
+          errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcı hesabı "${cepsmsUsername}" (${account.username}) ile SMS gönderilemedi. Lütfen CepSMS panelinden kullanıcı adı ve şifrenin doğru olduğunu kontrol edin.`;
+        } else {
+          errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcı hesabı "${cepsmsUsername}" sistemde bulunamadı. Lütfen admin panelinden kullanıcının CepSMS hesabının doğru atandığını kontrol edin.`;
+        }
+      } else {
+        errorMessage = `CepSMS API kimlik doğrulama hatası. Kullanıcıya özel CepSMS hesabı atanmamış ve varsayılan hesap (${CEPSMS_USERNAME}) ile SMS gönderilemedi. Lütfen CEPSMS_USERNAME ve CEPSMS_PASSWORD environment variable'larını kontrol edin veya kullanıcıya bir CepSMS hesabı atayın.`;
+      }
     } else if (!errorMessage) {
       // Özel hata durumları için anlaşılır mesajlar
       if (statusStrUpper.includes('PAYMENT') || statusStrUpper.includes('PAYMENT REQUIRED') || statusStrUpper === '402') {
@@ -235,7 +272,22 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
       }
     }
     
-    console.error('[CepSMS] SMS gönderim hatası:', errorMessage);
+    // API yanıtını logla
+    console.error('[CepSMS] SMS gönderim hatası detayları:', {
+      error: errorMessage,
+      apiResponse: {
+        Status: status,
+        Error: error,
+        MessageId: messageId,
+        fullResponse: JSON.stringify(response.data, null, 2),
+      },
+      requestInfo: {
+        username: username,
+        cepsmsUsername: cepsmsUsername || '(atanmamış)',
+        apiUrl: CEPSMS_API_URL,
+        phone: formattedPhone,
+      },
+    });
     
     return {
       success: false,
