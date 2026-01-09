@@ -94,7 +94,9 @@ export default function AdminDashboardPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', credit: 0 });
+  // Varsayılan başlangıç kredisi: 1,000,000 (1 milyon)
+  const DEFAULT_USER_CREDIT = 1000000;
+  const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user', credit: DEFAULT_USER_CREDIT });
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
@@ -541,13 +543,13 @@ export default function AdminDashboardPage() {
         username: newUser.username,
         password: newUser.password,
         role: newUser.role,
-        credit: newUser.credit || 0,
+        credit: newUser.credit !== undefined ? newUser.credit : DEFAULT_USER_CREDIT,
       });
 
       if (response.data.success) {
         setSuccess('Kullanıcı başarıyla oluşturuldu');
         setCreateUserDialogOpen(false);
-        setNewUser({ username: '', password: '', role: 'user', credit: 0 });
+        setNewUser({ username: '', password: '', role: 'user', credit: DEFAULT_USER_CREDIT });
         loadUsers();
         loadStats();
       } else {
@@ -996,7 +998,7 @@ export default function AdminDashboardPage() {
                       variant="contained"
                       startIcon={<PersonAdd />}
                       onClick={() => {
-                        setNewUser({ username: '', password: '', role: 'user', credit: 0 });
+                        setNewUser({ username: '', password: '', role: 'user', credit: DEFAULT_USER_CREDIT });
                         setCreateUserDialogOpen(true);
                       }}
                       sx={{
@@ -2163,7 +2165,7 @@ export default function AdminDashboardPage() {
                 label="Başlangıç Kredisi"
                 type="number"
                 value={newUser.credit}
-                onChange={(e) => setNewUser({ ...newUser, credit: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setNewUser({ ...newUser, credit: parseInt(e.target.value) || DEFAULT_USER_CREDIT })}
                 margin="dense"
                 sx={{
                   '& .MuiOutlinedInput-root': {

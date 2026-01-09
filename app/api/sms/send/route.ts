@@ -75,27 +75,31 @@ export async function POST(request: NextRequest) {
     const userRole = (auth.user.role || '').toLowerCase();
     const isAdmin = userRole === 'admin' || userRole === 'moderator' || userRole === 'administrator';
 
-    // Kullanıcı bilgilerini al (kredi kontrolü ve düşürme için)
-    let currentUser: { credit: number; role?: string } | null = null;
+    // Kullanıcı bilgilerini al (kredi kontrolü, düşürme ve CepSMS hesabı için)
+    let currentUser: { credit: number; role?: string; cepsms_username?: string } | null = null;
     let userError: any = null;
 
+    // Tüm kullanıcılar için bilgi al (admin değilse kredi kontrolü için, admin ise CepSMS hesabı için)
+    const userResult = await supabaseServer
+      .from('users')
+      .select('credit, role, cepsms_username')
+      .eq('id', auth.user.userId)
+      .single();
+    
+    currentUser = userResult.data;
+    userError = userResult.error;
+
+    if (userError || !currentUser) {
+      return NextResponse.json(
+        { success: false, message: 'Kullanıcı bilgileri alınamadı' },
+        { status: 500 }
+      );
+    }
+
+    // Kullanıcının CepSMS hesabı
+    const userCepsmsUsername = currentUser.cepsms_username;
+
     if (!isAdmin) {
-      const userResult = await supabaseServer
-        .from('users')
-        .select('credit, role')
-        .eq('id', auth.user.userId)
-        .single();
-      
-      currentUser = userResult.data;
-      userError = userResult.error;
-
-      if (userError || !currentUser) {
-        return NextResponse.json(
-          { success: false, message: 'Kullanıcı bilgileri alınamadı' },
-          { status: 500 }
-        );
-      }
-
       const userCredit = currentUser.credit || 0;
       const totalRequiredCredit = validPhones.length * requiredCredit;
       
@@ -172,8 +176,11 @@ export async function POST(request: NextRequest) {
         };
       }
 
-      // SMS gönder
-      const smsResult = await sendSMS(phoneNumber, message);
+      // Kullanıcının CepSMS hesabını kullan
+      const cepsmsUsername = currentUser?.cepsms_username || undefined;
+      
+      // SMS gönder (kullanıcıya özel hesap ile)
+      const smsResult = await sendSMS(phoneNumber, message, cepsmsUsername);
 
       if (smsResult.success && smsResult.messageId) {
         // SMS kaydı oluştur

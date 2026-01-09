@@ -1,6 +1,7 @@
 import axios from 'axios';
 import https from 'https';
 import FormData from 'form-data';
+import { getAccountByUsername, CepSMSAccount } from './cepsmsAccounts';
 
 interface CepSMSResponse {
   Status?: string;
@@ -92,21 +93,41 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * CepSMS API ile SMS gönder
+ * CepSMS API ile SMS gönder (kullanıcıya özel hesap ile)
+ * @param phone Telefon numarası
+ * @param message SMS mesajı
+ * @param cepsmsUsername CepSMS kullanıcı adı (opsiyonel, yoksa environment variable kullanılır)
  */
-export async function sendSMS(phone: string, message: string): Promise<SendSMSResult> {
+export async function sendSMS(phone: string, message: string, cepsmsUsername?: string): Promise<SendSMSResult> {
     const formattedPhone = formatPhoneNumber(phone);
+    
+    // Kullanıcıya özel hesap kullan veya varsayılan environment variable'ları kullan
+    let username = CEPSMS_USERNAME;
+    let password = CEPSMS_PASSWORD;
+    let from = CEPSMS_FROM;
+    
+    if (cepsmsUsername) {
+      const account = getAccountByUsername(cepsmsUsername);
+      if (account) {
+        username = account.username;
+        password = account.password;
+        from = account.from || CEPSMS_FROM;
+        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor: ${username}`);
+      } else {
+        console.warn(`[CepSMS] Kullanıcı hesabı bulunamadı: ${cepsmsUsername}, varsayılan hesap kullanılıyor`);
+      }
+    }
     
     console.log('[CepSMS] SMS gönderiliyor:', {
       phone: formattedPhone,
       messageLength: message.length,
-      from: CEPSMS_FROM,
-      username: CEPSMS_USERNAME,
+      from: from,
+      username: username,
       apiUrl: CEPSMS_API_URL,
-      hasPassword: !!CEPSMS_PASSWORD,
+      hasPassword: !!password,
     });
 
-    const fromCandidate = (CEPSMS_FROM || '').trim();
+    const fromCandidate = (from || '').trim();
 
     // CepSMS API isteği (test ile doğrulanan çalışan format)
     // - User/Pass (zorunlu)
@@ -114,8 +135,8 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
     // - Numbers (zorunlu, ARRAY formatında olmalı)
     // - From (opsiyonel, bazı hesaplarda geçersiz olabilir!)
     const baseRequestData: any = {
-      User: CEPSMS_USERNAME,
-      Pass: CEPSMS_PASSWORD,
+      User: username,
+      Pass: password,
       Message: message,
       Numbers: [formattedPhone],
     };
@@ -331,8 +352,11 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
 /**
  * CepSMS API'den mesaj durumunu kontrol et
  * CepSMS API dokümantasyonuna göre SMS Report endpoint'i kullanılır
+ * @param messageId Mesaj ID'si
+ * @param phoneNumber Telefon numarası (opsiyonel)
+ * @param cepsmsUsername CepSMS kullanıcı adı (opsiyonel, yoksa environment variable kullanılır)
  */
-export async function checkSMSStatus(messageId: string, phoneNumber?: string): Promise<{
+export async function checkSMSStatus(messageId: string, phoneNumber?: string, cepsmsUsername?: string): Promise<{
   success: boolean;
   status?: 'gönderildi' | 'iletildi' | 'iletilmedi' | 'rapor_bekliyor' | 'zaman_aşımı';
   network?: string;
@@ -340,6 +364,21 @@ export async function checkSMSStatus(messageId: string, phoneNumber?: string): P
 }> {
   try {
     console.log('[CepSMS] Mesaj durumu kontrol ediliyor:', { messageId, phoneNumber });
+
+    // Kullanıcıya özel hesap kullan veya varsayılan environment variable'ları kullan
+    let username = CEPSMS_USERNAME;
+    let password = CEPSMS_PASSWORD;
+    
+    if (cepsmsUsername) {
+      const account = getAccountByUsername(cepsmsUsername);
+      if (account) {
+        username = account.username;
+        password = account.password;
+        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor (durum kontrolü): ${username}`);
+      } else {
+        console.warn(`[CepSMS] Kullanıcı hesabı bulunamadı: ${cepsmsUsername}, varsayılan hesap kullanılıyor`);
+      }
+    }
 
     // CepSMS API SMS Report endpoint'i - resmi dokümana göre JSON POST
     const normalizedBaseUrl = CEPSMS_API_URL.replace(/\/$/, '');
@@ -359,8 +398,8 @@ export async function checkSMSStatus(messageId: string, phoneNumber?: string): P
     );
 
     const requestPayload = {
-      User: CEPSMS_USERNAME,
-      Pass: CEPSMS_PASSWORD,
+      User: username,
+      Pass: password,
       MessageId: messageId,
     };
 
@@ -533,12 +572,15 @@ export async function checkSMSStatus(messageId: string, phoneNumber?: string): P
 
 /**
  * Toplu SMS gönder
+ * @param phones Telefon numaraları dizisi
+ * @param message SMS mesajı
+ * @param cepsmsUsername CepSMS kullanıcı adı (opsiyonel, yoksa environment variable kullanılır)
  */
-export async function sendBulkSMS(phones: string[], message: string): Promise<SendSMSResult[]> {
+export async function sendBulkSMS(phones: string[], message: string, cepsmsUsername?: string): Promise<SendSMSResult[]> {
   const results: SendSMSResult[] = [];
   
   for (const phone of phones) {
-    const result = await sendSMS(phone, message);
+    const result = await sendSMS(phone, message, cepsmsUsername);
     results.push(result);
   }
   

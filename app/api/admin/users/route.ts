@@ -141,13 +141,15 @@ export async function POST(request: NextRequest) {
     // Create user (email kaldırıldı, role varsayılan 'user')
     // Email kolonu NOT NULL ve UNIQUE olduğu için unique bir değer gönderiyoruz
     const uniqueEmail = `${username}@kentsms.local`;
+    // Varsayılan başlangıç kredisi: 1,000,000 (1 milyon)
+    const defaultCredit = 1000000;
     const { data: user, error: createError } = await supabaseServer
       .from('users')
       .insert({
         username,
         email: uniqueEmail, // Email kaldırıldı, unique bir değer gönderiyoruz
         password_hash: passwordHash,
-        credit: credit || 0,
+        credit: credit !== undefined ? credit : defaultCredit,
         role: role || 'user',
       })
       .select('id, username, email, credit, role, created_at')

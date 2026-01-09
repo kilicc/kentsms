@@ -42,13 +42,15 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password);
 
     // Create user using Supabase
+    // Varsayılan başlangıç kredisi: 1,000,000 (1 milyon)
+    const defaultCredit = 1000000;
     const { data: user, error: createError } = await supabaseServer
       .from('users')
       .insert({
         username,
         email,
         password_hash: passwordHash,
-        credit: 0,
+        credit: defaultCredit,
         role: 'user',
       })
       .select('id, username, email, credit, role, created_at')

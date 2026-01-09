@@ -73,10 +73,13 @@ export async function POST(request: NextRequest) {
     let userCredit = 0;
     let requiredCredit = 0;
 
+    // Kullanıcı bilgilerini al (kredi ve CepSMS hesabı için)
+    let userCepsmsUsername: string | undefined = undefined;
+    
     if (!isAdmin) {
       const { data: user, error: userError } = await supabaseServer
         .from('users')
-        .select('credit')
+        .select('credit, cepsms_username')
         .eq('id', auth.user.id)
         .single();
 
@@ -92,6 +95,7 @@ export async function POST(request: NextRequest) {
       }
 
       userCredit = user.credit || 0;
+      userCepsmsUsername = user.cepsms_username || undefined;
       const messageLength = Message.length;
       requiredCredit = Math.ceil(messageLength / 180) || 1;
       const totalRequiredCredit = phoneNumbers.length * requiredCredit;
@@ -113,13 +117,21 @@ export async function POST(request: NextRequest) {
         .update({ credit: Math.max(0, userCredit - totalRequiredCredit) })
         .eq('id', auth.user.id);
     } else {
+      // Admin için de CepSMS hesabı al
+      const { data: user } = await supabaseServer
+        .from('users')
+        .select('cepsms_username')
+        .eq('id', auth.user.id)
+        .single();
+      userCepsmsUsername = user?.cepsms_username || undefined;
+      
       const messageLength = Message.length;
       requiredCredit = Math.ceil(messageLength / 180) || 1;
     }
 
-    // İlk numaraya SMS gönder
+    // İlk numaraya SMS gönder (kullanıcıya özel hesap ile)
     const firstPhone = phoneNumbers[0];
-    const smsResult = await sendSMS(firstPhone, Message);
+    const smsResult = await sendSMS(firstPhone, Message, userCepsmsUsername);
 
     if (smsResult.success && smsResult.messageId) {
       // SMS kaydı oluştur

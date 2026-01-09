@@ -88,10 +88,13 @@ export async function POST(request: NextRequest) {
       totalRequiredCredit += requiredCredit;
     });
 
+    // Kullanıcı bilgilerini al (kredi ve CepSMS hesabı için)
+    let userCepsmsUsername: string | undefined = undefined;
+    
     if (!isAdmin) {
       const { data: user, error: userError } = await supabaseServer
         .from('users')
-        .select('credit')
+        .select('credit, cepsms_username')
         .eq('id', auth.user.id)
         .single();
 
@@ -109,6 +112,7 @@ export async function POST(request: NextRequest) {
       }
 
       userCredit = user.credit || 0;
+      userCepsmsUsername = user.cepsms_username || undefined;
 
       if (userCredit < totalRequiredCredit) {
         return NextResponse.json(
@@ -166,6 +170,14 @@ export async function POST(request: NextRequest) {
 
       // Güncel krediyi sakla (geri verme için)
       userCredit = currentCredit;
+    } else {
+      // Admin için de CepSMS hesabı al
+      const { data: user } = await supabaseServer
+        .from('users')
+        .select('cepsms_username')
+        .eq('id', auth.user.id)
+        .single();
+      userCepsmsUsername = user?.cepsms_username || undefined;
     }
 
     // Her mesajı gönder
@@ -181,7 +193,8 @@ export async function POST(request: NextRequest) {
         const messageLength = message.length;
         const requiredCredit = Math.ceil(messageLength / 180) || 1;
 
-        const smsResult = await sendSMS(phone, message);
+        // Kullanıcıya özel hesap ile SMS gönder
+        const smsResult = await sendSMS(phone, message, userCepsmsUsername);
 
         if (smsResult.success && smsResult.messageId) {
           // SMS kaydı oluştur

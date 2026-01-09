@@ -75,12 +75,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Kullanıcı kredisini de düş (görüntüleme ve takip için)
+    // Kullanıcı bilgilerini al (kredi ve CepSMS hesabı için)
     const { data: currentUser, error: userError } = await supabaseServer
       .from('users')
-      .select('credit')
+      .select('credit, cepsms_username')
       .eq('id', auth.user.userId)
       .single();
+
+    const userCepsmsUsername = currentUser?.cepsms_username || undefined;
 
     if (!userError && currentUser) {
       const userCredit = currentUser.credit || 0;
@@ -106,8 +108,8 @@ export async function POST(request: NextRequest) {
     for (const contact of contacts) {
       try {
         console.log(`[Bulk SMS] SMS gönderiliyor: ${contact.phone}`);
-        // Her numara için SMS gönder
-        const smsResult = await sendSMS(contact.phone, message);
+        // Her numara için SMS gönder (kullanıcıya özel hesap ile)
+        const smsResult = await sendSMS(contact.phone, message, userCepsmsUsername);
         console.log(`[Bulk SMS] SMS sonucu:`, smsResult);
 
         if (smsResult.success && smsResult.messageId) {

@@ -52,6 +52,7 @@
     "@types/react-dom": "^19.0.0",
     "@types/speakeasy": "^2.0.10",
     "autoprefixer": "^10.4.23",
+    "dotenv": "^17.2.3",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.0.0",
     "markdown-pdf": "^11.0.0",
