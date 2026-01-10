@@ -304,7 +304,8 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
           
           console.log(`[CepSMS] Alternatif endpoint deneniyor: ${altUrl}`);
           try {
-            const altResp = await axios.post<CepSMSResponse>(altUrl, baseRequestData, {
+            // Önce JSON formatında dene
+            let altResp = await axios.post<CepSMSResponse>(altUrl, baseRequestData, {
               headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -314,8 +315,31 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
               validateStatus: (status) => status < 500,
             });
             
-            const altStatus = altResp.data?.Status || altResp.data?.status || altResp.data?.statusCode;
-            const altStatusStr = String(altStatus || '').toUpperCase();
+            let altStatus = altResp.data?.Status || altResp.data?.status || altResp.data?.statusCode;
+            let altStatusStr = String(altStatus || '').toUpperCase();
+            
+            // Eğer hala System Error ise, form-encoded formatını dene
+            if (altStatusStr === 'SYSTEM ERROR' || altStatusStr === 'USER ERROR') {
+              console.log(`[CepSMS] Alternatif endpoint'te de System Error, form-encoded deneniyor: ${altUrl}`);
+              const formData = new URLSearchParams();
+              formData.append('User', username);
+              formData.append('Pass', password);
+              formData.append('Message', message);
+              formData.append('Numbers', formattedPhone);
+              
+              altResp = await axios.post<CepSMSResponse>(altUrl, formData.toString(), {
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json',
+                },
+                httpsAgent: httpsAgent,
+                timeout: 30000,
+                validateStatus: (status) => status < 500,
+              });
+              
+              altStatus = altResp.data?.Status || altResp.data?.status || altResp.data?.statusCode;
+              altStatusStr = String(altStatus || '').toUpperCase();
+            }
             
             if (altStatusStr === 'OK' || altStatus === 200) {
               console.log(`[CepSMS] Alternatif endpoint başarılı: ${altUrl}`);
