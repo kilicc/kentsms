@@ -113,6 +113,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Kullanıcıya CepSMS hesabı atanmışsa, hesabın mevcut olduğunu kontrol et (admin değilse)
+    if (!isAdmin && userCepsmsUsername && userCepsmsUsername.trim() !== '') {
+      const { getAccountByUsername } = await import('@/lib/utils/cepsmsAccounts');
+      const account = getAccountByUsername(userCepsmsUsername);
+      if (!account) {
+        const { getAllAccounts } = await import('@/lib/utils/cepsmsAccounts');
+        const allAccounts = getAllAccounts();
+        const availableAccounts = allAccounts.map(a => a.username).join(', ');
+        console.error('[SMS Send] Kullanıcı hesabı bulunamadı:', {
+          userId: auth.user.userId,
+          cepsmsUsername: userCepsmsUsername,
+          availableAccounts,
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            message: `CepSMS hesabı "${userCepsmsUsername}" sistemde bulunamadı. Mevcut hesaplar: ${availableAccounts}. Lütfen admin panelinden kullanıcınıza doğru bir hesap atayın.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     if (!isAdmin) {
       const userCredit = currentUser.credit || 0;
       const totalRequiredCredit = validPhones.length * requiredCredit;

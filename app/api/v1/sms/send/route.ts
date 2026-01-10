@@ -109,6 +109,29 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Kullanıcıya CepSMS hesabı atanmışsa, hesabın mevcut olduğunu kontrol et
+      if (userCepsmsUsername && userCepsmsUsername.trim() !== '') {
+        const { getAccountByUsername, getAllAccounts } = await import('@/lib/utils/cepsmsAccounts');
+        const account = getAccountByUsername(userCepsmsUsername);
+        if (!account) {
+          const allAccounts = getAllAccounts();
+          const availableAccounts = allAccounts.map(a => a.username).join(', ');
+          console.error('[SMS Send V1] Kullanıcı hesabı bulunamadı:', {
+            userId: auth.user.id,
+            cepsmsUsername: userCepsmsUsername,
+            availableAccounts,
+          });
+          return NextResponse.json(
+            {
+              MessageId: 0,
+              Status: 'Error',
+              Error: `CepSMS hesabı "${userCepsmsUsername}" sistemde bulunamadı. Mevcut hesaplar: ${availableAccounts}. Lütfen admin panelinden kullanıcınıza doğru bir hesap atayın.`,
+            },
+            { status: 400 }
+          );
+        }
+      }
+
       if (userCredit < totalRequiredCredit) {
         return NextResponse.json(
           {
