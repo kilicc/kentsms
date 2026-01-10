@@ -20,7 +20,7 @@ export interface CepSMSAccount {
  */
 export const CEPSMS_ACCOUNTS: CepSMSAccount[] = [
   {
-    password: 'qe?d|WP-iL*jy27C',
+    password: '123456',
     username: 'bahi1',
     phone: '05483441264',
     from: 'CepSMS',
