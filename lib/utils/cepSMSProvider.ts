@@ -27,10 +27,19 @@ const CEPSMS_PASSWORD = process.env.CEPSMS_PASSWORD || 'Qaswed';
 const CEPSMS_FROM = process.env.CEPSMS_FROM || '';
 // CepSMS API URL - farklı versiyonlar için environment variable ile değiştirilebilir
 // Alternatif URL'ler: 
-// - https://panel4.cepsms.com/smsapi
+// - https://panel4.cepsms.com/smsapi (ana endpoint)
 // - https://api.cepsms.com/sms/send
 // - https://www.cepsms.com/api/sms/send
+// - https://panel.cepsms.com/api/sms/send
 const CEPSMS_API_URL = process.env.CEPSMS_API_URL || 'https://panel4.cepsms.com/smsapi';
+
+// Alternatif API endpoint'leri (System Error durumunda kullanılacak)
+const ALTERNATIVE_API_URLS = [
+  'https://panel4.cepsms.com/smsapi',
+  'https://api.cepsms.com/sms/send',
+  'https://www.cepsms.com/api/sms/send',
+  'https://panel.cepsms.com/api/sms/send',
+];
 
 // HTTPS agent - SSL sertifika doğrulaması
 // CepSMS API için SSL sertifika doğrulaması
@@ -285,7 +294,38 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
                          error1Str.includes('system error');
     
     if (isUserErrorAfterFirst || isSystemError) {
-      console.warn('[CepSMS] JSON formatında User Error veya System Error alındı, alternatif formatlar deneniyor...');
+      console.warn('[CepSMS] JSON formatında User Error veya System Error alındı, alternatif formatlar ve endpoint\'ler deneniyor...');
+      
+      // System Error durumunda alternatif endpoint'leri de dene
+      if (isSystemError) {
+        for (const altUrl of ALTERNATIVE_API_URLS) {
+          if (altUrl === CEPSMS_API_URL) continue; // Ana endpoint'i zaten denedik
+          
+          console.log(`[CepSMS] Alternatif endpoint deneniyor: ${altUrl}`);
+          try {
+            const altResp = await axios.post<CepSMSResponse>(altUrl, baseRequestData, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              httpsAgent: httpsAgent,
+              timeout: 30000,
+              validateStatus: (status) => status < 500,
+            });
+            
+            const altStatus = altResp.data?.Status || altResp.data?.status || altResp.data?.statusCode;
+            const altStatusStr = String(altStatus || '').toUpperCase();
+            
+            if (altStatusStr === 'OK' || altStatus === 200) {
+              console.log(`[CepSMS] Alternatif endpoint başarılı: ${altUrl}`);
+              response = altResp;
+              break; // Başarılı endpoint bulundu, döngüden çık
+            }
+          } catch (altError: any) {
+            console.warn(`[CepSMS] Alternatif endpoint başarısız (${altUrl}):`, altError.message);
+          }
+        }
+      }
       
       // 2a) Numbers'ı string formatında dene (virgülle ayrılmış)
       try {
