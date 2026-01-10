@@ -524,7 +524,22 @@ Hata: ${error || status || 'Bilinmeyen'}`;
       }
     } else if (!errorMessage) {
       // Özel hata durumları için anlaşılır mesajlar
-      if (statusStrUpper.includes('PAYMENT') || statusStrUpper.includes('PAYMENT REQUIRED') || statusStrUpper === '402') {
+      if (statusStrUpper.includes('SYSTEM ERROR') || errorStr.includes('system error')) {
+        errorMessage = `CepSMS API sistem hatası. CepSMS sunucularında geçici bir sorun olabilir. 
+        
+Olası nedenler:
+1. CepSMS API sunucuları geçici olarak bakımda olabilir
+2. API endpoint formatı değişmiş olabilir
+3. CepSMS servisinde yüksek trafik olabilir
+
+Çözüm:
+- Birkaç dakika sonra tekrar deneyin
+- CepSMS panelinden hesabınızın aktif olduğunu kontrol edin
+- Sorun devam ederse CepSMS destek ekibiyle iletişime geçin
+
+API Endpoint: ${CEPSMS_API_URL}
+Hesap: ${username}${cepsmsUsername ? ` (${cepsmsUsername})` : ''}`;
+      } else if (statusStrUpper.includes('PAYMENT') || statusStrUpper.includes('PAYMENT REQUIRED') || statusStrUpper === '402') {
         errorMessage = 'CepSMS hesabında yetersiz bakiye. Lütfen hesabınıza bakiye yükleyin.';
       } else if (statusStrUpper.includes('UNAUTHORIZED') || statusStrUpper === '401') {
         errorMessage = 'CepSMS API kimlik doğrulama hatası. Kullanıcı adı veya şifre hatalı.';
