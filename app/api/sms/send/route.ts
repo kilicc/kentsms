@@ -96,43 +96,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Kullanıcının CepSMS hesabı
-    const userCepsmsUsername = currentUser.cepsms_username;
+    let userCepsmsUsername = currentUser.cepsms_username;
 
-    // Kullanıcıya CepSMS hesabı atanmamışsa hata ver (admin değilse)
-    if (!isAdmin && (!userCepsmsUsername || userCepsmsUsername.trim() === '')) {
-      console.error('[SMS Send] Kullanıcıya CepSMS hesabı atanmamış:', {
-        userId: auth.user.userId,
-        username: currentUser.role || 'unknown',
-      });
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'CepSMS hesabı atanmamış! Lütfen admin panelinden kullanıcınıza bir CepSMS hesabı atayın.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Kullanıcıya CepSMS hesabı atanmışsa, hesabın mevcut olduğunu kontrol et (admin değilse)
-    if (!isAdmin && userCepsmsUsername && userCepsmsUsername.trim() !== '') {
-      const { getAccountByUsername } = await import('@/lib/utils/cepsmsAccounts');
-      const account = getAccountByUsername(userCepsmsUsername);
-      if (!account) {
-        const { getAllAccounts } = await import('@/lib/utils/cepsmsAccounts');
-        const allAccounts = getAllAccounts();
-        const availableAccounts = allAccounts.map(a => a.username).join(', ');
-        console.error('[SMS Send] Kullanıcı hesabı bulunamadı:', {
+    // Admin olmayan kullanıcılar için: cepsms_username boşsa veya hesap bulunamazsa varsayılan hesaba fallback yap
+    // Admin2 gibi çalışması için - admin olmayan kullanıcılar da varsayılan hesabı kullanabilir
+    if (!isAdmin) {
+      if (!userCepsmsUsername || userCepsmsUsername.trim() === '') {
+        // Hesap atanmamış - varsayılan hesabı kullan (admin2 gibi)
+        console.warn('[SMS Send] Kullanıcıya CepSMS hesabı atanmamış, varsayılan hesap kullanılıyor:', {
           userId: auth.user.userId,
-          cepsmsUsername: userCepsmsUsername,
-          availableAccounts,
+          username: currentUser.username || 'unknown',
         });
-        return NextResponse.json(
-          {
-            success: false,
-            message: `CepSMS hesabı "${userCepsmsUsername}" sistemde bulunamadı. Mevcut hesaplar: ${availableAccounts}. Lütfen admin panelinden kullanıcınıza doğru bir hesap atayın.`,
-          },
-          { status: 400 }
-        );
+        userCepsmsUsername = undefined; // undefined = varsayılan hesap kullan
+      } else {
+        // Hesap atanmış - hesabın mevcut olduğunu kontrol et
+        const { getAccountByUsername } = await import('@/lib/utils/cepsmsAccounts');
+        const account = getAccountByUsername(userCepsmsUsername);
+        if (!account) {
+          // Hesap bulunamadı - varsayılan hesaba fallback yap
+          console.warn('[SMS Send] Kullanıcı hesabı bulunamadı, varsayılan hesaba fallback yapılıyor:', {
+            userId: auth.user.userId,
+            cepsmsUsername: userCepsmsUsername,
+          });
+          userCepsmsUsername = undefined; // undefined = varsayılan hesap kullan
+        }
       }
     }
 

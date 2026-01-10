@@ -82,20 +82,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userCepsmsUsername = currentUser.cepsms_username || undefined;
+    let userCepsmsUsername = currentUser.cepsms_username || undefined;
 
-    // Kullanıcıya CepSMS hesabı atanmamışsa hata ver (admin değilse)
-    if (!isAdmin && (!userCepsmsUsername || userCepsmsUsername.trim() === '')) {
-      console.error('[Bulk SMS] Kullanıcıya CepSMS hesabı atanmamış:', {
-        userId: auth.user.userId,
-      });
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'CepSMS hesabı atanmamış! Lütfen admin panelinden kullanıcınıza bir CepSMS hesabı atayın.',
-        },
-        { status: 400 }
-      );
+    // Admin2 gibi çalışması için: admin olmayan kullanıcılar için de cepsms_username boşsa varsayılan hesaba fallback yap
+    if (!isAdmin) {
+      if (!userCepsmsUsername || userCepsmsUsername.trim() === '') {
+        // Hesap atanmamış - varsayılan hesabı kullan (admin2 gibi)
+        console.warn('[Bulk SMS] Kullanıcıya CepSMS hesabı atanmamış, varsayılan hesap kullanılıyor:', {
+          userId: auth.user.userId,
+        });
+        userCepsmsUsername = undefined; // undefined = varsayılan hesap kullan
+      } else {
+        // Hesap atanmış - hesabın mevcut olduğunu kontrol et
+        const { getAccountByUsername } = await import('@/lib/utils/cepsmsAccounts');
+        const account = getAccountByUsername(userCepsmsUsername);
+        if (!account) {
+          // Hesap bulunamadı - varsayılan hesaba fallback yap
+          console.warn('[Bulk SMS] Kullanıcı hesabı bulunamadı, varsayılan hesaba fallback yapılıyor:', {
+            userId: auth.user.userId,
+            cepsmsUsername: userCepsmsUsername,
+          });
+          userCepsmsUsername = undefined; // undefined = varsayılan hesap kullan
+        }
+      }
     }
 
     // Kullanıcı kredisi kontrolü (admin değilse)
