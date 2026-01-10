@@ -174,6 +174,21 @@ export default function AdminDashboardPage() {
     }
   }, [user, tabValue, selectedDate]);
 
+  // Kullanıcılar listesini periyodik olarak güncelle (kredilerin güncel görünmesi için)
+  useEffect(() => {
+    if (user && (user.role === 'admin' || user.role === 'moderator')) {
+      // Kullanıcılar tab'ı açıkken periyodik güncelleme
+      if (tabValue === 1) {
+        const interval = setInterval(() => {
+          loadUsers();
+          loadStats(); // Stats'ı da güncelle (kullanıcı sayısı değişebilir)
+        }, 10000); // Her 10 saniyede bir güncelle
+
+        return () => clearInterval(interval);
+      }
+    }
+  }, [user, tabValue]);
+
   const loadStats = async () => {
     try {
       const [statsResponse, systemCreditResponse] = await Promise.all([
