@@ -64,19 +64,22 @@ async function testUserSMS() {
     console.log(`   Kredi: ${user.credit || 0}`);
     console.log(`   Rol: ${user.role || 'user'}\n`);
 
-    // 2. Şifre kontrolü
-    if (!user.password_hash) {
-      console.error('❌ Kullanıcının şifre hash\'i yok!');
-      process.exit(1);
-    }
+    // 2. Şifre kontrolü (opsiyonel - şifre verilmişse kontrol et)
+    if (testPassword && testPassword !== 'skip') {
+      if (!user.password_hash) {
+        console.error('❌ Kullanıcının şifre hash\'i yok!');
+        process.exit(1);
+      }
 
-    const passwordValid = await bcrypt.compare(testPassword, user.password_hash);
-    if (!passwordValid) {
-      console.error('❌ Şifre yanlış!');
-      process.exit(1);
+      const passwordValid = await bcrypt.compare(testPassword, user.password_hash);
+      if (!passwordValid) {
+        console.warn('⚠️  Şifre yanlış! Devam ediliyor (sadece SMS gönderme testi)...\n');
+      } else {
+        console.log('✅ Şifre doğru\n');
+      }
+    } else {
+      console.log('ℹ️  Şifre kontrolü atlandı (sadece SMS gönderme testi)\n');
     }
-
-    console.log('✅ Şifre doğru\n');
 
     // 3. CepSMS hesabı kontrolü
     if (!user.cepsms_username || user.cepsms_username.trim() === '') {

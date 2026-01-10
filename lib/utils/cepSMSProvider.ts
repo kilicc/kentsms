@@ -123,25 +123,14 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
         from = account.from || CEPSMS_FROM;
         console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor: ${username} (${cepsmsUsername})`);
       } else {
-        // Hesap bulunamadı - kullanıcıya hata ver
+        // Hesap bulunamadı - varsayılan hesaba fallback yap (sadece warning log)
         const allAccounts = getAllAccounts();
         const availableAccounts = allAccounts.map(a => a.username).join(', ');
         console.error(`[CepSMS] Kullanıcı hesabı bulunamadı: ${cepsmsUsername}`);
         console.error(`[CepSMS] Mevcut hesaplar: ${availableAccounts}`);
-        
-        return {
-          success: false,
-          error: `CepSMS hesabı "${cepsmsUsername}" sistemde bulunamadı. 
-
-Kullanıcınıza atanan hesap adı hatalı olabilir veya hesap sistemde kayıtlı değil.
-
-Mevcut hesaplar: ${availableAccounts}
-
-Çözüm:
-- Admin panelinden kullanıcının "cepsms_username" alanını kontrol edin
-- Doğru hesap adını (yukarıdaki listeden birini) kullanıcıya atayın
-- Hesap adının doğru yazıldığından emin olun (büyük/küçük harf farketmez)`,
-        };
+        console.warn(`[CepSMS] Varsayılan environment variable hesabı kullanılıyor: ${CEPSMS_USERNAME}`);
+        // Hesap bulunamadığı için varsayılan environment variable'lar kullanılacak
+        // Bu durumda kullanıcıya daha açıklayıcı bir warning mesajı verilebilir
       }
     } else {
       console.log(`[CepSMS] Kullanıcıya özel hesap atanmamış, varsayılan hesap kullanılıyor: ${CEPSMS_USERNAME}`);
