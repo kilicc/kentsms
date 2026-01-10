@@ -29,14 +29,16 @@ const COMMON_API_PASSWORD = process.env.COMMON_API_PASSWORD || 'SxRtu2952!!opeq'
 const CEPSMS_FROM = process.env.CEPSMS_FROM || '';
 // CepSMS API URL - farklı versiyonlar için environment variable ile değiştirilebilir
 // Alternatif URL'ler: 
-// - https://panel4.cepsms.com/smsapi (ana endpoint)
+// - https://panel6.cepsms.com/smsapi (ana endpoint)
+// - https://panel4.cepsms.com/smsapi
 // - https://api.cepsms.com/sms/send
 // - https://www.cepsms.com/api/sms/send
 // - https://panel.cepsms.com/api/sms/send
-const CEPSMS_API_URL = process.env.CEPSMS_API_URL || 'https://panel4.cepsms.com/smsapi';
+const CEPSMS_API_URL = process.env.CEPSMS_API_URL || 'https://panel6.cepsms.com/smsapi';
 
 // Alternatif API endpoint'leri (System Error durumunda kullanılacak)
 const ALTERNATIVE_API_URLS = [
+  'https://panel6.cepsms.com/smsapi',
   'https://panel4.cepsms.com/smsapi',
   'https://api.cepsms.com/sms/send',
   'https://www.cepsms.com/api/sms/send',
