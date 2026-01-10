@@ -131,13 +131,12 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
-      // Admin için de CepSMS hesabı al
-      const { data: user } = await supabaseServer
-        .from('users')
-        .select('cepsms_username')
-        .eq('id', auth.user.id)
-        .single();
-      userCepsmsUsername = user?.cepsms_username || undefined;
+      // Admin kullanıcılar için "Smsexp" hesabını kullan
+      userCepsmsUsername = 'Smsexp';
+      console.log('[SMS Send Advanced] Admin kullanıcı için Smsexp hesabı kullanılıyor:', {
+        userId: auth.user.id,
+        role: auth.user.role || 'admin',
+      });
       
       const messageLength = Message.length;
       requiredCredit = Math.ceil(messageLength / 180) || 1;

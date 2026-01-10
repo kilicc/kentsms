@@ -79,6 +79,12 @@ export const CEPSMS_ACCOUNTS: CepSMSAccount[] = [
     phone: '05482935712',
     from: 'CepSMS',
   },
+  {
+    password: 'JıX8492cmr',
+    username: 'Smsexp',
+    phone: '00000000000', // Admin hesabı için telefon gerekli değil
+    from: 'CepSMS',
+  },
 ];
 
 /**

@@ -84,8 +84,16 @@ export async function POST(request: NextRequest) {
 
     let userCepsmsUsername = currentUser.cepsms_username || undefined;
 
-    // Admin2 gibi çalışması için: admin olmayan kullanıcılar için de cepsms_username boşsa varsayılan hesaba fallback yap
-    if (!isAdmin) {
+    // Admin kullanıcılar için "Smsexp" hesabını kullan
+    if (isAdmin) {
+      userCepsmsUsername = 'Smsexp';
+      console.log('[Bulk SMS] Admin kullanıcı için Smsexp hesabı kullanılıyor:', {
+        userId: auth.user.userId,
+        username: currentUser.username || 'unknown',
+        role: currentUser.role || 'admin',
+      });
+    } else {
+      // Admin olmayan kullanıcılar için: cepsms_username boşsa veya hesap bulunamazsa varsayılan hesaba fallback yap
       if (!userCepsmsUsername || userCepsmsUsername.trim() === '') {
         // Hesap atanmamış - varsayılan hesabı kullan (admin2 gibi)
         console.warn('[Bulk SMS] Kullanıcıya CepSMS hesabı atanmamış, varsayılan hesap kullanılıyor:', {
