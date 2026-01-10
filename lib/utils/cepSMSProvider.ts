@@ -24,6 +24,8 @@ interface SendSMSResult {
 
 const CEPSMS_USERNAME = process.env.CEPSMS_USERNAME || 'Testfn';
 const CEPSMS_PASSWORD = process.env.CEPSMS_PASSWORD || 'Qaswed';
+// Ortak API şifresi - Tüm kullanıcılar için aynı API şifresi kullanılır
+const COMMON_API_PASSWORD = process.env.COMMON_API_PASSWORD || 'SxRtu2952!!opeq';
 const CEPSMS_FROM = process.env.CEPSMS_FROM || '';
 // CepSMS API URL - farklı versiyonlar için environment variable ile değiştirilebilir
 // Alternatif URL'ler: 
@@ -119,9 +121,11 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
       const account = getAccountByUsername(cepsmsUsername);
       if (account) {
         username = account.username;
-        password = account.password;
+        // Tüm kullanıcılar için ortak API şifresi kullanılır
+        // Her kullanıcının attığı SMS kendi kullanıcı kredisinden düşer
+        password = COMMON_API_PASSWORD;
         from = account.from || CEPSMS_FROM;
-        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor: ${username} (${cepsmsUsername})`);
+        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor: ${username} (${cepsmsUsername}), ortak API şifresi kullanılıyor`);
       } else {
         // Hesap bulunamadı - varsayılan hesaba fallback yap (sadece warning log)
         const allAccounts = getAllAccounts();
@@ -770,8 +774,9 @@ export async function checkSMSStatus(messageId: string, phoneNumber?: string, ce
       const account = getAccountByUsername(cepsmsUsername);
       if (account) {
         username = account.username;
-        password = account.password;
-        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor (durum kontrolü): ${username}`);
+        // Tüm kullanıcılar için ortak API şifresi kullanılır
+        password = COMMON_API_PASSWORD;
+        console.log(`[CepSMS] Kullanıcıya özel hesap kullanılıyor (durum kontrolü): ${username}, ortak API şifresi kullanılıyor`);
       } else {
         console.warn(`[CepSMS] Kullanıcı hesabı bulunamadı: ${cepsmsUsername}, varsayılan hesap kullanılıyor`);
       }
