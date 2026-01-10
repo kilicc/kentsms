@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
       userCepsmsUsername = 'Smsexp';
       console.log('[Bulk SMS] Admin kullanıcı için Smsexp hesabı kullanılıyor:', {
         userId: auth.user.userId,
-        username: currentUser.username || 'unknown',
         role: currentUser.role || 'admin',
       });
     } else {

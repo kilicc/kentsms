@@ -103,7 +103,6 @@ export async function POST(request: NextRequest) {
       userCepsmsUsername = 'Smsexp';
       console.log('[SMS Send] Admin kullanıcı için Smsexp hesabı kullanılıyor:', {
         userId: auth.user.userId,
-        username: currentUser.username || 'unknown',
         role: currentUser.role || 'admin',
       });
     } else {
@@ -112,7 +111,6 @@ export async function POST(request: NextRequest) {
         // Hesap atanmamış - varsayılan hesabı kullan (admin2 gibi)
         console.warn('[SMS Send] Kullanıcıya CepSMS hesabı atanmamış, varsayılan hesap kullanılıyor:', {
           userId: auth.user.userId,
-          username: currentUser.username || 'unknown',
         });
         userCepsmsUsername = undefined; // undefined = varsayılan hesap kullan
       } else {
