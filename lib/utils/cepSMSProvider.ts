@@ -654,7 +654,9 @@ Hesap: ${username}${cepsmsUsername ? ` (${cepsmsUsername})` : ''}`;
         const apiError = String(error || status || '');
         const apiErrorUpper = apiError.toUpperCase();
         if (apiErrorUpper.includes('SOURCE ADDRESS') || apiErrorUpper.includes('FROM')) {
-          errorMessage = 'CepSMS API hatası: Gönderen adı (From) geçersiz. Lütfen CepSMS panelinden hesabınızın gönderen adını kontrol edin.';
+          // From alanı hatası - API'nin From alanını beklediği veya hesap ayarlarında From tanımlı olmadığı durum
+          // Sistem zaten From olmadan gönderiyor, bu yüzden bu hata genellikle hesap ayarlarından kaynaklanır
+          errorMessage = `CepSMS API hatası: Hesap ayarlarında gönderen adı (From) tanımlı değil veya geçersiz. Bu hata hesap ayarlarından kaynaklanıyor olabilir. API yanıtı: ${apiError}. Sistem From alanını göndermeden denedi ancak API hata verdi.`;
         } else if (apiErrorUpper.includes('PHONE') || apiErrorUpper.includes('NUMARA')) {
           errorMessage = `Geçersiz telefon numarası formatı. Lütfen 5XX ile başlayan bir mobil numara girin (örn: 905551234567, 05551234567, 5551234567). API Hatası: ${apiError}`;
         } else if (apiErrorUpper.includes('MESSAGE') || apiErrorUpper.includes('MESAJ')) {
