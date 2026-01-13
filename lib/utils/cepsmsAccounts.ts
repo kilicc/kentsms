@@ -20,7 +20,7 @@ export interface CepSMSAccount {
  */
 export const CEPSMS_ACCOUNTS: CepSMSAccount[] = [
   {
-    password: '123456',
+    password: 'Tkaipd771',
     username: 'bahi1',
     phone: '05483441264',
     from: 'CepSMS',
@@ -44,9 +44,9 @@ export const CEPSMS_ACCOUNTS: CepSMSAccount[] = [
     from: 'CepSMS',
   },
   {
-    password: 'Cglw7lUmuUaDeX',
+    password: '1234567',
     username: 'asus1',
-    phone: '05487781322',
+    phone: '05483212211',
     from: 'CepSMS',
   },
   {
@@ -83,6 +83,18 @@ export const CEPSMS_ACCOUNTS: CepSMSAccount[] = [
     password: 'JıX8492cmr',
     username: 'Smsexp',
     phone: '00000000000', // Admin hesabı için telefon gerekli değil
+    from: 'CepSMS',
+  },
+  {
+    password: '1234567',
+    username: 'Aasus1',
+    phone: '',
+    from: 'CepSMS',
+  },
+  {
+    password: 'Tkaipd771Tka',
+    username: 'test1',
+    phone: '',
     from: 'CepSMS',
   },
 ];
