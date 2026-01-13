@@ -112,7 +112,31 @@ export function formatPhoneNumber(phone: string): string {
  * @param cepsmsUsername CepSMS kullanıcı adı (opsiyonel, yoksa environment variable kullanılır)
  */
 export async function sendSMS(phone: string, message: string, cepsmsUsername?: string): Promise<SendSMSResult> {
-    const formattedPhone = formatPhoneNumber(phone);
+    // Mesaj validasyonu
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return {
+        success: false,
+        error: 'Mesaj boş olamaz. Lütfen geçerli bir mesaj girin.',
+      };
+    }
+    
+    // Mesaj uzunluğu kontrolü (CepSMS genellikle 160 karakter limiti var, ancak daha uzun mesajlar da gönderilebilir)
+    if (message.length > 10000) {
+      return {
+        success: false,
+        error: 'Mesaj çok uzun. Maksimum 10000 karakter kabul edilir.',
+      };
+    }
+    
+    let formattedPhone: string;
+    try {
+      formattedPhone = formatPhoneNumber(phone);
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Geçersiz telefon numarası formatı. Lütfen 5XX ile başlayan bir mobil numara girin (örn: 905551234567, 05551234567, 5551234567).',
+      };
+    }
     
     // Kullanıcıya özel hesap kullan veya varsayılan environment variable'ları kullan
     let username = CEPSMS_USERNAME;
@@ -617,7 +641,18 @@ Hesap: ${username}${cepsmsUsername ? ` (${cepsmsUsername})` : ''}`;
       } else if (statusStrUpper.includes('FORBIDDEN') || statusStrUpper === '403') {
         errorMessage = 'CepSMS API erişim hatası. Hesabınızın SMS gönderme yetkisi yok.';
       } else if (statusStrUpper.includes('INVALID') || statusStrUpper.includes('GEÇERSİZ')) {
-        errorMessage = 'Geçersiz istek. Telefon numarası veya mesaj formatı hatalı.';
+        // Daha detaylı hata mesajı - API yanıtındaki hatayı göster
+        const apiError = String(error || status || '');
+        const apiErrorUpper = apiError.toUpperCase();
+        if (apiErrorUpper.includes('SOURCE ADDRESS') || apiErrorUpper.includes('FROM')) {
+          errorMessage = 'CepSMS API hatası: Gönderen adı (From) geçersiz. Lütfen CepSMS panelinden hesabınızın gönderen adını kontrol edin.';
+        } else if (apiErrorUpper.includes('PHONE') || apiErrorUpper.includes('NUMARA')) {
+          errorMessage = `Geçersiz telefon numarası formatı. Lütfen 5XX ile başlayan bir mobil numara girin (örn: 905551234567, 05551234567, 5551234567). API Hatası: ${apiError}`;
+        } else if (apiErrorUpper.includes('MESSAGE') || apiErrorUpper.includes('MESAJ')) {
+          errorMessage = `Geçersiz mesaj formatı. Mesaj boş olamaz ve maksimum 10000 karakter olmalıdır. API Hatası: ${apiError}`;
+        } else {
+          errorMessage = `Geçersiz istek. Telefon numarası veya mesaj formatı hatalı. API Hatası: ${apiError || 'Bilinmeyen hata'}`;
+        }
       } else {
         errorMessage = `CepSMS API hatası: ${error || status || 'Bilinmeyen durum'}`;
       }
