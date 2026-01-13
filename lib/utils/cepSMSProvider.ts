@@ -476,15 +476,24 @@ export async function sendSMS(phone: string, message: string, cepsmsUsername?: s
     }
 
     // 3) Eğer geçersiz istek/bad request ise ve From adayımız varsa, From ile tekrar dene
+    // ANCAK: "Source address (From) is invalid" hatası alındığında From ile tekrar deneme (From zaten geçersiz)
+    const isFromInvalidError = error1Str.includes('source address') || 
+                                error1Str.includes('from') && error1Str.includes('invalid') ||
+                                status1Str.includes('SOURCE ADDRESS') ||
+                                (error1Str.includes('from') && error1Str.includes('geçersiz'));
+    
     const shouldRetryWithFrom =
       !!fromCandidate &&
       fromCandidate.toLowerCase() !== 'cepsms' &&
       (status1Str.includes('BAD REQUEST') || status1Str === '400' || error1Str.includes('geçersiz') || error1Str.includes('invalid')) &&
-      !isUserErrorAfterFirst; // User Error ise From ile tekrar deneme
+      !isUserErrorAfterFirst && // User Error ise From ile tekrar deneme
+      !isFromInvalidError; // From geçersiz hatası alındıysa From ile tekrar deneme
 
     if (shouldRetryWithFrom) {
       console.warn('[CepSMS] İlk deneme geçersiz istek döndü; From ile tekrar deneniyor:', fromCandidate);
       response = await postJson({ ...baseRequestData, From: fromCandidate });
+    } else if (isFromInvalidError) {
+      console.warn('[CepSMS] From alanı geçersiz hatası alındı, From olmadan devam ediliyor. From alanı gönderilmeyecek.');
     }
 
     // API yanıtını kontrol et
